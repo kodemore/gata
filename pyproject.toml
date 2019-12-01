@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "fatcode.gata"
+version = "0.1.0"
+description = "Gata id data validation and transformation library for python."
+authors = [
+    "Dawid Kraczkowski <dawid.kraczkowski@gmail.com>"
+]
+license = "MIT"
+readme = "README.md"
+
+homepage = "https://github.com/fatcode/gata"
+repository = "https://github.com/fatcode/gata"
+documentation = "https://github.com/fatcode/gata"
+
+keywords = ["validation", "schema", "dataclass", "formatter"]
+
+classifiers = [
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+# Requirements
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+pytest = "^4.1.0"
+pytest-cov = "^2.5"
+pytest-mock = "^1.9"
+mypy = "^0.730.0"
+black = { version = "^19.3b0", python = "^3.6" }
