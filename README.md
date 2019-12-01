@@ -15,8 +15,9 @@ Extended data classes for python with json-schema like validation support
 ## Dataclasses
 Dataclasses are containers and validators for data used by other classes. It is providing simple interface for 
 setting/getting/validating value. `Gata` library can be used with python built-in types, which is recommended for
-fast prototyping and very simple validation but also provide powerful type objects that are reflecting json schema 
+fast prototyping and very simple validation but also provide powerful type objects reflecting json schema 
 compatible types.
+
 
 ### Dataclass example with python built-in types
 ```python
@@ -50,8 +51,57 @@ class Pet(DataClass):
     name: types.String(min=2, max=12) = "Pimpek" # Minimum length of a string is 2 and maximum is 12
     age: types.Integer(min=0, max=200) = 0
     sold_at: types.DateTime()
-    tags: type.Array[types.String(min=2, max=100)]
+    tags: types.Array[types.String(min=2, max=100)]
     status: PetStatus = PetStatus.AVAILABLE
+```
+
+### Validating data with dataclasses
+
+```python
+pet_dict = {
+    "name": "Pimpek",
+    "age": 12,
+    "sold_at": None,
+    "tags": ["dogs", "cute"],
+    "status": 0,
+}
+
+Pet.validate(pet_dict) # uses dataclass defined in previous example, throws an exception when dict contains invalid values
+
+pet_instance = Pet(pet_dict) # creates new instance of mutable Pet's dataclass
+pet_instance.age = "ten" # will throw a ValidationError as value is not conforming defined type
+
+pet_instance.to_dict() # will return dict representation of Pet's dataclass instance
+```
+
+### Defining class mapping
+
+```python
+from gata import DataClass
+from datetime import datetime
+
+class Dog:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+
+def map_dog(dog: Dog) -> dict:
+    return {
+        "name": dog.name,
+        "age": dog.age,
+        "tags": ["dog"],
+        "status": 1,
+    }
+
+class Pet(DataClass, mapping={
+    Dog: map_dog
+}):
+    name: str = "Pimpek"
+    age: int = 0
+    sold_at: datetime
+    tags: dict
+    status: int = 0
 ```
 
 ## Python types to json types mapping table
