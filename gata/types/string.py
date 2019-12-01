@@ -23,7 +23,7 @@ FORMAT_TO_VALIDATOR_MAP = {
 
 
 class StringType(Type):
-    def __init__(self):
+    def __init__(self, string_format: Format = None):
         super().__init__()
         self._allow_overrides += (
             "min_length",
@@ -34,7 +34,7 @@ class StringType(Type):
         self.min_length = None
         self.max_length = None
         self.pattern = None
-        self.format = None
+        self.format = string_format
 
     def validate(self, value: Any) -> None:
         if self.min_length is not None or self.max_length is not None:
@@ -50,4 +50,4 @@ class StringType(Type):
 
 String = StringType()
 
-__all__ = ["String", "Format"]
+__all__ = ["String", "Format", "StringType"]
