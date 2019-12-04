@@ -80,7 +80,7 @@ def check_dict(value: Any, type_definition: Union[type, Any]) -> bool:
 def check_list(value: Any, type_definition: Union[type, Any]) -> bool:
     if not isinstance(value, list):
         return False
-    value_type, = type_definition.__args__  # type: ignore
+    (value_type,) = type_definition.__args__  # type: ignore
 
     if isinstance(value_type, TypeVar):  # type: ignore
         return True
@@ -96,7 +96,7 @@ def check_sequence(value: Any, type_definition: Union[type, Any]) -> bool:
     if not isinstance(value, Sequence):
         return False
 
-    value_type, = type_definition.__args__  # type: ignore
+    (value_type,) = type_definition.__args__  # type: ignore
     if isinstance(value_type, TypeVar):  # type: ignore
         return True
 
@@ -111,7 +111,7 @@ def check_set(value: Any, type_definition: Union[type, Any]) -> bool:
     if not isinstance(value, set):
         return False
 
-    value_type, = type_definition.__args__  # type: ignore
+    (value_type,) = type_definition.__args__  # type: ignore
     if isinstance(value_type, TypeVar):  # type: ignore
         return True
 
@@ -127,7 +127,7 @@ def check_tuple(value: Any, type_definition: Union[type, Any]) -> bool:
         return False
 
     if type_definition.__args__:  # type: ignore
-        value_type, = type_definition.__args__  # type: ignore
+        (value_type,) = type_definition.__args__  # type: ignore
     else:
         return True
 

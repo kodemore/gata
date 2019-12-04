@@ -12,7 +12,7 @@ class Type(ABC):
     """
 
     def __init__(self):
-        self.nullable = True
+        self.nullable = False
         self.default = None
         self.deprecated = False
         self.read_only = False
@@ -29,22 +29,23 @@ class Type(ABC):
     def validate(self, value: Any) -> None:
         pass
 
-    def __call__(self, **kwargs) -> "Type":
+    def __call__(
+        self,
+        deprecated: bool = False,
+        write_only: bool = False,
+        read_only: bool = False,
+        nullable: bool = False,
+        default: Any = None,
+    ) -> "Type":
         """
         Overrides default creation of base classes, allowing for better type handling.
-        :param kwargs:
-        :return:
         """
         instance = deepcopy(self)
-        for key, value in kwargs.items():
-            if key not in self._allow_overrides:
-                raise RuntimeError(
-                    "Invalid attribute for type: "
-                    + str(type(self))
-                    + ", expected one of: "
-                    + ",".join(map(str, self._allow_overrides))
-                )
-            setattr(instance, key, value)
+        instance.deprecated = deprecated
+        instance.write_only = write_only
+        instance.read_only = read_only
+        instance.nullable = nullable
+        instance.default = default
 
         return instance
 

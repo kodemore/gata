@@ -5,27 +5,26 @@ from gata.errors import ValidationError
 from .type import Type
 
 
-class EnumType(Type):
-    def __init__(self):
+class Enum(Type):
+    def __init__(self, *args):
         super().__init__()
-        self._allow_overrides += (
-            "enum",
-        )
-        self.enum = []
+        self.values = args
 
     def validate(self, value: Any) -> None:
-        if value not in self.enum:
+        if value not in self.values:
             raise ValidationError(
-                f"Passed value `{value}` is not within allowed values `{self.enum}`."
+                f"Passed value `{value}` is not within allowed values `{self.values}`."
             )
 
-        return value
+    def __call__(
+            self,
+            deprecated: bool = False,
+            write_only: bool = False,
+            read_only: bool = False,
+            nullable: bool = False,
+            default: Any = None,
+    ) -> "Enum":
+        raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
 
-    def __call__(self, *args: List[str], **kwargs):
-        kwargs["enum"] = args
-        return super().__call__(**kwargs)
-
-
-Enum = EnumType()
 
 __all__ = ["Enum"]

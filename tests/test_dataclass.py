@@ -1,11 +1,13 @@
 from gata import DataClass
 
 
-class Example(DataClass):
-    name: str = "John"
+def test_can_define_class():
 
-    def __init__(self, name: str):
-        self.name = name
+    class Example(DataClass):
+        name: str = "John"
+        age: int
 
-
-n = Example(name="Tom")
+    assert issubclass(Example, DataClass)
+    assert hasattr(Example, "validate")
+    assert hasattr(Example, "create")
+    assert hasattr(Example, "__schema__")

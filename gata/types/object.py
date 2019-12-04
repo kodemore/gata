@@ -1,17 +1,14 @@
+from typing import Any
+
 from gata.errors import ValidationError
-from gata.validators import validate
 from .type import Type
 
 
-class ObjectType(Type):
-    def __init__(self):
+class Object(Type):
+    def __init__(self, properties: dict, required: list = []):
         super().__init__()
-        self.properties = {}
-        self.required = []
-        self._allow_overrides += (
-            "properties",
-            "required",
-        )
+        self.properties = properties
+        self.required = required
 
     def __getitem__(self, key: str) -> Type:
         return self.properties[key]
@@ -31,12 +28,15 @@ class ObjectType(Type):
                 continue
             prop.validate(value[key])
 
-    def __call__(self, properties, **kwargs) -> "ObjectType":
-        all_attributes = {**{"properties": properties}, **kwargs}
-        return super().__call__(**all_attributes)
-
-
-Object = ObjectType()
+    def __call__(
+        self,
+        deprecated: bool = False,
+        write_only: bool = False,
+        read_only: bool = False,
+        nullable: bool = False,
+        default: Any = None,
+    ) -> None:
+        raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
 
 
 __all__ = ["Object"]

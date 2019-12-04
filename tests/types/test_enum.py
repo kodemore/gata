@@ -6,7 +6,7 @@ from gata.types import Enum
 
 def test_can_instantiate():
     test_instance = Enum("some", "accepted", "values")
-    assert test_instance.enum == ("some", "accepted", "values")
+    assert test_instance.values == ("some", "accepted", "values")
 
 
 @pytest.mark.parametrize("value", ("some", "accepted", "values"))

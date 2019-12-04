@@ -9,7 +9,6 @@ Extended data classes for python with json-schema like validation support
  - dataclasses with built-in value validation
  - support for complex nested validation
  - over 15 validators for everyday use
- - mapping support 
 
 
 ## Dataclasses
@@ -71,37 +70,7 @@ Pet.validate(pet_dict) # uses dataclass defined in previous example, throws an e
 pet_instance = Pet(pet_dict) # creates new instance of mutable Pet's dataclass
 pet_instance.age = "ten" # will throw a ValidationError as value is not conforming defined type
 
-pet_instance.to_dict() # will return dict representation of Pet's dataclass instance
-```
-
-### Defining class mapping
-
-```python
-from gata import DataClass
-from datetime import datetime
-
-class Dog:
-    def __init__(self, name, age):
-        self.name = name
-        self.age = age
-
-
-def map_dog(dog: Dog) -> dict:
-    return {
-        "name": dog.name,
-        "age": dog.age,
-        "tags": ["dog"],
-        "status": 1,
-    }
-
-class Pet(DataClass, mapping={
-    Dog: map_dog
-}):
-    name: str = "Pimpek"
-    age: int = 0
-    sold_at: datetime
-    tags: dict
-    status: int = 0
+pet_instance.as_dict() # will return dict representation of Pet's dataclass instance
 ```
 
 ## Python types to json types mapping table

@@ -1,6 +1,10 @@
+import re
 from typing import Any
+from typing import Optional
+from typing import Union
 
 from gata import validators
+from gata.errors import ValidationError
 from gata.types.formatters.format import Format
 from .type import Type
 
@@ -19,22 +23,52 @@ FORMAT_TO_VALIDATOR_MAP = {
     Format.FALSY: validators.validate_falsy,
     Format.SEMVER: validators.validate_semver,
     Format.BYTE: validators.validate_base64,
+    "date-time": validators.validate_datetime,
+    "date": validators.validate_date,
+    "time": validators.validate_time,
+    "uri": validators.validate_uri,
+    "url": validators.validate_url,
+    "email": validators.validate_email,
+    "uuid": validators.validate_uuid,
+    "hostname": validators.validate_hostname,
+    "ipv4": validators.validate_ipv4,
+    "ipv6": validators.validate_ipv6,
+    "truthy": validators.validate_truthy,
+    "falsy": validators.validate_falsy,
+    "semver": validators.validate_semver,
+    "byte": validators.validate_base64,
+    "base64": validators.validate_base64,
 }
 
 
 class StringType(Type):
     def __init__(self, string_format: Format = None):
         super().__init__()
-        self._allow_overrides += (
-            "min_length",
-            "max_length",
-            "pattern",
-            "format",
-        )
         self.min_length = None
         self.max_length = None
         self.pattern = None
         self.format = string_format
+
+    def __call__(
+            self,
+            min_length: Optional[int] = None,
+            max_length: Optional[int] = None,
+            pattern: Optional[str] = None,
+            string_format: Union[str, Format, None] = None,
+            deprecated: bool = False,
+            write_only: bool = False,
+            read_only: bool = False,
+            nullable: bool = False,
+            default: Any = None,
+    ) -> "Type":
+        instance: StringType = super().__call__(deprecated, write_only, read_only, nullable, default)
+        instance.min_length = min_length
+        instance.max_length = max_length
+        if pattern:
+            instance.pattern = re.compile(pattern)
+        instance.format = string_format
+
+        return instance
 
     def validate(self, value: Any) -> None:
         if self.min_length is not None or self.max_length is not None:
@@ -43,9 +77,12 @@ class StringType(Type):
         if self.format in FORMAT_TO_VALIDATOR_MAP:
             validate_value = FORMAT_TO_VALIDATOR_MAP[self.format]
             validate_value(value)  # type: ignore
+        elif self.pattern:
+            if not self.pattern.match(value):
+                raise ValidationError(f"Passed string does not conform pattern {self.pattern}")
 
     def __getitem__(self, item: Format) -> "StringType":
-        return self.__call__(format=item)
+        return self.__call__(string_format=item)
 
 
 String = StringType()

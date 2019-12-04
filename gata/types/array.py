@@ -1,9 +1,11 @@
 from typing import Optional
+from typing import Any as NativeAny
 from typing import Union
 
 from gata.errors import ValidationError
 from gata.validators import validate_length
 from .type import Type
+from .any import Any
 
 
 class ArrayType(Type):
@@ -14,13 +16,6 @@ class ArrayType(Type):
         self.max_length = None
         self.min_length = None
         self._items = None
-
-        self._allow_overrides += (
-            "unique_items",
-            "max_length",
-            "min_length",
-            "items",
-        )
 
     @property
     def items(self) -> Optional[Type]:
@@ -53,14 +48,28 @@ class ArrayType(Type):
         if self.min_length or self.max_length:
             validate_length(value, self.min_length, self.max_length)
 
-    def __getitem__(self, item):
-        return self.__call__(item)
+    def __getitem__(self, items: Type) -> "ArrayType":
+        return self.__call__(items=items)
 
-    def __call__(self, *args, **kwargs) -> "ArrayType":
-        if args:
-            kwargs["items"] = args[0]
+    def __call__(
+        self,
+        items: Type = Any,
+        max_length: Optional[int] = None,
+        min_length: Optional[int] = None,
+        unique_items: bool = False,
+        deprecated: bool = False,
+        write_only: bool = False,
+        read_only: bool = False,
+        nullable: bool = False,
+        default: NativeAny = None,
+    ) -> "ArrayType":
+        instance: ArrayType = super().__call__(deprecated, write_only, read_only, nullable, default)
+        instance.items = items
+        instance.max_length = max_length
+        instance.min_length = min_length
+        instance.unique_items = unique_items
 
-        return super().__call__(**kwargs)
+        return instance
 
 
 Array = ArrayType()

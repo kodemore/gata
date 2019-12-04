@@ -1,14 +1,11 @@
 from typing import Any
-from gata.errors import ValidationError
+
 from .type import Type
 
 
-class BooleanType(Type):
+class AnyType(Type):
     def validate(self, value: Any) -> None:
-        if value is True or value is False:
-            return None
-
-        raise ValidationError("Passed value is not valid boolean value.")
+        pass
 
     def __call__(
             self,
@@ -21,6 +18,6 @@ class BooleanType(Type):
         raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
 
 
-Boolean = BooleanType()
+Any = AnyType()
 
-__all__ = ["Boolean"]
+__all__ = ["Any"]
