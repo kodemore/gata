@@ -17,13 +17,6 @@ class Type(ABC):
         self.deprecated = False
         self.read_only = False
         self.write_only = False
-        self._allow_overrides: tuple = (
-            "deprecated",
-            "write_only",
-            "read_only",
-            "nullable",
-            "default",
-        )
 
     @abstractmethod
     def validate(self, value: Any) -> None:

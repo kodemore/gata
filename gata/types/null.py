@@ -1,11 +1,13 @@
 from typing import Any as TypingAny
 
+from gata.errors import ValidationError
 from .type import Type
 
 
-class AnyType(Type):
+class NullType(Type):
     def validate(self, value: TypingAny) -> None:
-        pass
+        if value is not None:
+            raise ValidationError("Invalid value, expected None.")
 
     def __call__(
             self,
@@ -18,6 +20,6 @@ class AnyType(Type):
         raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
 
 
-Any = AnyType()
+Null = NullType()
 
-__all__ = ["Any"]
+__all__ = ["Null"]

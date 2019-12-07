@@ -2,6 +2,7 @@ from datetime import date
 from datetime import datetime
 from datetime import time
 from enum import Enum
+from gata.types.utils import map_type
 import typing
 
 import pytest
@@ -18,15 +19,15 @@ from gata import types
     (tuple, types.Array),
 ])
 def test_map_base_types(base_type, expected_type) -> None:
-    assert types.map_type(base_type) == expected_type
+    assert map_type(base_type) == expected_type
 
 
 def test_map_set() -> None:
-    translated_type = types.map_type(set)
+    translated_type = map_type(set)
     assert translated_type.unique_items
     assert isinstance(translated_type, types.Array.__class__)
 
-    translated_type = types.map_type(typing.Set)
+    translated_type = map_type(typing.Set)
     assert isinstance(translated_type, types.Array.__class__)
     assert translated_type.unique_items
 
@@ -36,7 +37,7 @@ def test_map_enum() -> None:
         ITEM_1 = 1
         ITEM_2 = "two"
 
-    translated_type: types.Enum.__class__ = types.map_type(TestEnum)
+    translated_type: types.Enum.__class__ = map_type(TestEnum)
 
     assert isinstance(translated_type, types.Enum)
     assert translated_type.values == (1, "two")
@@ -52,26 +53,44 @@ def test_map_enum() -> None:
     (typing.Tuple, types.Array),
 ])
 def test_map_typing_type(typing_type, expected_type) -> None:
-    assert types.map_type(typing_type) == expected_type
+    assert map_type(typing_type) == expected_type
 
 
-def test_complex_list() -> None:
-    mapped_type: types.Array.__class__ = types.map_type(typing.List[str])
+def test_map_complex_list() -> None:
+    mapped_type: types.Array.__class__ = map_type(typing.List[str])
     assert isinstance(mapped_type, types.Array.__class__)
     assert mapped_type.items == types.String
 
-    mapped_type: types.Array.__class__ = types.map_type(typing.List[typing.List[datetime]])
+    mapped_type: types.Array.__class__ = map_type(typing.List[typing.List[datetime]])
     assert isinstance(mapped_type, types.Array.__class__)
     assert isinstance(mapped_type.items, types.Array.__class__)
     assert mapped_type.items.items, types.DateTime
 
-    mapped_type: types.Array.__class__ = types.map_type(typing.List[typing.Any])
+    mapped_type: types.Array.__class__ = map_type(typing.List[typing.Any])
     assert isinstance(mapped_type, types.Array.__class__)
     assert mapped_type.items == types.Any
 
 
-def test_complex_sequence() -> None:
-    mapped_type: types.Array.__class__ = types.map_type(typing.Sequence[str])
+def test_map_complex_sequence() -> None:
+    mapped_type: types.Array.__class__ = map_type(typing.Sequence[str])
     assert isinstance(mapped_type, types.Array.__class__)
     assert mapped_type.items == types.String
 
+    mapped_type: types.Array.__class__ = map_type(typing.Sequence[typing.Any])
+    assert isinstance(mapped_type, types.Array.__class__)
+    assert mapped_type.items == types.Any
+
+
+def test_map_optional_types() -> None:
+    mapped_type: types.Integer.__class__ = map_type(typing.Optional[int])
+    assert isinstance(mapped_type, types.Integer.__class__)
+    assert mapped_type.nullable
+
+
+def test_map_union_type() -> None:
+    mapped_type: types.AnyOf.__class__ = map_type(typing.Union[str, int])
+    assert isinstance(mapped_type, types.AnyOf.__class__)
+    assert isinstance(mapped_type.types[0], types.String.__class__)
+    assert isinstance(mapped_type.types[1], types.Integer.__class__)
+
+    mapped_type: types.AnyOf.__class__ = map_type(typing.Union[typing.Optional[str], typing.Optional[int], None])

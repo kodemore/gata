@@ -10,11 +10,6 @@ from .type import Type
 class IntegerType(Type):
     def __init__(self):
         super().__init__()
-        self._allow_overrides += (
-            "minimum",
-            "maximum",
-            "multiple_of",
-        )
         self.minimum = None
         self.maximum = None
         self.multiple_of = None

@@ -5,7 +5,7 @@ from typing import Type
 from typing import TypeVar
 
 from gata.types.object import Object
-from gata.types import map_type
+from gata.types.utils import map_type
 
 T = TypeVar("T")
 
@@ -45,15 +45,34 @@ class DataClass(metaclass=DataClassMeta):
     __data__: Dict[str, Any]
     __schema__: Object
 
-    def __getattr__(self, property_name):
-        if property_name not in self.__schema__.properties:
+    def __getattr__(self, attribute):
+        if not self.__hasattr__(attribute):
             raise AttributeError(
-                f"Property {property_name} is not defined in dataclass {self.__class__}"
+                f"Attribute `{attribute}` is not defined in dataclass {self.__class__}"
             )
 
-        return self.__data__[property_name] if property_name in self.__data__ else None
+        return self.__dict__[attribute] if attribute in self.__dict__["__data__"] else None
 
-    def __setattr__(self, attribute_name: str, value: Any) -> None:
+    def __setattr__(self, attribute: str, value: Any) -> None:
+        if not self.__hasattr__(attribute):
+            raise AttributeError(
+                f"Property {attribute} is not defined in dataclass {self.__class__}"
+            )
+        self.__dict__[attribute] = value
+        self.__schema__.validate(self.__dict__)
+
+    def __hasattr__(self, attribute_name: str) -> bool:
+        return attribute_name in self.__schema__.properties
+
+    def as_dict(self) -> dict:
+        return self.__dict__
+
+    @classmethod
+    def create(cls, properties: dict) -> "DataClass":
+        pass
+
+    @classmethod
+    def validate(cls, properties: dict) -> None:
         pass
 
 

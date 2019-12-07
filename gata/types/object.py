@@ -10,12 +10,6 @@ class Object(Type):
         self.properties = properties
         self.required = required
 
-    def __getitem__(self, key: str) -> Type:
-        return self.properties[key]
-
-    def __setitem__(self, key: str, value: Type):
-        self.properties[key] = value
-
     def validate(self, value: dict) -> None:
         for prop in self.required:
             if prop not in value:
