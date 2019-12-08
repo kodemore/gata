@@ -5,6 +5,9 @@ from gata.types.formatters import BooleanFormatter
 
 
 def validate_falsy(value: Any) -> None:
+    if not isinstance(value, str) and value:
+        raise ValidationError(f"Passed value {value} is not valid falsy expression.")
+
     try:
         formatted_value = BooleanFormatter.hydrate(value)
     except ValueError:

@@ -10,12 +10,12 @@ class NullType(Type):
             raise ValidationError("Invalid value, expected None.")
 
     def __call__(
-            self,
-            deprecated: bool = False,
-            write_only: bool = False,
-            read_only: bool = False,
-            nullable: bool = False,
-            default: TypingAny = None,
+        self,
+        deprecated: bool = False,
+        write_only: bool = False,
+        read_only: bool = False,
+        nullable: bool = False,
+        default: TypingAny = None,
     ) -> None:
         raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
 

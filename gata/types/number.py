@@ -31,17 +31,19 @@ class NumberType(Type):
             validate_multiple_of(value, self.multiple_of)  # type: ignore
 
     def __call__(
-            self,
-            minimum: Optional[int] = None,
-            maximum: Optional[int] = None,
-            multiple_of: Optional[float] = None,
-            deprecated: bool = False,
-            write_only: bool = False,
-            read_only: bool = False,
-            nullable: bool = False,
-            default: Any = None,
+        self,
+        minimum: Optional[int] = None,
+        maximum: Optional[int] = None,
+        multiple_of: Optional[float] = None,
+        deprecated: bool = False,
+        write_only: bool = False,
+        read_only: bool = False,
+        nullable: bool = False,
+        default: Any = None,
     ) -> "NumberType":
-        instance: NumberType = super().__call__(deprecated, write_only, read_only, nullable, default)
+        instance: NumberType = super().__call__(
+            deprecated, write_only, read_only, nullable, default
+        )
         instance.minimum = minimum
         instance.maximum = maximum
         instance.multiple_of = multiple_of

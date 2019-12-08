@@ -2,10 +2,10 @@ from gata import DataClass
 from typing import Union
 from typing import List
 from enum import Enum
+from datetime import datetime
 
 
 def test_can_define_class() -> None:
-
     class Example(DataClass):
         name: str = "John"
         age: int
@@ -13,8 +13,8 @@ def test_can_define_class() -> None:
 
     assert issubclass(Example, DataClass)
     assert hasattr(Example, "validate")
-    assert hasattr(Example, "create")
-    assert hasattr(Example, "__schema__")
+    assert hasattr(Example, "unserialise")
+    assert hasattr(Example, "__dataclass__")
 
 
 def test_can_create_instance_from_data_class() -> None:
@@ -23,8 +23,8 @@ def test_can_create_instance_from_data_class() -> None:
         age: int = 0
         favourites: List[str] = ["bone", "ball"]
 
-    roxy = Pet.create({"name": "Roxy"})
-    rex = Pet.create({"name": "Rex", "age": 10})
+    roxy = Pet.unserialise({"name": "Roxy"})
+    rex = Pet.unserialise({"name": "Rex", "age": 10})
 
     assert isinstance(roxy, Pet)
     assert isinstance(roxy, DataClass)
@@ -39,7 +39,7 @@ def test_can_create_instance_from_data_class() -> None:
     assert roxy.favourites == ["bone", "ball"]
 
 
-def _test_can_create_nested_instance_from_data_classes() -> None:
+def test_can_create_nested_instance_from_data_classes() -> None:
     class PetStatus(Enum):
         AVAILABLE = 0
         SOLD = 1
@@ -54,13 +54,22 @@ def _test_can_create_nested_instance_from_data_classes() -> None:
         age: int = 0
         favourites: List[Favourite]
         status: PetStatus = PetStatus.AVAILABLE
+        created_at: datetime
 
-    roxy = Pet.create({"name": "Roxy", "favourites": [{"name": "ball", "priority": 10}, {"name": "bone"}], "status": 2})
+    roxy = Pet.unserialise(
+        {
+            "name": "Roxy",
+            "favourites": [{"name": "ball", "priority": 10}, {"name": "bone"}],
+            "status": 2,
+            "created_at": "2016-09-18T17:34:02.666Z",
+        }
+    )
     assert isinstance(roxy, Pet)
     assert isinstance(roxy, DataClass)
     assert isinstance(roxy.status, PetStatus)
     assert isinstance(roxy.favourites[0], Favourite)
     assert isinstance(roxy.favourites[1], Favourite)
+    assert isinstance(roxy.created_at, datetime)
 
     assert roxy.favourites[0].name == "ball"
     assert roxy.favourites[0].priority == 10

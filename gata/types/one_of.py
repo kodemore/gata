@@ -32,11 +32,15 @@ class OneOfType(Type):
 
     def __getitem__(self, types: Tuple[Type]) -> "OneOfType":
         if not isinstance(types, Iterable):
-            raise InvalidTypeError(f"gata.types.OneOf[] expects at least two types to be passed.")
+            raise InvalidTypeError(
+                f"gata.types.OneOf[] expects at least two types to be passed."
+            )
 
         for item in types:
             if not isinstance(item, Type):
-                raise InvalidTypeError(f"Passed type {item} must be instance of gata.types.Type")
+                raise InvalidTypeError(
+                    f"Passed type {item} must be instance of gata.types.Type"
+                )
 
         instance = deepcopy(self)
         instance.types = types

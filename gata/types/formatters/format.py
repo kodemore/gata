@@ -1,5 +1,5 @@
 from enum import Enum
-from .base64_formatter import Base64Formatter
+from .bytes_formatter import Base64Formatter
 from .datetime_formatter import DateTimeFormatter
 from .boolean_formatter import BooleanFormatter
 from .default_formatter import DefaultFormatter

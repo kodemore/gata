@@ -8,14 +8,14 @@ class AnyType(Type):
         pass
 
     def __call__(
-            self,
-            deprecated: bool = False,
-            write_only: bool = False,
-            read_only: bool = False,
-            nullable: bool = False,
-            default: TypingAny = None,
+        self,
+        deprecated: bool = False,
+        write_only: bool = False,
+        read_only: bool = False,
+        nullable: bool = False,
+        default: TypingAny = None,
     ) -> None:
-        raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
+        super().__call__(deprecated, write_only, read_only, nullable, default)
 
 
 Any = AnyType()

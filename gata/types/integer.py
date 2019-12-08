@@ -38,7 +38,9 @@ class IntegerType(Type):
         nullable: bool = False,
         default: Any = None,
     ) -> "IntegerType":
-        instance: IntegerType = super().__call__(deprecated, write_only, read_only, nullable, default)
+        instance: IntegerType = super().__call__(
+            deprecated, write_only, read_only, nullable, default
+        )
         instance.minimum = minimum
         instance.maximum = maximum
         instance.multiple_of = multiple_of

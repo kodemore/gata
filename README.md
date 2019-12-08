@@ -8,14 +8,16 @@ Extended data classes for python with json-schema like validation support
 ## Features
  - dataclasses with built-in value validation
  - support for complex nested validation
- - over 15 validators for everyday use
+ - serialisation/unserialising mechanism
 
 
-## Dataclasses
+# Dataclasses
 Dataclasses are containers and validators for data used by other classes. It is providing simple interface for 
-setting/getting/validating value. `Gata` library can be used with python built-in types, which is recommended for
+setting/getting/validating values. `Gata` library can be used with python built-in types, which is recommended for
 fast prototyping and very simple validation but also provide powerful type objects reflecting json schema 
 compatible types.
+
+Dataclasses can also be used as a serialisation/deserialisation library so you can store your data in easy manner.
 
 
 ### Dataclass example with python built-in types
@@ -25,14 +27,14 @@ from datetime import datetime
 
 
 class Pet(DataClass):
-    name: str = "Pimpek"
+    name: str = "Pimpek"  # "Pimpek" is a default value for Pet.name
     age: int = 0
     sold_at: datetime
     tags: dict
     status: int = 0
 ```
 
-### Dataclass with json validators
+### Dataclass validators
 
 ```python
 from enum import Enum
@@ -47,14 +49,18 @@ class PetStatus(Enum):
 
 
 class Pet(DataClass):
-    name: types.String(min=2, max=12) = "Pimpek" # Minimum length of a string is 2 and maximum is 12
-    age: types.Integer(min=0, max=200) = 0
+    name: types.String(min_length=2, max_length=12) = "Pimpek" # Minimum length of a string is 2 and maximum is 12
+    age: types.Integer(minimum=0, maximum=200) = 0
     sold_at: types.DateTime()
-    tags: types.Array[types.String(min=2, max=100)]
+    tags: types.Array[types.String(min_length=2, max_length=100)]
     status: PetStatus = PetStatus.AVAILABLE
 ```
 
-### Validating data with dataclasses
+### Validating data
+
+Data can be validated in two ways:
+ - by using `Dataclass.validate()` method
+ - by using `Dataclass.unserialise()` method
 
 ```python
 pet_dict = {
@@ -67,83 +73,317 @@ pet_dict = {
 
 Pet.validate(pet_dict) # uses dataclass defined in previous example, throws an exception when dict contains invalid values
 
-pet_instance = Pet(pet_dict) # creates new instance of mutable Pet's dataclass
-pet_instance.age = "ten" # will throw a ValidationError as value is not conforming defined type
-
-pet_instance.as_dict() # will return dict representation of Pet's dataclass instance
+pet_instance = Pet.unserialise(pet_dict) # creates validated instance of Pet class
 ```
 
-## Python types to json types mapping table
+### Unserialising complex data
+
+```python
+from enum import Enum
+from typing import List
+
+from gata import DataClass
+
+# Definitions
+
+class PetStatus(Enum):
+    AVAILABLE = 0
+    SOLD = 1
+    RESERVED = 2
+
+class Favourite(DataClass):
+    name: str
+    priority: int = 0
+
+class Pet(DataClass):
+    name: str = "Pimpek"
+    age: int = 0
+    favourites: List[Favourite]
+    status: PetStatus = PetStatus.AVAILABLE
+
+# Data unserialisation
+
+roxy = Pet.unserialise({
+    "name": "Roxy",
+    "favourites": [
+        {"name": "bones"}, {"name": "balls"}, {"name": "running", "priority": 1}
+    ],
+    "status": 2
+})
+
+assert isinstance(roxy, Pet)
+assert isinstance(roxy.favourites[0], Favourite)
+assert isinstance(roxy.favourites[1], Favourite)
+assert isinstance(roxy.status, PetStatus)
+```
+
+## Python types to dataclass types mapping
 
 | python type | maps to | description | 
 |:--:|:--:|:--:|
-|`int`|`gata.types.Integer`|Validates integer numbers|
-|`bool`|`gata.types.Boolean`|Validates boolean values|
-|`str`|`gata.types.String`|Validates strings|
-|`float`|`gata.types.Number`|Validates number|
-|`bytes`|`gata.types.String[gata.types.Format.BYTES]`|Validates bytes|
+|`int`|`gata.types.Integer`|Checks if value is an integer number|
+|`bool`|`gata.types.Boolean`|Checks if value is valid boolean value|
+|`str`|`gata.types.String`|Checks if value is a string|
+|`float`|`gata.types.Number`|Checks if value is a number|
+|`bytes`|`gata.types.String[gata.types.Format.BYTES]`|Checks if value if byte64 encoded string|
 |`dict`|n/a|Not supported|
-|`list`|`gata.types.Array[Any]`|Validates arrays values|
-|`tuple`|`gata.types.Array[Any]`|Validates arrays values|
-|`set`|`gata.types.Array(unique=True)`|Validates unique arrays values|
+|`list`|`gata.types.Array[Any]`|Checks if value is a valid list|
+|`tuple`|`gata.types.Array[Any]`|Same as `list`|
+|`set`|`gata.types.Array(unique=True)`|Checks if value is a list with unique items|
+|`enum.Enum`|`gata.types.Enum`|Checks if value exists within enum definition|
+|`datetime.datetime`|`gata.types.String[gata.types.Format.DATETIME]`| Checks if value is iso compatible datetime|
+|`datetime.date`|`gata.types.String[gata.types.Format.DATE]`| Checks if value is iso compatible date|
+|`datetime.time`|`gata.types.String[gata.types.Format.TIME]`| Checks if value is iso compatible time|
+|`typing.Any`|`gata.types.Any`|Validates against everything|
 |`typing.Dict`|n/a|Not supported|
-|`typing.List`|`gata.types.Array[Any]`|Same as `list`|
-|`typing.List[str]`|`gata.types.Array[gata.types.String]`|Same as `list`|
-|`datetime.datetime`|`gata.types.String[gata.types.Format.DATETIME]`| Validates iso compatible datetime values|
-|`datetime.date`|`gata.types.String[gata.types.Format.DATE]`| Validates iso compatible date values|
-|`datetime.time`|`gata.types.String[gata.types.Format.TIME]`| Validates iso compatible time values|
+|`typing.List`|`gata.types.Array[gata.types.Any]`|Same as `list`|
+|`typing.Union`|`gata.types.AnyOf`|Checks if value conforms one of the provided types|
 
-## Types reference
+The following table provides some complex type mapping examples:
 
-### Array
+| python type | maps to | description | 
+|:--:|:--:|:--:|
+|`typing.List[int]`|`gata.types.Array[gata.types.Integer]`|Validates against list of integers|
+|`typing.Union[int, str]`|`gata.types.AnyOf[gata.types.Integer, gata.types.String]`|Validates against valid integer or string value|
+|`typing.List[Pet]`|`gata.types.Array[Pet]`|Validates against list of `Pet` instances|
+|`typing.Set[Pet]`|`gata.types.Array[Pet]`|Validates against list of unique `Pet` instances|
 
-### Boolean
+# Types reference
 
-### Enum
+All types are supporting following attributes inherited from base `gata.Type` type:
 
-### Integer
+ - `default` sets default value for attribute
+ - `deprecated` marks attribute as deprecated 
+ - `read_only` sets attribute in read-mode only
+ - `write_only` sets attribute in write-mode only
 
-### Number
+## `gata.types.Any`
+Validates against any value.
 
-### Object
+#### Examples
+```python
+from gata import DataClass
+from gata import types 
+import typing
 
-### String
+
+class Example(DataClass):
+    example_attribute: types.Any
+    python_equivalent: typing.Any
+```
+
+#### Attributes
+No additional attributes are supported.
+
+## `gata.types.AnyOf`
+Validates if value conforms any of the specified subtypes.
+
+#### Examples
+```python
+from gata import DataClass
+from gata import types 
+import typing
 
 
-## Validators reference
+class Example(DataClass):
+    example_attribute: types.AnyOf[types.String, types.Number]
+    python_equivalent: typing.Union[str, float]
+```
 
-### base64 validator
+#### Attributes
+No additional attributes are supported.
 
-### date validator
+## `gata.types.Array`
+Validates if value is iterable and each item conforms specified type.
 
-### datetime validator
+#### Examples
+```python
+from gata import DataClass
+from gata import types 
+import typing
 
-### email validator
 
-### falsy validator
+class BasicExample(DataClass):
+    example_attribute: types.Array[types.Number]
+    python_equivalent: typing.List[float]
 
-### truthy validator
+class UniqueItemsExample(DataClass):
+    example_attribute: types.Array(items=types.Number, unique_items=True)
+    python_equivalent: typing.Set[float]
+```
 
-### hostname validator
+#### Attributes
+ - `items` sets validator per list's item
+ - `max_length` sets maximum allowed list's length
+ - `min_length` sets minimum allowed list's length
+ - `unique_items` all items should be unique
 
-### ipv4 validator
+### `gata.types.Boolean`
+Validates if value is iterable and each item conforms specified type.
 
-### ipv6 validator
+#### Examples
+```python
+from gata import DataClass
+from gata import types 
+import typing
 
-### length validator
 
-### multiple of validator
+class BasicExample(DataClass):
+    example_attribute: types.Array[types.Number]
+    python_equivalent: typing.List[float]
 
-### range validator
+class UniqueItemsExample(DataClass):
+    example_attribute: types.Array(items=types.Number, unique_items=True)
+    python_equivalent: typing.Set[float]
+```
 
-### semver validator
+#### Attributes
+ - `items` sets validator per list's item
+ - `max_length` sets maximum allowed list's length
+ - `min_length` sets minimum allowed list's length
+ - `unique_items` all items should be unique
 
-### time validator
+## `gata.types.Enum`
+Validates if value is within specified enum values.
 
-### truthy validator
+#### Examples
+```python
+from gata import DataClass
+from gata import types
+from enum import Enum
+import typing
 
-### uri validator
+class Numbers(Enum):
+    ONE = "one"
+    TWO = "two"
+    THREE = "three"
 
-### url validator
+class BasicExample(DataClass):
+    example_attribute: types.Enum["one", "two", "three"]
+    python_equivalent: Numbers
+```
 
-### uuid validator
+#### Attributes
+ - `values` list of valid values
+
+
+## `gata.types.Integer`
+Validates integer values.
+
+#### Examples
+```python
+from gata import DataClass
+from gata import types
+
+class BasicExample(DataClass):
+    example_attribute: types.Integer
+    python_equivalent: int
+```
+
+#### Attributes
+ - `minimum` sets minimal valid value (inclusive)
+ - `maximum` sets maximum valid value (inclusive)
+ - `multiple_of` restricts value to a multiple of a given number
+
+
+## `gata.types.Null`
+Validates `None` values.
+
+This type is mostly to map python's optional types, should not be used per se.
+
+#### Attributes
+No additional attributes are supported.
+
+
+## `gata.types.Number`
+Validates integer values.
+
+#### Examples
+```python
+from numbers import Number
+from numbers import Rational
+from numbers import Real
+import typing
+
+from gata import DataClass
+from gata import types
+
+class BasicExample(DataClass):
+    example_attribute: types.Number
+    python_equivalent: typing.Union[float, int, Number, Real, Rational]
+```
+
+#### Attributes
+ - `minimum` sets minimal valid value (inclusive)
+ - `maximum` sets maximum valid value (inclusive)
+ - `multiple_of` restricts value to a multiple of a given number
+
+
+## `gata.types.OneOf`
+Validates if value conforms only one of the specified subtypes.
+
+#### Examples
+```python
+from gata import DataClass
+from gata import types 
+
+
+class Example(DataClass):
+    example_attribute: types.OneOf[types.String, types.Number]
+    no_python_equivalent_available = None
+```
+
+#### Attributes
+No additional attributes are supported.
+
+
+## `gata.types.String`
+Validates if value is valid string.
+
+#### Examples
+```python
+from gata import DataClass
+from gata import types 
+from datetime import datetime
+from datetime import date
+from datetime import time
+
+
+class Example(DataClass):
+    simple_value: types.String
+    simple_python: str
+    
+    datetime_value: types.String(string_format=types.string.Format.DATETIME)
+    datetime_python: datetime
+
+    date_value: types.String(string_format=types.string.Format.DATE)
+    date_python: date
+
+    time_value: types.String(string_format=types.string.Format.TIME)
+    time_python: time
+
+    time_value: types.String(string_format=types.string.Format.BYTE)
+    time_python: bytes
+```
+
+#### Attributes
+ - `string_format` specifies accepted format, list of valid formats is available below
+ - `min_length` specified minimum length for a string
+ - `max_length` specifies maximum length for a string
+ - `pattern` specifies regex pattern which is used to validate the string
+
+#### Available formats (string validators)
+ - `date-time`
+ - `date`
+ - `time`
+ - `uri`
+ - `url`
+ - `email`
+ - `uuid`
+ - `hostname`
+ - `ipv4`
+ - `ipv6`
+ - `truthy`
+ - `falsy`
+ - `semver`
+ - `byte`

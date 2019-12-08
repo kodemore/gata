@@ -2,6 +2,7 @@ from typing import Any
 
 from gata.errors import ValidationError
 from .type import Type
+from .string import String
 
 
 class Object(Type):
@@ -18,9 +19,15 @@ class Object(Type):
                 )
 
         for key, prop in self.properties.items():
+            # Value is not within the object
             if key not in value:
                 continue
-            prop.validate(value[key])
+            # Value has been already formatted, thus it is valid
+            if isinstance(prop, String.__class__) and not isinstance(value, str):
+                continue
+            # Validate property
+            if isinstance(prop, Type):
+                prop.validate(value[key])
 
     def __call__(
         self,

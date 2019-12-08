@@ -3,7 +3,7 @@ from gata.validators import validate_falsy
 from gata.errors import ValidationError
 
 
-@pytest.mark.parametrize("input", [0.0, 0, "0", "false", False, "no", "nope", "n"])
+@pytest.mark.parametrize("input", ["0", "false", "no", "nope", "n"])
 def test_validate_valid_falsy_format(input: str):
     assert validate_falsy(input) is None
 

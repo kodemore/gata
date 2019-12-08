@@ -1,11 +1,11 @@
-from typing import Optional
 from typing import Any as NativeAny
+from typing import Optional
 from typing import Union
 
 from gata.errors import ValidationError
 from gata.validators import validate_length
-from .type import Type
 from .any import Any
+from .type import Type
 
 
 class ArrayType(Type):
@@ -15,24 +15,7 @@ class ArrayType(Type):
         self.unique_items = False
         self.max_length = None
         self.min_length = None
-        self._items = None
-
-    @property
-    def items(self) -> Optional[Type]:
-        return self._items
-
-    @items.setter
-    def items(self, value: Type) -> None:
-        """
-        #todo: https://json-schema.org/understanding-json-schema/reference/array.html#tuple-validation tuple support
-        :param Type value:
-        :return:
-        """
-        if value and not isinstance(value, Type):
-            raise ValueError(
-                "items argument must be either None or instance of opyapi.schema.Type"
-            )
-        self._items = value
+        self.items = None
 
     def validate(self, value: Union[list, tuple]) -> None:
 
@@ -43,7 +26,7 @@ class ArrayType(Type):
 
         if self.items:
             for item in value:
-                self._items.validate(item)
+                self.items.validate(item)
 
         if self.min_length or self.max_length:
             validate_length(value, self.min_length, self.max_length)
@@ -63,7 +46,9 @@ class ArrayType(Type):
         nullable: bool = False,
         default: NativeAny = None,
     ) -> "ArrayType":
-        instance: ArrayType = super().__call__(deprecated, write_only, read_only, nullable, default)
+        instance: ArrayType = super().__call__(
+            deprecated, write_only, read_only, nullable, default
+        )
         instance.items = items
         instance.max_length = max_length
         instance.min_length = min_length

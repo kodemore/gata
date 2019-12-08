@@ -37,7 +37,6 @@ FORMAT_TO_VALIDATOR_MAP = {
     "falsy": validators.validate_falsy,
     "semver": validators.validate_semver,
     "byte": validators.validate_base64,
-    "base64": validators.validate_base64,
 }
 
 
@@ -50,18 +49,20 @@ class StringType(Type):
         self.format = string_format
 
     def __call__(
-            self,
-            min_length: Optional[int] = None,
-            max_length: Optional[int] = None,
-            pattern: Optional[str] = None,
-            string_format: Union[str, Format, None] = None,
-            deprecated: bool = False,
-            write_only: bool = False,
-            read_only: bool = False,
-            nullable: bool = False,
-            default: Any = None,
+        self,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        string_format: Union[str, Format, None] = None,
+        deprecated: bool = False,
+        write_only: bool = False,
+        read_only: bool = False,
+        nullable: bool = False,
+        default: Any = None,
     ) -> "Type":
-        instance: StringType = super().__call__(deprecated, write_only, read_only, nullable, default)
+        instance: StringType = super().__call__(
+            deprecated, write_only, read_only, nullable, default
+        )
         instance.min_length = min_length
         instance.max_length = max_length
         if pattern:
@@ -79,7 +80,9 @@ class StringType(Type):
             validate_value(value)  # type: ignore
         elif self.pattern:
             if not self.pattern.match(value):
-                raise ValidationError(f"Passed string does not conform pattern {self.pattern}")
+                raise ValidationError(
+                    f"Passed string does not conform pattern {self.pattern}"
+                )
 
     def __getitem__(self, item: Format) -> "StringType":
         return self.__call__(string_format=item)

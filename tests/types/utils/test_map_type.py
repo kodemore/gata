@@ -10,16 +10,37 @@ import pytest
 from gata import types
 
 
-@pytest.mark.parametrize("base_type, expected_type", [
-    (int, types.Integer),
-    (bool, types.Boolean),
-    (float, types.Number),
-    (str, types.String),
-    (list, types.Array),
-    (tuple, types.Array),
-])
+@pytest.mark.parametrize(
+    "base_type, expected_type",
+    [
+        (int, types.Integer),
+        (bool, types.Boolean),
+        (float, types.Number),
+        (str, types.String),
+        (list, types.Array),
+        (tuple, types.Array),
+    ],
+)
 def test_map_base_types(base_type, expected_type) -> None:
     assert map_type(base_type) == expected_type
+
+
+def test_map_datetime() -> None:
+    translated_type = map_type(datetime)
+    assert isinstance(translated_type, types.String.__class__)
+    assert translated_type.format == types.string.Format.DATETIME
+
+
+def test_map_date() -> None:
+    translated_type = map_type(date)
+    assert isinstance(translated_type, types.String.__class__)
+    assert translated_type.format == types.string.Format.DATE
+
+
+def test_map_time() -> None:
+    translated_type = map_type(time)
+    assert isinstance(translated_type, types.String.__class__)
+    assert translated_type.format == types.string.Format.TIME
 
 
 def test_map_set() -> None:
@@ -39,19 +60,20 @@ def test_map_enum() -> None:
 
     translated_type: types.Enum.__class__ = map_type(TestEnum)
 
-    assert isinstance(translated_type, types.Enum)
-    assert translated_type.values == (1, "two")
+    assert isinstance(translated_type, types.Enum.__class__)
+    assert translated_type.values == {1, "two"}
+    assert translated_type.target == TestEnum
 
 
-@pytest.mark.parametrize("typing_type, expected_type", [
-    (datetime, types.DateTime),
-    (date, types.Date),
-    (time, types.Time),
-    (typing.List, types.Array),
-    (typing.Sequence, types.Array),
-    (typing.Iterable, types.Array),
-    (typing.Tuple, types.Array),
-])
+@pytest.mark.parametrize(
+    "typing_type, expected_type",
+    [
+        (typing.List, types.Array),
+        (typing.Sequence, types.Array),
+        (typing.Iterable, types.Array),
+        (typing.Tuple, types.Array),
+    ],
+)
 def test_map_typing_type(typing_type, expected_type) -> None:
     assert map_type(typing_type) == expected_type
 
@@ -93,4 +115,11 @@ def test_map_union_type() -> None:
     assert isinstance(mapped_type.types[0], types.String.__class__)
     assert isinstance(mapped_type.types[1], types.Integer.__class__)
 
-    mapped_type: types.AnyOf.__class__ = map_type(typing.Union[typing.Optional[str], typing.Optional[int], None])
+    mapped_type: types.AnyOf.__class__ = map_type(
+        typing.Union[typing.Optional[str], typing.Optional[int], None]
+    )
+
+
+@pytest.mark.parametrize("input", [types.Any, types.Enum])
+def test_map_gata_types(input) -> None:
+    assert input == map_type(input)

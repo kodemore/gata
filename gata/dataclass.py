@@ -1,13 +1,46 @@
 from abc import ABCMeta
+from inspect import isclass
 from typing import Any
-from typing import Dict
 from typing import Type
 from typing import TypeVar
+from typing import Union
 
+from gata.types.array import Array
+from gata.types.enum import Enum
 from gata.types.object import Object
+from gata.types.string import String
 from gata.types.utils import map_type
 
 T = TypeVar("T")
+
+
+def unserialise_value(schema, value) -> Any:
+    # Formatted strings
+    if isinstance(schema, String.__class__):
+        if schema.format:
+            return schema.format.value.hydrate(value)
+        return value
+
+    # Enums
+    if isinstance(schema, Enum.__class__) and schema.target:
+        return schema.target(value)
+
+    # Dataclasses
+    if isclass(schema) and issubclass(schema, DataClass):
+        return schema.unserialise(value)
+
+    # Lists and sets
+    if isinstance(schema, Array.__class__) and schema.items:
+        items = []
+        for item in value:
+            items.append(unserialise_value(schema.items, item))
+        if schema.unique_items:
+            return set(items)
+
+        return items
+
+    # Ignore
+    return value
 
 
 class DataClassMeta(ABCMeta):
@@ -22,28 +55,39 @@ class DataClassMeta(ABCMeta):
         for attribute_name, attribute_type in klass.__annotations__.items():
             properties[attribute_name] = map_type(attribute_type)
 
-        schema = Object(properties)
+        dataclass = Object(properties)
 
-        def _validate(data: dict) -> None:
-            schema.validate(data)
+        def _validate(data: Union[DataClass, dict]) -> None:
+            if isinstance(
+                data, DataClass
+            ):  # Do not validate dataclasses, this can cause infinite recursion.
+                return None
 
-        def _create(data: dict):
+            dataclass.validate(data)
+
+        def _unserialise(data: dict):
             instance = klass.__new__(klass)
             for key, value in data.items():
-                setattr(instance, key, value)
+                if key not in dataclass.properties:
+                    raise AttributeError(
+                        f"Attribute `{key}` is not defined in dataclass {klass}"
+                    )
+                instance.__dict__[key] = unserialise_value(
+                    dataclass.properties[key], value
+                )
 
+            dataclass.validate(instance.__dict__)
             return instance
 
         setattr(klass, "validate", _validate)
-        setattr(klass, "create", _create)
-        setattr(klass, "__schema__", schema)
+        setattr(klass, "unserialise", _unserialise)
+        setattr(klass, "__dataclass__", dataclass)
 
         return klass
 
 
 class DataClass(metaclass=DataClassMeta):
-    __data__: Dict[str, Any]
-    __schema__: Object
+    __dataclass__: Object
 
     def __getattr__(self, attribute):
         if not self.__hasattr__(attribute):
@@ -51,7 +95,9 @@ class DataClass(metaclass=DataClassMeta):
                 f"Attribute `{attribute}` is not defined in dataclass {self.__class__}"
             )
 
-        return self.__dict__[attribute] if attribute in self.__dict__["__data__"] else None
+        return (
+            self.__dict__[attribute] if attribute in self.__dict__["__data__"] else None
+        )
 
     def __setattr__(self, attribute: str, value: Any) -> None:
         if not self.__hasattr__(attribute):
@@ -59,16 +105,16 @@ class DataClass(metaclass=DataClassMeta):
                 f"Property {attribute} is not defined in dataclass {self.__class__}"
             )
         self.__dict__[attribute] = value
-        self.__schema__.validate(self.__dict__)
+        self.__dataclass__.validate(self.__dict__)
 
     def __hasattr__(self, attribute_name: str) -> bool:
-        return attribute_name in self.__schema__.properties
+        return attribute_name in self.__dataclass__.properties
 
-    def as_dict(self) -> dict:
+    def serialise(self) -> dict:
         return self.__dict__
 
     @classmethod
-    def create(cls, properties: dict) -> "DataClass":
+    def unserialise(cls, properties: dict) -> "DataClass":
         pass
 
     @classmethod
