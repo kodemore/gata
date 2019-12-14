@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "fatcode.gata"
+name = "gata"
 version = "0.1.0"
 description = "Gata id data validation and transformation library for python."
 authors = [
@@ -22,6 +22,8 @@ classifiers = [
 # Requirements
 [tool.poetry.dependencies]
 python = "^3.6"
+pytest-cov = "^2.8.1"
+coverage = "^4.5.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.1.0"

@@ -72,6 +72,9 @@ class StringType(Type):
         return instance
 
     def validate(self, value: Any) -> None:
+        if not isinstance(value, str):
+            raise ValidationError("Passed value is not a valid string value.")
+
         if self.min_length is not None or self.max_length is not None:
             validators.validate_length(value, self.min_length, self.max_length)
 

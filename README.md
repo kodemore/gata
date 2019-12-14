@@ -5,6 +5,8 @@ Extended data classes for python with json-schema like validation support
 
 ## Installation
 
+`pip install gata`
+
 ## Features
  - dataclasses with built-in value validation
  - support for complex nested validation
@@ -73,7 +75,53 @@ pet_dict = {
 
 Pet.validate(pet_dict) # uses dataclass defined in previous example, throws an exception when dict contains invalid values
 
-pet_instance = Pet.unserialise(pet_dict) # creates validated instance of Pet class
+pet_instance = Pet.create(pet_dict) # creates validated instance of Pet class
+```
+
+
+### Serialising dataclasses
+```python
+from enum import Enum
+from typing import List
+
+from gata import DataClass
+
+# Definitions
+
+class PetStatus(Enum):
+    AVAILABLE = 0
+    SOLD = 1
+    RESERVED = 2
+
+class Favourite(DataClass):
+    name: str
+    priority: int = 0
+    
+    def __init__(self, name: str, priority: int = 0):
+        self.name = name
+        self.priority = priority
+
+class Pet(DataClass):
+    name: str = "Pimpek"
+    age: int = 0
+    favourites: List[Favourite]
+    status: PetStatus = PetStatus.AVAILABLE
+
+    def __init__(self, name: str, age: int = 0, favourites: List[Favourite] = [], status: PetStatus = PetStatus.AVAILABLE):
+        self.name = name
+        self.age = age
+        self.favourites = favourites
+        self.status = status    
+
+favourites = [Favourite("Bone toy"), Favourite("Color red")]
+boo = Pet("boo", 2, favourites)
+
+assert boo.serialise() == {
+    "name": "boo",
+    "age": 2,
+    "favourites": [{"name": "Bone toy", "priority": "0"}, {"name": "Color red", "priority": 0}],
+    "status": 0
+}
 ```
 
 ### Unserialising complex data
@@ -101,9 +149,9 @@ class Pet(DataClass):
     favourites: List[Favourite]
     status: PetStatus = PetStatus.AVAILABLE
 
-# Data unserialisation
+# Data deserialisation
 
-roxy = Pet.unserialise({
+roxy = Pet.create({
     "name": "Roxy",
     "favourites": [
         {"name": "bones"}, {"name": "balls"}, {"name": "running", "priority": 1}
@@ -116,6 +164,10 @@ assert isinstance(roxy.favourites[0], Favourite)
 assert isinstance(roxy.favourites[1], Favourite)
 assert isinstance(roxy.status, PetStatus)
 ```
+
+### Limitations
+Gata cannot correctly serialise/deserialise `OneOf` and `AnyOf` types, those values are simply assigned to corresponding 
+properties. 
 
 ## Python types to dataclass types mapping
 

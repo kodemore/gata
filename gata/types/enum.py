@@ -24,6 +24,7 @@ class EnumType(Type):
     def __call__(
         self,
         values: List[Union[str, int]],
+        target_class=None,
         deprecated: bool = False,
         write_only: bool = False,
         read_only: bool = False,
@@ -34,6 +35,7 @@ class EnumType(Type):
             deprecated, write_only, read_only, nullable, default
         )
         instance.values = values
+        instance.target = target_class
 
         return instance
 

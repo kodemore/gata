@@ -4,9 +4,11 @@ from typing import Any
 from typing import Type
 from typing import TypeVar
 from typing import Union
+from enum import Enum
 
+from gata.types import Type as GataType
 from gata.types.array import Array
-from gata.types.enum import Enum
+from gata.types.enum import Enum as GataEnum
 from gata.types.object import Object
 from gata.types.string import String
 from gata.types.utils import map_type
@@ -14,7 +16,7 @@ from gata.types.utils import map_type
 T = TypeVar("T")
 
 
-def unserialise_value(schema, value) -> Any:
+def unserialise_value(schema: GataType, value: Any) -> Any:
     # Formatted strings
     if isinstance(schema, String.__class__):
         if schema.format:
@@ -22,12 +24,12 @@ def unserialise_value(schema, value) -> Any:
         return value
 
     # Enums
-    if isinstance(schema, Enum.__class__) and schema.target:
+    if isinstance(schema, GataEnum.__class__) and schema.target:
         return schema.target(value)
 
     # Dataclasses
     if isclass(schema) and issubclass(schema, DataClass):
-        return schema.unserialise(value)
+        return schema.create(value)
 
     # Lists and sets
     if isinstance(schema, Array.__class__) and schema.items:
@@ -40,6 +42,33 @@ def unserialise_value(schema, value) -> Any:
         return items
 
     # Ignore
+    return value
+
+
+def serialise_value(schema: GataType, value: Any) -> Any:
+    # Formatted strings
+    if isinstance(schema, String.__class__):
+        if schema.format:
+            return schema.format.value.extract(value)
+        return value
+
+    # Enums
+    if isinstance(schema, GataEnum.__class__):
+        if isinstance(value, Enum):
+            return value.value
+        return value
+
+    # Dataclasses
+    if isclass(schema) and issubclass(schema, DataClass):
+        return schema.serialise(value)
+
+    # Lists and sets
+    if isinstance(schema, Array.__class__) and schema.items:
+        items = []
+        for item in value:
+            items.append(serialise_value(schema.items, item))
+        return items
+
     return value
 
 
@@ -65,8 +94,9 @@ class DataClassMeta(ABCMeta):
 
             dataclass.validate(data)
 
-        def _unserialise(data: dict):
+        def _create(data: dict):
             instance = klass.__new__(klass)
+
             for key, value in data.items():
                 if key not in dataclass.properties:
                     raise AttributeError(
@@ -80,7 +110,7 @@ class DataClassMeta(ABCMeta):
             return instance
 
         setattr(klass, "validate", _validate)
-        setattr(klass, "unserialise", _unserialise)
+        setattr(klass, "create", _create)
         setattr(klass, "__dataclass__", dataclass)
 
         return klass
@@ -95,9 +125,7 @@ class DataClass(metaclass=DataClassMeta):
                 f"Attribute `{attribute}` is not defined in dataclass {self.__class__}"
             )
 
-        return (
-            self.__dict__[attribute] if attribute in self.__dict__["__data__"] else None
-        )
+        return self.__dict__[attribute] if attribute in self.__dict__ else None
 
     def __setattr__(self, attribute: str, value: Any) -> None:
         if not self.__hasattr__(attribute):
@@ -111,15 +139,18 @@ class DataClass(metaclass=DataClassMeta):
         return attribute_name in self.__dataclass__.properties
 
     def serialise(self) -> dict:
-        return self.__dict__
+        serialised = {}
+        for key, value in self.__dataclass__.properties.items():
+            serialised[key] = serialise_value(value, getattr(self, key))
+        return serialised
 
     @classmethod
-    def unserialise(cls, properties: dict) -> "DataClass":
-        pass
+    def create(cls, properties: dict) -> "DataClass":
+        raise NotImplemented()
 
     @classmethod
     def validate(cls, properties: dict) -> None:
-        pass
+        raise NotImplemented()
 
 
-__all__ = ["DataClass"]
+__all__ = ["DataClass", "unserialise_value", "serialise_value"]
