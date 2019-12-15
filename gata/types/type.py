@@ -5,12 +5,6 @@ from typing import Any
 
 
 class Type(ABC):
-    """
-    Reflects available types in the open api specification
-
-    :: _Open Api types: https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#data-types
-    """
-
     def __init__(self):
         self.nullable = False
         self.default = None
