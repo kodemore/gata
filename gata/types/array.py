@@ -36,17 +36,17 @@ class ArrayType(Type):
 
     def __call__(
         self,
-        items: Type = Any,
-        max_length: Optional[int] = None,
-        min_length: Optional[int] = None,
-        unique_items: bool = False,
         deprecated: bool = False,
         write_only: bool = False,
         read_only: bool = False,
         nullable: bool = False,
         default: NativeAny = None,
+        items: Type = Any,
+        max_length: Optional[int] = None,
+        min_length: Optional[int] = None,
+        unique_items: bool = False,
     ) -> "ArrayType":
-        instance: ArrayType = super().__call__(
+        instance: ArrayType = super().__call__(  # type: ignore
             deprecated, write_only, read_only, nullable, default
         )
         instance.items = items

@@ -52,7 +52,7 @@ TYPE_MAPPING = {
 }
 
 
-def map_list(origin_type) -> None:
+def map_list(origin_type):
     (value_type,) = origin_type.__args__
 
     return Array(items=map_type(value_type))

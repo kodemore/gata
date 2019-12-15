@@ -23,15 +23,15 @@ class EnumType(Type):
 
     def __call__(
         self,
-        values: List[Union[str, int]],
-        target_class=None,
         deprecated: bool = False,
         write_only: bool = False,
         read_only: bool = False,
         nullable: bool = False,
         default: Any = None,
+        values: List[Union[str, int]] = [],
+        target_class=None,
     ) -> "EnumType":
-        instance: EnumType = super().__call__(
+        instance: EnumType = super().__call__(  # type: ignore
             deprecated, write_only, read_only, nullable, default
         )
         instance.values = values
@@ -40,7 +40,6 @@ class EnumType(Type):
         return instance
 
     def __getitem__(self, values: List[Union[str, int]]) -> "EnumType":
-
         instance = deepcopy(self)
         instance.values = set(values)
         return instance

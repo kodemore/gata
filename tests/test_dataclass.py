@@ -51,7 +51,9 @@ class Pet(DataClass):
     status: PetStatus = PetStatus.AVAILABLE
     created_at: datetime
 
-    def __init__(self, name: str, age: int, favourites: List[Favourite], status: PetStatus):
+    def __init__(
+        self, name: str, age: int, favourites: List[Favourite], status: PetStatus
+    ):
         self.name = name
         self.age = age
         self.favourites = favourites
@@ -77,8 +79,8 @@ class Pet(DataClass):
         (types.Number, 10e5, 1000000.0),
         (types.Array[types.Integer], (1, 2, 3), [1, 2, 3]),
         (types.Boolean, True, True),
-        (types.Enum([1, 2, 3], EnumFixture), 1, EnumFixture.ONE),
-        (types.Enum([1, 2, 3]), 1, 1),
+        (types.Enum(values=[1, 2, 3], target_class=EnumFixture), 1, EnumFixture.ONE),
+        (types.Enum(values=[1, 2, 3]), 1, 1),
     ],
 )
 def test_unserialise_value(schema, value, expected) -> None:
@@ -165,12 +167,11 @@ def test_can_serialise_complex_object() -> None:
             {"name": "ball", "priority": 0},
         ],
         "status": 1,
-        "created_at": doggo.created_at.isoformat()
+        "created_at": doggo.created_at.isoformat(),
     }
 
 
 def test_override_base_methods() -> None:
-
     class PetWithHooks(DataClass):
         name: str = "Doggo"
         age: int = 0
@@ -193,12 +194,12 @@ def test_override_base_methods() -> None:
 
     doggo_instance = PetWithHooks.create(raw_doggo)
     assert doggo_instance.serialise() == {
-        'age': 0,
-        'created_at': '2016-09-18T17:34:02+00:00',
-        'favourites': [
-            {'name': 'ball', 'priority': 10},
-            {'name': 'bone', 'priority': 0},
+        "age": 0,
+        "created_at": "2016-09-18T17:34:02+00:00",
+        "favourites": [
+            {"name": "ball", "priority": 10},
+            {"name": "bone", "priority": 0},
         ],
-        'name': 'Doggo',
-        'status': 2,
+        "name": "Doggo",
+        "status": 2,
     }

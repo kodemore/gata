@@ -36,7 +36,7 @@ class Object(Type):
         read_only: bool = False,
         nullable: bool = False,
         default: Any = None,
-    ) -> None:
+    ) -> Type:
         raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
 
 

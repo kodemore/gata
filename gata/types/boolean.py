@@ -18,8 +18,10 @@ class BooleanType(Type):
         read_only: bool = False,
         nullable: bool = False,
         default: Any = None,
-    ) -> None:
-        super().__call__(deprecated, write_only, read_only, nullable, default)
+    ) -> "BooleanType":
+        instance: BooleanType = super().__call__(deprecated, write_only, read_only, nullable, default)  # type: ignore
+
+        return instance
 
 
 Boolean = BooleanType()

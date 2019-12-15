@@ -29,16 +29,16 @@ class IntegerType(Type):
 
     def __call__(
         self,
-        minimum: Optional[int] = None,
-        maximum: Optional[int] = None,
-        multiple_of: Optional[float] = None,
         deprecated: bool = False,
         write_only: bool = False,
         read_only: bool = False,
         nullable: bool = False,
         default: Any = None,
+        minimum: Optional[int] = None,
+        maximum: Optional[int] = None,
+        multiple_of: Optional[float] = None,
     ) -> "IntegerType":
-        instance: IntegerType = super().__call__(
+        instance: IntegerType = super().__call__(  # type: ignore
             deprecated, write_only, read_only, nullable, default
         )
         instance.minimum = minimum

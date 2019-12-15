@@ -11,7 +11,7 @@ from gata.types.array import Array
 from gata.types.enum import Enum as GataEnum
 from gata.types.object import Object
 from gata.types.string import String
-from gata.types.utils import map_type
+from gata.types.utils.map_type import map_type
 
 T = TypeVar("T")
 
@@ -28,8 +28,8 @@ def unserialise_value(schema: GataType, value: Any) -> Any:
         return schema.target(value)
 
     # Dataclasses
-    if isclass(schema) and issubclass(schema, DataClass):
-        return schema.create(value)
+    if isclass(schema) and issubclass(schema, DataClass):  # type: ignore
+        return schema.create(value)  # type: ignore
 
     # Lists and sets
     if isinstance(schema, Array.__class__) and schema.items:
@@ -59,8 +59,8 @@ def serialise_value(schema: GataType, value: Any) -> Any:
         return value
 
     # Dataclasses
-    if isclass(schema) and issubclass(schema, DataClass):
-        return schema.serialise(value)
+    if isclass(schema) and issubclass(schema, DataClass):  # type: ignore
+        return schema.serialise(value)  # type: ignore
 
     # Lists and sets
     if isinstance(schema, Array.__class__) and schema.items:
@@ -95,7 +95,7 @@ class DataClassMeta(ABCMeta):
             dataclass.validate(data)
 
         def _create(data: dict):
-            instance = klass.__new__(klass)
+            instance = klass.__new__(klass)  # type: ignore
 
             for key, value in data.items():
                 if key not in dataclass.properties:

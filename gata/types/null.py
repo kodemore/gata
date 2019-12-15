@@ -16,7 +16,7 @@ class NullType(Type):
         read_only: bool = False,
         nullable: bool = False,
         default: TypingAny = None,
-    ) -> None:
+    ) -> Type:
         raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
 
 

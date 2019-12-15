@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any as TypingAny
-from typing import Tuple
+from typing import Any as Any
+from typing import Tuple, List
 
 from gata.errors import InvalidTypeError
 from gata.errors import ValidationError
@@ -12,7 +12,7 @@ class OneOfType(Type):
     def __init__(self):
         self.types = []
 
-    def validate(self, value: TypingAny) -> None:
+    def validate(self, value: Any) -> None:
         passed = 0
         for validator in self.types:
             try:
@@ -27,10 +27,17 @@ class OneOfType(Type):
         if passed > 1:
             raise ValidationError(f"Passed value {value} conforms more than one rule")
 
-    def __call__(self) -> None:
+    def __call__(
+        self,
+        deprecated: bool = False,
+        write_only: bool = False,
+        read_only: bool = False,
+        nullable: bool = False,
+        default: Any = None,
+    ) -> Type:
         raise RuntimeError(f"Cannot recreate instance of {self.__class__}.")
 
-    def __getitem__(self, types: Tuple[Type]) -> "OneOfType":
+    def __getitem__(self, types: List[Type]) -> "OneOfType":
         if not isinstance(types, Iterable):
             raise InvalidTypeError(
                 f"gata.types.OneOf[] expects at least two types to be passed."

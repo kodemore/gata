@@ -14,8 +14,9 @@ class AnyType(Type):
         read_only: bool = False,
         nullable: bool = False,
         default: TypingAny = None,
-    ) -> None:
-        super().__call__(deprecated, write_only, read_only, nullable, default)
+    ) -> "AnyType":
+        instance: AnyType = super().__call__(deprecated, write_only, read_only, nullable, default)  # type: ignore
+        return instance
 
 
 Any = AnyType()
