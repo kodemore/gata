@@ -6,7 +6,6 @@ from typing import Union
 from gata import validators
 from gata.errors import ValidationError
 from gata.types.formatters.format import Format
-from gata.types.formatters import Formatter
 from .type import Type
 
 FORMAT_TO_VALIDATOR_MAP = {

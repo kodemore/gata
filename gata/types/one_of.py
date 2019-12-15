@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from copy import deepcopy
 from typing import Any as Any
-from typing import Tuple, List
+from typing import List
 
 from gata.errors import InvalidTypeError
 from gata.errors import ValidationError

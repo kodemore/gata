@@ -1,8 +1,8 @@
 from typing import Any
 
 from gata.errors import ValidationError
-from .type import Type
 from .string import String
+from .type import Type
 
 
 class Object(Type):

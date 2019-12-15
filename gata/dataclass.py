@@ -1,10 +1,10 @@
 from abc import ABCMeta
+from enum import Enum
 from inspect import isclass
 from typing import Any
 from typing import Type
 from typing import TypeVar
 from typing import Union
-from enum import Enum
 
 from gata.types import Type as GataType
 from gata.types.array import Array
