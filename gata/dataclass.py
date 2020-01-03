@@ -104,13 +104,17 @@ class DataClassMeta(ABCMeta):
                         f"Attribute `{key}` is not defined in dataclass {klass}"
                     )
                 try:
+                    dataclass.properties[key].validate(value)
+                except ValueError as error:
+                    raise FieldValidationError(key, error)
+
+                try:
                     instance.__dict__[key] = unserialise_value(
                         dataclass.properties[key], value
                     )
                 except ValueError as error:
                     raise FieldValidationError(key, error)
 
-            dataclass.validate(instance.__dict__)
             return instance
 
         setattr(klass, "validate", _validate)

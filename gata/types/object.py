@@ -26,12 +26,9 @@ class Object(Type):
             if key not in value:
                 continue
 
-            # Validate string
+            # Value has been already formatted, thus it is valid
             if isinstance(prop, String.__class__) and not isinstance(value, str):
-                try:
-                    String.validate(value)
-                except ValidationError as e:
-                    raise FieldValidationError(key, e)
+                continue
 
             # Validate property
             if isinstance(prop, Type):
