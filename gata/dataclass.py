@@ -103,6 +103,7 @@ class DataClassMeta(ABCMeta):
                     raise AttributeError(
                         f"Attribute `{key}` is not defined in dataclass {klass}"
                     )
+
                 try:
                     dataclass.properties[key].validate(value)
                 except ValueError as error:

@@ -1,4 +1,4 @@
-# Gata [![Build Status](https://travis-ci.org/fatcode/gata.svg?branch=master)](https://travis-ci.org/fatcode/gata) [![codecov](https://codecov.io/gh/fatcode/gata/branch/master/graph/badge.svg)](https://codecov.io/gh/fatcode/gata) [![Maintainability](https://api.codeclimate.com/v1/badges/c224b3a0ece5d2005b0c/maintainability)](https://codeclimate.com/github/fatcode/gata/maintainability)
+# Gata [![Build Status](https://travis-ci.org/kodemore/gata.svg?branch=master)](https://travis-ci.org/kodemore/gata) [![codecov](https://codecov.io/gh/kodemore/gata/branch/master/graph/badge.svg)](https://codecov.io/gh/kodemore/gata) [![Maintainability](https://api.codeclimate.com/v1/badges/c224b3a0ece5d2005b0c/maintainability)](https://codeclimate.com/github/kodemore/gata/maintainability)
 Extended data classes for python with json-schema like validation support
 
 # Introduction
