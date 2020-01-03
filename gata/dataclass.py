@@ -6,6 +6,7 @@ from typing import Type
 from typing import TypeVar
 from typing import Union
 
+from gata.errors import FieldValidationError
 from gata.types import Type as GataType
 from gata.types.array import Array
 from gata.types.enum import Enum as GataEnum
@@ -102,9 +103,12 @@ class DataClassMeta(ABCMeta):
                     raise AttributeError(
                         f"Attribute `{key}` is not defined in dataclass {klass}"
                     )
-                instance.__dict__[key] = unserialise_value(
-                    dataclass.properties[key], value
-                )
+                try:
+                    instance.__dict__[key] = unserialise_value(
+                        dataclass.properties[key], value
+                    )
+                except ValueError as error:
+                    raise FieldValidationError(key, error)
 
             dataclass.validate(instance.__dict__)
             return instance

@@ -1,6 +1,6 @@
 from typing import Any
 
-from gata.errors import ValidationError
+from gata.errors import ValidationError, FieldValidationError
 from .string import String
 from .type import Type
 
@@ -14,20 +14,31 @@ class Object(Type):
     def validate(self, value: dict) -> None:
         for prop in self.required:
             if prop not in value:
-                raise ValidationError(
-                    f"Missing required property `{prop}` in passed dataset `{value}`"
+                raise FieldValidationError(
+                    prop,
+                    ValidationError(
+                        f"Missing required property `{prop}` in passed dataset `{value}`"
+                    ),
                 )
 
         for key, prop in self.properties.items():
             # Value is not within the object
             if key not in value:
                 continue
-            # Value has been already formatted, thus it is valid
+
+            # Validate string
             if isinstance(prop, String.__class__) and not isinstance(value, str):
-                continue
+                try:
+                    String.validate(value)
+                except ValidationError as e:
+                    raise FieldValidationError(key, e)
+
             # Validate property
             if isinstance(prop, Type):
-                prop.validate(value[key])
+                try:
+                    prop.validate(value[key])
+                except ValidationError as e:
+                    raise FieldValidationError(key, e)
 
     def __call__(
         self,

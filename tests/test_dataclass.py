@@ -9,6 +9,7 @@ import pytest
 
 from gata import DataClass
 from gata import types
+from gata.errors import FieldValidationError
 from gata.dataclass import serialise_value
 from gata.dataclass import unserialise_value
 
@@ -203,3 +204,15 @@ def test_override_base_methods() -> None:
         "name": "Doggo",
         "status": 2,
     }
+
+
+def test_fail_on_validation():
+    try:
+        Pet.create({"name": 123, "status": 1})
+    except FieldValidationError as error:
+        assert error.field_name == "name"
+
+
+def test_raises_correct_exception_on_creation():
+    with pytest.raises(FieldValidationError):
+        Pet.create({"name": 123, "status": 1})

@@ -1,4 +1,5 @@
 from .dataclass_error import DataClassError
+from .field_validation_error import FieldValidationError
 from .invalid_length_error import InvalidLengthError
 from .invalid_length_error import OverflowError
 from .invalid_length_error import UnderflowError
