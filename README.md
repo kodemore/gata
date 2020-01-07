@@ -192,7 +192,9 @@ assert isinstance(roxy.status, PetStatus)
 |`typing.Set` with specified type |Validates set of values|
 |`typing.Union`|Checks if value conforms one of the provided types|
 
-## Available string formats (string validators)
+## Validators
+
+### Available string formats (string validators)
  - `datetime`
  - `date`
  - `time`
