@@ -20,7 +20,7 @@ def _unserialise_dataclass(value: dict, target_type: Type[T]) -> T:
         raise ValueError(
             f"Cannot unserialise value of type {type(value)} to {target_type}."
         )
-    return target_type.unserialise(value)
+    return target_type.unserialise(value)  # type: ignore
 
 
 def _unserialise_list(value, target_type, meta: dict) -> list:
