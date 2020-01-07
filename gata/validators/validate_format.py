@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Callable
 
 from gata.format import Format
 from gata.validators.validate_base64 import validate_base64
@@ -52,12 +52,15 @@ STRING_FORMAT_TO_FORMAT_MAP = {
 
 
 def validate_format(value: str, format: Union[str, Format]) -> bool:
-    if isinstance(format, str):
-        validate = STRING_FORMAT_TO_FORMAT_MAP[format]
-    else:
-        validate = FORMAT_TO_VALIDATOR_MAP[format]
 
-    return validate(value)
+    if isinstance(format, str) and format in STRING_FORMAT_TO_FORMAT_MAP:
+        validate = STRING_FORMAT_TO_FORMAT_MAP[format]  # type: function
+    elif isinstance(format, Format):
+        validate = FORMAT_TO_VALIDATOR_MAP[format]
+    else:
+        return False
+
+    return validate(value)  # type: ignore
 
 
 __all__ = ["validate_format"]

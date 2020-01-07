@@ -66,7 +66,7 @@ class FieldDescriptor:
         if self._validator:
             return self._validator
 
-        self._validator = partial(
+        self._validator = partial(  # type: ignore
             validate_all,
             validators=[
                 map_type_to_validator(self.type),
@@ -74,7 +74,7 @@ class FieldDescriptor:
             ],
         )
 
-        return self._validator
+        return self._validator  # type: ignore
 
     def validate(self, value: Any) -> bool:
         validator = self.validator

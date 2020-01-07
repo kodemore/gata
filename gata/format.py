@@ -1,5 +1,7 @@
 from enum import Enum
-from typing import Type, Union
+from inspect import isclass
+from typing import Type
+from typing import Union
 
 from .formatter import Formatter
 from .formatters.boolean_formatter import BooleanFormatter
@@ -43,11 +45,11 @@ class Format(Enum):
         return DefaultFormatter
 
     @classmethod
-    def get_formatter(cls, name: Union[str, Type[Formatter], "Format"]) -> Formatter:
+    def get_formatter(cls, name: Union[str, Type[Formatter], "Format"]) -> Type[Formatter]:
         if isinstance(name, str):
             return cls(name).formatter
-        elif issubclass(name, Formatter):
-            return name
+        elif isclass(name) and issubclass(name, Formatter):  # type: ignore
+            return name  # type: ignore
         elif isinstance(name, Format):
             return name.formatter
 

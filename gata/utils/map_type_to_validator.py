@@ -83,7 +83,7 @@ def map_type_to_validator(python_type) -> Callable[..., bool]:
 
     # Simple map one to one
     if python_type in TYPE_MAPPING:
-        return TYPE_MAPPING[python_type]
+        return TYPE_MAPPING[python_type]  # type: ignore
 
     # Map enums
     if isclass(python_type) and issubclass(python_type, Enum):
