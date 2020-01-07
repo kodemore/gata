@@ -4,20 +4,20 @@ checks:
     config:
       threshold: 8
 plugins:
-  markdownlint:
-    enabled: true
   pep8:
     enabled: true
   sonar-python:
     enabled: true
     config:
       minimum_severity: minor
+      tests_patterns:
+        - tests/**
   duplication:
     enabled: true
     config:
       languages:
         python:
-          python_version: 3.7
+          python_version: 3
           mass_threshold: 128
 
 exclude_patterns:
