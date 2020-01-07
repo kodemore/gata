@@ -50,7 +50,8 @@ class Format(Enum):
             return name
         elif isinstance(name, Format):
             return name.formatter
-        raise
+
+        raise ValueError(f"Unknown formatter: {name}")
 
 
 __all__ = ["Format"]

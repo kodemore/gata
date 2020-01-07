@@ -1,0 +1,25 @@
+version: "2"
+checks:
+  method-complexity:
+    config:
+      threshold: 8
+plugins:
+  markdownlint:
+    enabled: true
+  pep8:
+    enabled: true
+  sonar-python:
+    enabled: true
+    config:
+      minimum_severity: minor
+  duplication:
+    enabled: true
+    config:
+      languages:
+        python:
+          python_version: 3.7
+          mass_threshold: 128
+
+exclude_patterns:
+- "tests/"
+- "**/__init__.py"
