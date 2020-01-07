@@ -1,7 +1,4 @@
-from .dataclass_error import DataClassError
-
-
-class TypeMapError(DataClassError):
+class TypeMapError(RuntimeError):
     pass
 
 

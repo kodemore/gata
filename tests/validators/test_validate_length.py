@@ -15,7 +15,7 @@ from gata.validators import validate_length
     ),
 )
 def test_pass_validation(min_len, max_len, value):
-    assert validate_length(value, minimum=min_len, maximum=max_len) is None
+    assert validate_length(value, minimum=min_len, maximum=max_len)
 
 
 @pytest.mark.parametrize(

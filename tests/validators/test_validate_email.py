@@ -22,7 +22,7 @@ from gata.errors import ValidationError
     ],
 )
 def test_validate_valid_email_format(input: str):
-    assert validate_email(input) is None
+    assert validate_email(input)
 
 
 @pytest.mark.parametrize(

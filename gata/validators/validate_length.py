@@ -7,7 +7,7 @@ from gata.errors import UnderflowError
 
 def validate_length(
     value: Sized, minimum: Optional[int] = None, maximum: Optional[int] = None
-) -> None:
+) -> bool:
     length = len(value)
 
     if minimum is not None and length < minimum:
@@ -19,6 +19,8 @@ def validate_length(
         raise OverflowError(
             f"Passed collection cannot contain more than `{maximum}` items."
         )
+
+    return True
 
 
 __all__ = ["validate_length"]

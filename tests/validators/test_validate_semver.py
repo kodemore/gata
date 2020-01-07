@@ -8,7 +8,7 @@ from gata.validators import validate_semver
     "value", ("1.0.0", "1.0.0-alpha", "1.0.0-alpha.1", "1.0.0-0.3.7", "1.0.0-x.7.z.92")
 )
 def test_valid_values(value: str):
-    assert validate_semver(value) is None
+    assert validate_semver(value)
 
 
 @pytest.mark.parametrize(

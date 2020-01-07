@@ -5,7 +5,7 @@ from gata.errors import ValidationError
 
 @pytest.mark.parametrize("input", ["google.com", "test.foo.bar", "localhost"])
 def test_validate_valid_hostname(input: str):
-    assert validate_hostname(input) is None
+    assert validate_hostname(input)
 
 
 @pytest.mark.parametrize("input", ["!jkfd.com", "@mfd.com", "jkfd@jkfdkd.com"])

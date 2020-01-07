@@ -8,9 +8,11 @@ _HOSTNAME_REGEX = re.compile(
 )
 
 
-def validate_hostname(value: str) -> None:
+def validate_hostname(value: str) -> bool:
     if not _HOSTNAME_REGEX.match(value):
         raise ValidationError(f"Passed value {value} is not valid hostname.")
+
+    return True
 
 
 __all__ = ["validate_hostname"]

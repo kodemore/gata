@@ -7,9 +7,11 @@ _IPV4_REGEX = re.compile(
 )
 
 
-def validate_ipv4(value: str) -> None:
+def validate_ipv4(value: str) -> bool:
     if not _IPV4_REGEX.match(value):
         raise ValidationError(f"Passed value {value} is not valid ipv4 address.")
+
+    return True
 
 
 __all__ = ["validate_ipv4"]

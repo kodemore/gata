@@ -22,7 +22,7 @@ from gata.validators import validate_url
     ),
 )
 def test_valid_values(value: str):
-    assert validate_url(value) is None
+    assert validate_url(value)
 
 
 @pytest.mark.parametrize(

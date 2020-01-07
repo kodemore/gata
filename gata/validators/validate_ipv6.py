@@ -8,9 +8,11 @@ _IPV6_REGEX = re.compile(
 )
 
 
-def validate_ipv6(value: str) -> None:
+def validate_ipv6(value: str) -> bool:
     if not _IPV6_REGEX.match(value):
         raise ValidationError(f"Passed value {value} is not valid ipv6 address.")
+
+    return True
 
 
 __all__ = ["validate_ipv6"]

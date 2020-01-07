@@ -7,9 +7,11 @@ _UUID_REGEX = re.compile(
 )
 
 
-def validate_uuid(value: str) -> None:
+def validate_uuid(value: str) -> bool:
     if not _UUID_REGEX.match(value):
         raise ValidationError(f"Passed value {value} is not valid uuid.")
+
+    return True
 
 
 __all__ = ["validate_uuid"]

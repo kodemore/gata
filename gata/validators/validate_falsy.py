@@ -1,10 +1,10 @@
 from typing import Any
 
 from gata.errors import ValidationError
-from gata.types.formatters import BooleanFormatter
+from gata.formatters import BooleanFormatter
 
 
-def validate_falsy(value: Any) -> None:
+def validate_falsy(value: Any) -> bool:
     if not isinstance(value, str) and value:
         raise ValidationError(f"Passed value {value} is not valid falsy expression.")
 
@@ -14,7 +14,7 @@ def validate_falsy(value: Any) -> None:
         raise ValidationError(f"Passed value {value} is not valid falsy expression.")
 
     if formatted_value is False:
-        return
+        return True
 
     raise ValidationError(f"Passed value {value} is not valid falsy expression.")
 
