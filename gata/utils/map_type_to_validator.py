@@ -97,10 +97,6 @@ def map_type_to_validator(python_type) -> Callable[..., bool]:
     if is_dataclass_type(python_type):
         return python_type.validate
 
-    # Optional types
-    if isinstance(None, python_type):
-        pass
-
     raise TypeMapError(f"Cannot map {python_type} in dataclass.")
 
 
