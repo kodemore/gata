@@ -80,7 +80,7 @@ class DataClassMeta(ABCMeta):
 
 
 class DataClass(metaclass=DataClassMeta):
-    __dataclass__: Dict
+    __dataclass__: Dict[str, FieldDescriptor]
 
     def __getattr__(self, attribute):
         if not self.__hasattr__(attribute):

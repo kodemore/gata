@@ -12,7 +12,7 @@ from .utils.is_dataclass_type import is_dataclass_type
 
 ARRAY_TYPES = (list, set)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def _unserialise_dataclass(value: dict, target_type: Type[T]) -> T:
@@ -30,6 +30,9 @@ def _unserialise_list(value, target_type, meta: dict) -> list:
             "Cannot unserialise generic lists/sets. Please List/Set subtype."
         )
 
+    if value is None:
+        return []
+
     return [
         unserialise(item, arg_type, meta["items"] if "items" in meta else {})
         for item in value
@@ -43,29 +46,24 @@ def _unserialise_set(value, target_type, meta: dict) -> set:
             "Cannot unserialise generic lists/sets. Please List/Set subtype."
         )
 
-    return set(
+    if value is None:
+        return {}
+
+    return {
         unserialise(item, arg_type, meta["items"] if "items" in meta else {})
         for item in value
-    )
+    }
 
 
-def _unserialise_string(value, target_type, meta) -> Any:
+def _unserialise_string(value, meta) -> Any:
     if "format" in meta:
         formatter = Format.get_formatter(meta["format"])
-        return formatter.hydrate(value)
+        return formatter.extract(value)
 
-    return value
+    return str(value)
 
 
 def unserialise(value: Any, target_type, meta: dict = {}) -> Any:
-    # Enums
-    if isclass(target_type) and issubclass(target_type, Enum):
-        return target_type(value)
-
-    # Dataclass
-    if is_dataclass_type(target_type):
-        return _unserialise_dataclass(value, target_type)
-
     # List and sets
     origin_type = getattr(target_type, "__origin__", None)
     if origin_type and origin_type in ARRAY_TYPES:
@@ -74,9 +72,20 @@ def unserialise(value: Any, target_type, meta: dict = {}) -> Any:
         else:
             return _unserialise_set(value, target_type, meta)
 
+    if value is None:
+        return None
+
+    # Enums
+    if isclass(target_type) and issubclass(target_type, Enum):
+        return target_type(value)
+
+    # Dataclass
+    if is_dataclass_type(target_type):
+        return _unserialise_dataclass(value, target_type)
+
     # Strings
     if target_type is str:
-        return _unserialise_string(value, target_type, meta)
+        return _unserialise_string(value, meta)
 
     # Datetimes
     if target_type is datetime:

@@ -18,6 +18,17 @@ def test_validate_field_descriptor_for_formatted_string() -> None:
         field.validate("test")
 
 
+def test_validate_field_descriptor_for_multiple_of() -> None:
+    field = FieldDescriptor(int, {"multiple_of": 3})
+
+    assert field.validate(3)
+    assert field.validate(6)
+    assert field.validate(9)
+
+    with pytest.raises(ValueError):
+        field.validate(11)
+
+
 def test_validate_field_descriptor_for_formatter_list_of_strings() -> None:
     field = FieldDescriptor(
         List[str], {"min": 1, "max": 3, "items": {"format": "email"}}

@@ -12,6 +12,35 @@ Extended data classes for python with json-schema like validation support
  - support for complex nested validation
  - serialisation/unserialising mechanism
 
+# Validators
+
+`Gata` also provides interface for simple validation.
+ 
+```python
+from gata import Validator
+
+# Validate email
+Validator.email("test@test.com")
+```
+
+### List of available validators
+
+ - `Validator.array(value, items)` checks if value is set or list and each item conforms passed validator
+ - `Validator.base64(value)` checks if passed string is valid base64 value
+ - `Validator.date(value, min, max)` checks if passed string is valid iso date value
+ - `Validator.datetime(value, min, max)` checks if passed string is valid iso datetime value
+ - `Validator.email(value)` checks if passed string is valid email address
+ - `Validator.falsy(value)` checks if passed string is valid falsy expression
+ - `Validator.hostname(value)` checks if passed string is valid host name
+ - `Validator.ipv4(value)` checks if passed string is valid ipv4 address
+ - `Validator.ipv6(value)` checks if passed string is valid ipv6 address
+ - `Validator.number(value, min, max, multiple_of)` checks if passed value is a valid number
+ - `Validator.semver(value)` checks if passed string is valid semantic versioning number
+ - `Validator.time(value, min, max)` checks if passed string is valid iso time
+ - `Validator.truthy(value)` checks if passed string is valid truthy expression
+ - `Validator.uri(value)` checks if passed string is valid uri
+ - `Validator.url(value)` checks if passed string is valid url
+ - `Validator.uuid(value)` checks if passed string is valid uuid number
 
 # Dataclasses
 Dataclasses are containers and validators for data used by other classes. It is providing simple interface for 
@@ -69,6 +98,7 @@ options that might be used in the meta field's specification:
  - `min` - depending on the context it specified be min value or length
  - `max` - depending on the context it specifies maximum value or length
  - `format` - used to specify accepted string's format, available list of formats is available in further reading
+ - `multiple_of` - used with numbers to specify that validated value has to be multiplication of given value
  - `items` - used with lists or sets to specify item's limitation
 
 

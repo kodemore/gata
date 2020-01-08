@@ -1,40 +1,9 @@
 from datetime import datetime
-from enum import Enum
-from typing import List
+import pytest
 
-from gata import DataClass
 from gata.errors import FieldError
-
-
-class PetStatus(Enum):
-    AVAILABLE = 0
-    SOLD = 1
-    RESERVED = 2
-
-
-class Favourite(DataClass):
-    name: str
-    priority: int = 0
-
-
-class Pet(DataClass):
-    name: str = "Pimpek"
-    age: int = 0
-    favourites: List[Favourite]
-    tags: List[str]
-    status: PetStatus = PetStatus.AVAILABLE
-    created_at: datetime
-
-    class Meta:
-        tags = {"items": {"min": 2, "max": 10}}
-        name = {"min": 2, "max": 20}
-        age = {"min": 0, "max": 100}
-
-    def __init__(self, name: str = "Pimpek", age: int = 0):
-        self.name = name
-        self.favourites = []
-        self.tags = []
-        self.age = age
+from tests.fixtures import Favourite
+from tests.fixtures import Pet
 
 
 def test_validate_data_with_dataclass() -> None:
@@ -70,3 +39,47 @@ def test_serialise_dataclass() -> None:
         "status": 0,
         "created_at": None,
     }
+
+
+def test_unserialise_dataclass_with_invalid_fields() -> None:
+    with pytest.raises(AttributeError):
+        Pet.unserialise({"pet_name": "Tom"})
+
+
+def test_validate_with_unknown_field() -> None:
+    with pytest.raises(ValueError):
+        Pet.validate(
+            {
+                "pet_name": "Tom",
+                "age": 20,
+                "favourites": [],
+                "tags": [],
+                "status": 0,
+                "created_at": None,
+            }
+        )
+
+
+def test_validate_success() -> None:
+    assert Pet.validate(
+        {
+            "name": "Tom",
+            "age": 20,
+            "favourites": [],
+            "tags": [],
+            "status": 0,
+            "created_at": "2019-01-01T10:10:10",
+        }
+    )
+
+
+def test_set_unkown_attribute() -> None:
+    pet = Pet()
+    with pytest.raises(AttributeError):
+        pet.fail = 2
+
+
+def test_get_unkown_attribute() -> None:
+    pet = Pet()
+    with pytest.raises(AttributeError):
+        fail = pet.fail

@@ -11,15 +11,6 @@ ARRAY_TYPES = (list, set)
 
 
 def serialise(value: Any, source_type) -> Any:
-
-    # Enums
-    if isinstance(value, Enum):
-        return value.value
-
-    # Dataclass
-    if is_dataclass_type(source_type):
-        return value.serialise()
-
     # List and sets
     origin_type = getattr(source_type, "__origin__", None)
     if origin_type and origin_type in ARRAY_TYPES:
@@ -30,16 +21,24 @@ def serialise(value: Any, source_type) -> Any:
             )
 
         if value is None:
-            return [] if origin_type is list else set()
+            return [] if origin_type is list else {}
 
         if origin_type == list:
             return [serialise(item, arg_type) for item in value]
 
-        return (serialise(item, arg_type) for item in value)
+        return {serialise(item, arg_type) for item in value}
 
     # Nullables
     if value is None:
         return None
+
+    # Enums
+    if isinstance(value, Enum):
+        return value.value
+
+    # Dataclass
+    if is_dataclass_type(source_type):
+        return value.serialise()
 
     # Strings
     if source_type in (str, int, float, bool):
@@ -58,3 +57,6 @@ def serialise(value: Any, source_type) -> Any:
         return Format.TIME.formatter.extract(value)
 
     return value
+
+
+__all__ = ["serialise"]

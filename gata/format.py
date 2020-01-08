@@ -45,7 +45,9 @@ class Format(Enum):
         return DefaultFormatter
 
     @classmethod
-    def get_formatter(cls, name: Union[str, Type[Formatter], "Format"]) -> Type[Formatter]:
+    def get_formatter(
+        cls, name: Union[str, Type[Formatter], "Format"]
+    ) -> Type[Formatter]:
         if isinstance(name, str):
             return cls(name).formatter
         elif isclass(name) and issubclass(name, Formatter):  # type: ignore
