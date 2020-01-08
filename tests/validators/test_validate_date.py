@@ -6,7 +6,7 @@ from gata.errors import ValidationError
 
 @pytest.mark.parametrize("value", ["2016-09-18", "20160918"])
 def test_valid_values(value: str) -> None:
-    assert validate_date(value) is None
+    assert validate_date(value)
 
 
 @pytest.mark.parametrize("value", ["2016-13-18", "20161318", "1209"])

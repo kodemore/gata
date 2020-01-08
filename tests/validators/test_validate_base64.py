@@ -8,7 +8,7 @@ from gata.validators import validate_base64
 
 @pytest.mark.parametrize("value", [b64encode(b"asa"), b64encode(b"another")])
 def test_valid_values(value: str):
-    validate_base64(value)
+    assert validate_base64(value)
 
 
 @pytest.mark.parametrize("value", ["asa", "another"])

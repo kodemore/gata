@@ -15,4 +15,4 @@ from gata.validators import validate_datetime
     ),
 )
 def test_valid_values(value: str):
-    assert validate_datetime(value) is None
+    assert validate_datetime(value)

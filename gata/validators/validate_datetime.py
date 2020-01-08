@@ -4,12 +4,12 @@ from typing import Optional
 from gata.errors import NotWithinMaximumBoundaryError
 from gata.errors import NotWithinMinimumBoundaryError
 from gata.errors import ValidationError
-from gata.types.formatters import DateTimeFormatter
+from gata.formatters import DateTimeFormatter
 
 
 def validate_datetime(
     value: str, minimum: Optional[datetime] = None, maximum: Optional[datetime] = None
-) -> None:
+) -> bool:
     try:
         datetime_value = DateTimeFormatter.hydrate(value)
     except ValueError:
@@ -24,6 +24,8 @@ def validate_datetime(
         raise NotWithinMaximumBoundaryError(
             f"Passed date `{datetime_value}` is greater than set maximum value `{maximum}`."
         )
+
+    return True
 
 
 __all__ = ["validate_datetime"]

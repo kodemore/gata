@@ -11,7 +11,7 @@ _EMAIL_REGEX = re.compile(
 )
 
 
-def validate_email(value: str) -> None:
+def validate_email(value: str) -> bool:
     """
     Keep in mind this validator willfully violates RFC 5322, the best way to invalidate email address is to send
     a message and receive confirmation from the recipient.
@@ -23,6 +23,8 @@ def validate_email(value: str) -> None:
         raise ValidationError(f"Passed value {value} is not valid email address.")
     if ".." in value:
         raise ValidationError(f"Passed value {value} is not valid email address.")
+
+    return True
 
 
 __all__ = ["validate_email"]

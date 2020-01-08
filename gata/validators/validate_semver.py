@@ -8,11 +8,13 @@ _SEMVER_REGEX = re.compile(
 )
 
 
-def validate_semver(value: str) -> None:
+def validate_semver(value: str) -> bool:
     if not _SEMVER_REGEX.match(value):
         raise ValidationError(
             f"Passed value {value} is not valid semantic version number."
         )
+
+    return True
 
 
 __all__ = ["validate_semver"]

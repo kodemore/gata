@@ -8,9 +8,11 @@ _URL_REGEX = re.compile(
 )
 
 
-def validate_url(value: str) -> None:
+def validate_url(value: str) -> bool:
     if not _URL_REGEX.match(value):
         raise ValidationError(f"Passed value {value} is not valid url.")
+
+    return True
 
 
 __all__ = ["validate_url"]
