@@ -21,7 +21,7 @@ def serialise(value: Any, source_type) -> Any:
             )
 
         if value is None:
-            return [] if origin_type is list else {}
+            return [] if origin_type is list else set()
 
         if origin_type == list:
             return [serialise(item, arg_type) for item in value]

@@ -9,13 +9,13 @@ from .validate_multiple_of import validate_multiple_of
 
 
 def validate_number(
-    value: Union[numbers.Number, int, float],
-    minimum: Optional[Union[numbers.Number, int, float]] = None,
-    maximum: Optional[Union[numbers.Number, int, float]] = None,
-    multiple_of: Optional[Union[numbers.Number, int, float]] = None,
+    value: Union[int, float],
+    minimum: Optional[Union[int, float]] = None,
+    maximum: Optional[Union[int, float]] = None,
+    multiple_of: Optional[Union[int, float]] = None,
 ) -> bool:
     if isinstance(value, bool) or not isinstance(
-        value, (int, float, complex, numbers.Number, numbers.Real, numbers.Rational)
+        value, (int, float, complex, numbers.Real, numbers.Rational)
     ):
         raise ValidationError("Passed value is not a valid number.")
 

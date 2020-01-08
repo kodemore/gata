@@ -65,7 +65,7 @@ def test_serialise_null() -> None:
     assert serialise(None, datetime) is None
     assert serialise(None, date) is None
     assert serialise(None, time) is None
-    assert serialise(None, Set[str]) == {}
+    assert serialise(None, Set[str]) == set()
     assert serialise(None, List[str]) == []
 
 

@@ -66,7 +66,7 @@ def test_unserialise_null() -> None:
     assert unserialise(None, date) is None
     assert unserialise(None, time) is None
     assert unserialise(None, List[str]) == []
-    assert unserialise(None, Set[str]) == {}
+    assert unserialise(None, Set[str]) == set()
 
 
 def test_unserialise_list() -> None:

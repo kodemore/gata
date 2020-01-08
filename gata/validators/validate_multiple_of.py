@@ -1,10 +1,10 @@
-from gata.errors import ValidationError
-from numbers import Complex
 from typing import Union
+
+from gata.errors import ValidationError
 
 
 def validate_multiple_of(
-    value: Union[float, int, Complex], multiple_of: Union[float, int, Complex]
+    value: Union[float, int], multiple_of: Union[float, int]
 ) -> bool:
     if not value % multiple_of == 0:
         raise ValidationError(

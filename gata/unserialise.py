@@ -47,7 +47,7 @@ def _unserialise_set(value, target_type, meta: dict) -> set:
         )
 
     if value is None:
-        return {}
+        return set()
 
     return {
         unserialise(item, arg_type, meta["items"] if "items" in meta else {})
