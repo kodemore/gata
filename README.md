@@ -12,36 +12,6 @@ Extended data classes for python with json-schema like validation support
  - support for complex nested validation
  - serialisation/unserialising mechanism
 
-# Validators
-
-`Gata` also provides interface for simple validation.
- 
-```python
-from gata import Validator
-
-# Validate email
-Validator.email("test@test.com")
-```
-
-### List of available validators
-
- - `Validator.array(value, items)` checks if value is set or list and each item conforms passed validator
- - `Validator.base64(value)` checks if passed string is valid base64 value
- - `Validator.date(value, min, max)` checks if passed string is valid iso date value
- - `Validator.datetime(value, min, max)` checks if passed string is valid iso datetime value
- - `Validator.email(value)` checks if passed string is valid email address
- - `Validator.falsy(value)` checks if passed string is valid falsy expression
- - `Validator.hostname(value)` checks if passed string is valid host name
- - `Validator.ipv4(value)` checks if passed string is valid ipv4 address
- - `Validator.ipv6(value)` checks if passed string is valid ipv6 address
- - `Validator.number(value, min, max, multiple_of)` checks if passed value is a valid number
- - `Validator.semver(value)` checks if passed string is valid semantic versioning number
- - `Validator.time(value, min, max)` checks if passed string is valid iso time
- - `Validator.truthy(value)` checks if passed string is valid truthy expression
- - `Validator.uri(value)` checks if passed string is valid uri
- - `Validator.url(value)` checks if passed string is valid url
- - `Validator.uuid(value)` checks if passed string is valid uuid number
-
 # Dataclasses
 Dataclasses are containers and validators for data used by other classes. It is providing simple interface for 
 setting/getting/validating values. `Gata` library utilises built-in python types (support has some limitations, 
@@ -50,8 +20,9 @@ supported list of types is listed below).
 Dataclasses can also be used as a serialisation/deserialisation library so you can store your data in easy manner.
 
 
-### Dataclass example with python built-in types
+### Dataclass example
 ```python
+from typing import Optional, List
 from gata import DataClass
 from datetime import datetime
 
@@ -59,9 +30,22 @@ from datetime import datetime
 class Pet(DataClass):
     name: str = "Pimpek"  # "Pimpek" is a default value for Pet.name
     age: int = 0
-    sold_at: datetime
-    tags: dict
-    status: int = 0
+    sold_at: Optional[datetime]
+    tags: List[str]
+
+Pet.validate({
+    "name": "Boo",
+    "age": 10,
+    "tags": []
+}) # returns True
+
+pet = Pet.unserialise({
+    "name": "Boo",
+    "age": 10,
+    "tags": []
+}) #  creates Pet instance with validated data
+
+pet.serialise() # serialises pet again to dict
 ```
 
 ### Dataclass validators with meta details
@@ -97,10 +81,25 @@ options that might be used in the meta field's specification:
 
  - `min` - depending on the context it specified be min value or length
  - `max` - depending on the context it specifies maximum value or length
- - `format` - used to specify accepted string's format, available list of formats is available in further reading
+ - `format` - used to specify accepted string's format, available list of formats is available below
  - `multiple_of` - used with numbers to specify that validated value has to be multiplication of given value
  - `items` - used with lists or sets to specify item's limitation
 
+### Available string formats (string validators)
+ - `datetime`
+ - `date`
+ - `time`
+ - `uri`
+ - `url`
+ - `email`
+ - `uuid`
+ - `hostname`
+ - `ipv4`
+ - `ipv6`
+ - `truthy`
+ - `falsy`
+ - `semver`
+ - `byte`
 
 ### Validating data
 
@@ -224,18 +223,32 @@ assert isinstance(roxy.status, PetStatus)
 
 ## Validators
 
-### Available string formats (string validators)
- - `datetime`
- - `date`
- - `time`
- - `uri`
- - `url`
- - `email`
- - `uuid`
- - `hostname`
- - `ipv4`
- - `ipv6`
- - `truthy`
- - `falsy`
- - `semver`
- - `byte`
+`Gata` also provides interface for simple validation.
+ 
+```python
+from gata import Validator
+
+# Validate email
+Validator.email("test@test.com")
+```
+
+### List of available validators
+
+ - `Validator.array(value, items)` checks if value is set or list and each item conforms passed validator
+ - `Validator.base64(value)` checks if passed string is valid base64 value
+ - `Validator.date(value, min, max)` checks if passed string is valid iso date value
+ - `Validator.datetime(value, min, max)` checks if passed string is valid iso datetime value
+ - `Validator.email(value)` checks if passed string is valid email address
+ - `Validator.falsy(value)` checks if passed string is valid falsy expression
+ - `Validator.hostname(value)` checks if passed string is valid host name
+ - `Validator.ipv4(value)` checks if passed string is valid ipv4 address
+ - `Validator.ipv6(value)` checks if passed string is valid ipv6 address
+ - `Validator.number(value, min, max, multiple_of)` checks if passed value is a valid number
+ - `Validator.semver(value)` checks if passed string is valid semantic versioning number
+ - `Validator.time(value, min, max)` checks if passed string is valid iso time
+ - `Validator.truthy(value)` checks if passed string is valid truthy expression
+ - `Validator.uri(value)` checks if passed string is valid uri
+ - `Validator.url(value)` checks if passed string is valid url
+ - `Validator.uuid(value)` checks if passed string is valid uuid number
+
+
