@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gata"
-version = "1.0.0a"
+version = "1.0.1"
 description = "Gata is data validation and transformation library for python."
 authors = [
     "Dawid Kraczkowski <dawid.kraczkowski@gmail.com>"
@@ -8,9 +8,9 @@ authors = [
 license = "MIT"
 readme = "README.md"
 
-homepage = "https://github.com/fatcode/gata"
-repository = "https://github.com/fatcode/gata"
-documentation = "https://github.com/fatcode/gata"
+homepage = "https://github.com/kodemore/gata"
+repository = "https://github.com/kodemore/gata"
+documentation = "https://github.com/kodemore/gata"
 
 keywords = ["validation", "schema", "dataclass", "formatter"]
 
