@@ -1,3 +1,5 @@
+from ipaddress import IPv4Address
+
 import pytest
 
 from gata.errors import ValidationError
@@ -8,7 +10,7 @@ from gata.validators import validate_ipv4
     "value", ("0.0.0.0", "127.0.0.1"),
 )
 def test_valid_values(value: str):
-    assert validate_ipv4(value)
+    assert isinstance(validate_ipv4(value), IPv4Address)
 
 
 @pytest.mark.parametrize(

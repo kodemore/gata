@@ -1,35 +1,69 @@
-from .validators.validate_array import validate_array
-from .validators.validate_base64 import validate_base64
-from .validators.validate_date import validate_date
-from .validators.validate_datetime import validate_datetime
-from .validators.validate_email import validate_email
-from .validators.validate_falsy import validate_falsy
-from .validators.validate_hostname import validate_hostname
-from .validators.validate_ipv4 import validate_ipv4
-from .validators.validate_ipv6 import validate_ipv6
-from .validators.validate_semver import validate_semver
-from .validators.validate_time import validate_time
-from .validators.validate_truthy import validate_truthy
-from .validators.validate_uri import validate_uri
-from .validators.validate_url import validate_url
-from .validators.validate_uuid import validate_uuid
-from .validators.validate_number import validate_number
+from .validators import (
+    validate_all,
+    validate_any,
+    validate_boolean,
+    validate_bytes,
+    validate_date,
+    validate_datetime,
+    validate_decimal,
+    validate_email,
+    validate_enum,
+    validate_float,
+    validate_frozenset,
+    validate_hostname,
+    validate_integer,
+    validate_ipv4,
+    validate_ipv6,
+    validate_iterable,
+    validate_iterable_items,
+    validate_length,
+    validate_list,
+    validate_literal,
+    validate_multiple_of,
+    validate_nullable,
+    validate_pattern,
+    validate_range,
+    validate_semver,
+    validate_set,
+    validate_string,
+    validate_time,
+    validate_tuple,
+    validate_uri,
+    validate_url,
+    validate_uuid,
+)
 
 
 class Validator:
-    array = validate_array
-    base64 = validate_base64
-    date = validate_date
+    all = validate_all
+    any = validate_any
+    array = validate_iterable
+    boolean = validate_boolean
+    bytes = validate_bytes
     datetime = validate_datetime
+    date = validate_date
+    decimal = validate_decimal
     email = validate_email
-    falsy = validate_falsy
+    enum = validate_enum
+    float = validate_float
+    frozenset = validate_frozenset
     hostname = validate_hostname
+    integer = validate_integer
     ipv4 = validate_ipv4
     ipv6 = validate_ipv6
-    number = validate_number
+    items = validate_iterable_items
+    length = validate_length
+    list = validate_list
+    literal = validate_literal
+    multiple_of = validate_multiple_of
+    nullable = validate_nullable
+    pattern = validate_pattern
+    range = validate_range
     semver = validate_semver
+    set = validate_set
+    string = validate_string
     time = validate_time
-    truthy = validate_truthy
+    tuple = validate_tuple
     uri = validate_uri
     url = validate_url
     uuid = validate_uuid

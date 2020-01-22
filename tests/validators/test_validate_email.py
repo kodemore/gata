@@ -1,7 +1,7 @@
 import pytest
-from gata.validators import validate_email
 
 from gata.errors import ValidationError
+from gata.validators import validate_email
 
 
 @pytest.mark.parametrize(

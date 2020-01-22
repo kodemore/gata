@@ -1,3 +1,5 @@
+from ipaddress import IPv6Address
+
 import pytest
 
 from gata.errors import ValidationError
@@ -9,7 +11,7 @@ from gata.validators import validate_ipv6
     ("1200:0000:AB00:1234:0000:2552:7777:1313", "21DA:D3:0:2F3B:2AA:FF:FE28:9C5A"),
 )
 def test_valid_values(value: str):
-    assert validate_ipv6(value)
+    assert isinstance(validate_ipv6(value), IPv6Address)
 
 
 @pytest.mark.parametrize(

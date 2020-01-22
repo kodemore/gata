@@ -1,6 +1,7 @@
 import pytest
-from gata.validators import validate_hostname
+
 from gata.errors import ValidationError
+from gata.validators import validate_hostname
 
 
 @pytest.mark.parametrize("input", ["google.com", "test.foo.bar", "localhost"])

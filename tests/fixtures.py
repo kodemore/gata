@@ -1,7 +1,8 @@
-from gata import DataClass
 from typing import List
 from datetime import datetime
 from enum import Enum
+from dataclasses import dataclass, field
+from typing_extensions import TypedDict
 
 
 class PetStatus(Enum):
@@ -10,30 +11,32 @@ class PetStatus(Enum):
     RESERVED = 2
 
 
-class Favourite(DataClass):
+@dataclass
+class Favourite:
     name: str
     priority: int = 0
 
-    def __init__(self, name: str, priority: int = 0):
-        self.name = name
-        self.priority = priority
 
-
-class Pet(DataClass):
-    name: str = "Pimpek"
-    age: int = 0
-    favourites: List[Favourite]
+class PetDict(TypedDict):
     tags: List[str]
+    name: str
+    age: int
+
+
+@dataclass()
+class Pet:
+    """
+    Some pet description
+    """
+
+    name: str
+    created_at: datetime = field(default_factory=datetime.now)
+    tags: List[str] = field(default_factory=list)
+    favourites: List[Favourite] = field(default_factory=list)
     status: PetStatus = PetStatus.AVAILABLE
-    created_at: datetime
+    age: int = 0
 
     class Meta:
-        tags = {"items": {"min": 2, "max": 10}}
+        tags = {"min": 1}
         name = {"min": 2, "max": 20}
         age = {"min": 0, "max": 100}
-
-    def __init__(self, name: str = "Pimpek", age: int = 0):
-        self.name = name
-        self.favourites = []
-        self.tags = []
-        self.age = age

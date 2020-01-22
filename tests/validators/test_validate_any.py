@@ -1,8 +1,6 @@
 import pytest
 
-from gata.validators import validate_any
-from gata.validators import validate_integer
-from gata.validators import validate_string
+from gata.validators import validate_any, validate_integer, validate_string
 
 
 def test_valid_any():

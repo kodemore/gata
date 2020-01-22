@@ -1,5 +1,5 @@
 # Gata [![Build Status](https://travis-ci.org/kodemore/gata.svg?branch=master)](https://travis-ci.org/kodemore/gata) [![codecov](https://codecov.io/gh/kodemore/gata/branch/master/graph/badge.svg)](https://codecov.io/gh/kodemore/gata) [![Maintainability](https://api.codeclimate.com/v1/badges/c224b3a0ece5d2005b0c/maintainability)](https://codeclimate.com/github/kodemore/gata/maintainability)
-Extended data classes for python with json-schema like validation support
+Gata is a toolbox library for python's dataclasses which allows to serialise/deserialise/validate complex dataclasses.
 
 # Introduction
 
@@ -8,54 +8,90 @@ Extended data classes for python with json-schema like validation support
 `pip install gata`
 
 ## Features
- - dataclasses with built-in value validation
- - support for complex nested validation
- - serialisation/unserialising mechanism
+ - non-intrusive interface
+ - dataclasses validation mechanism
+ - support for complex datatypes
+ - serialisation/deserialisation mechanism
 
-# Dataclasses
-Dataclasses are containers and validators for data used by other classes. It is providing simple interface for 
-setting/getting/validating values. `Gata` library utilises built-in python types (support has some limitations, 
-supported list of types is listed below).
-
-Dataclasses can also be used as a serialisation/deserialisation library so you can store your data in easy manner.
-
-
-### Dataclass example
+### Validating dataclass
 ```python
-from typing import Optional, List
-from gata import DataClass
+from dataclasses import dataclass, field
 from datetime import datetime
+from typing import List, Optional
+
+import gata
 
 
-class Pet(DataClass):
-    name: str = "Pimpek"  # "Pimpek" is a default value for Pet.name
-    age: int = 0
-    sold_at: Optional[datetime]
-    tags: List[str]
+@dataclass
+class Pet:
+    name: str = field(default="Pimpek")
+    age: int = field(default=0)
+    tags: List[str] = field(default_factory=list)
+    sold_at: Optional[datetime] = field(default=None)
 
-Pet.validate({
+gata.validate({
     "name": "Boo",
     "age": 10,
     "tags": []
 }) # returns True
-
-pet = Pet.unserialise({
-    "name": "Boo",
-    "age": 10,
-    "tags": []
-}) #  creates Pet instance with validated data
-
-pet.serialise() # serialises pet again to dict
 ```
 
-### Dataclass validators with meta details
+### Serialising dataclasses
+Gata serialisation mechanism is a better alternative to well known `dataclasses.asdict` function. 
+Differences between `gata`'s serialiser and `asdict` function are:
+ - `gata` ensures that returned value matches annotated type 
+ - `gata` knows how to serialise datetime values, sets, typed lists, typed sets, typed dicts, enums and more
+ - `gata` gives easy interface to implement custom serialisers for your custom defined types
+
+```python
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import List, Optional
+
+import gata
+
+
+@dataclass
+class Pet:
+    name: str
+    age: int = field(default=0)
+    tags: List[str] = field(default_factory=list)
+    sold_at: Optional[datetime] = field(default=None)
+
+pet = Pet(name="Boo", age=10)
+
+gata.serialise(pet)  # {"name": "Boo", "age": 10, "tags": [], "sold_at": None}
+```
+
+### Deserialising into dataclasses
+```python
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import List, Optional
+
+import gata
+
+
+@dataclass
+class Pet:
+    name: str
+    age: int = field(default=0)
+    tags: List[str] = field(default_factory=list)
+    sold_at: Optional[datetime] = field(default=None)
+
+pet = gata.deserialise({"name": "Boo", "age": 10, "tags": [], "sold_at": None}, Pet) 
+```
+
+
+### Adding metadata to validators
+Metadata can be used for more precise validation rules, eg. validating string length and/or format. 
+Consider the following example:
 
 ```python
 from datetime import datetime
 from enum import Enum
 from typing import List
-
-from gata import DataClass
+from dataclasses import dataclass
 
 class PetStatus(Enum):
     AVAILABLE = 0
@@ -63,30 +99,30 @@ class PetStatus(Enum):
     BOOKED = 2
     SOLD = 3
 
-
-class Pet(DataClass):
-    name: str = "Pimpek"
-    age: int = 0
+@dataclass()
+class Pet:
     sold_at: datetime
     tags: List[str]
+    name: str = "Pimpek"
+    age: int = 0
     status: PetStatus = PetStatus.AVAILABLE
     
     class Meta:
         name = {"min": 2, "max": 10}  # Minimum name length is 2 maximum is 10
         age = {"min": 0, "max": 100}  # Minimum pet's age is 0 and maximum is 100
-        tags = {"min": 1 , "items": {"min": 2, "max": 10}}  # Minimum amount of tags is 1 and each tag name's length must be between 2 to 10 characters
+        tags = {"min": 1}  # List of tags must contain at least one item
 ```
-Inner `Meta` class can be used to further specify validation limitations, the following is a list of possible
-options that might be used in the meta field's specification:
+Inner `Meta` class contains properties, name of the property corresponds to parent class. 
+Each property holds dict value which may contain the following keys:
 
  - `min` - depending on the context it specified be min value or length
  - `max` - depending on the context it specifies maximum value or length
  - `format` - used to specify accepted string's format, available list of formats is available below
  - `multiple_of` - used with numbers to specify that validated value has to be multiplication of given value
- - `items` - used with lists or sets to specify item's limitation
+ - `pattern` - specifies regex used to validate string value
 
 ### Available string formats (string validators)
- - `datetime`
+ - `date-time`
  - `date`
  - `time`
  - `uri`
@@ -100,137 +136,89 @@ options that might be used in the meta field's specification:
  - `falsy`
  - `semver`
  - `byte`
+ 
+## Supported python types
 
-### Validating data
+The following is a comprehensive list of supported python types.
 
-```python
-pet_dict = {
-    "name": "Pimpek",
-    "age": 12,
-    "sold_at": None,
-    "tags": ["dogs", "cute"],
-    "status": 0,
-}
+### Primitive types
 
-Pet.validate(pet_dict) # uses dataclass defined in previous example, throws an exception when dict contains invalid values
-pet_instance = Pet.unserialise(pet_dict) # creates validated instance of Pet class
-```
+#### `bool`
+
+Accepts boolean values, while serialisaion/deserialisation cast to boolean, accepts also truthy or falsy expressions. 
+
+#### `int`, `float`, `str`
+
+Accepts values as they are, while serialisation/deserialisation int/float/str functions are used to convert values 
+(this may cause dataloss).
+
+#### `bytes`
+
+Accepts `bytes` values or base64 encoded strings, while serialisation `bytes` values are returned as base64 encoded string, 
+during deserialisation base64 encoded strings are turned into bytes.
+
+### Date-related types
+
+#### `datetime.date`
+
+Accepts string containing valid ISO-8601 representation or `datetime.date` instances, while serialisation converts 
+`datetime.date` instance to string containing valid ISO-8601 date representation.
+
+#### `datetime.datetime`
+Same as `datetime.date` but accepts valid ISO-8601 datetime representation.
 
 
-### Serialising dataclasses
-```python
-from enum import Enum
-from typing import List
+#### `datetime.time`
+Same as `datetime.date` but accepts valid ISO-8601 time representation.
 
-from gata import DataClass
 
-# Definitions
+#### `datetime.timedelta`
+Same as `datetime.date` but accepts valid ISO-8601 time representation.
 
-class PetStatus(Enum):
-    AVAILABLE = 0
-    SOLD = 1
-    RESERVED = 2
+### Standard library
 
-class Favourite(DataClass):
-    name: str
-    priority: int = 0
-    
-    def __init__(self, name: str, priority: int = 0):
-        self.name = name
-        self.priority = priority
+#### `decimal.Decimal`
+Accepts string that can be converted to `decimal.Decimal` value, while serialisation converts value to string.
 
-class Pet(DataClass):
-    name: str = "Pimpek"
-    age: int = 0
-    favourites: List[Favourite]
-    status: PetStatus = PetStatus.AVAILABLE
+#### `uuid.UUID`
+Accepts string that can be converted to `uuid.UUID` value, while serialisation converts value to string.
 
-    def __init__(self, name: str, age: int = 0, favourites: List[Favourite] = [], status: PetStatus = PetStatus.AVAILABLE):
-        self.name = name
-        self.age = age
-        self.favourites = favourites
-        self.status = status    
+#### `enum.Enum`
+Accepts value that can be converted to valid instance of subclass of `enum.Enum`, while serialisation converts value to either string or integer.
 
-favourites = [Favourite("Bone toy"), Favourite("Color red")]
-boo = Pet("boo", 2, favourites)
+#### `ipaddress.IPv4Address`
+Accepts string that is valid ipv4 address representation, while serialisation converts value to string.
 
-assert boo.serialise() == {
-    "name": "boo",
-    "age": 2,
-    "favourites": [{"name": "Bone toy", "priority": "0"}, {"name": "Color red", "priority": 0}],
-    "status": 0
-}
-```
+#### `ipaddress.IPv6Address`
+Accepts string that is valid ipv6 address representation, while serialisation converts value to string.
 
-### Unserialising complex data
+### Typing library
 
-```python
-from enum import Enum
-from typing import List
+#### `typing.Any`
+Accepts any value, while serialisation the value is returned as-is.
 
-from gata import DataClass
+#### `typing.List` with defined subtype
+Accepts values that can be converted to list with specified type, while serialisation converts value to list of converted type.
 
-# Definitions
+#### `typing.Tuple` with defined subtype
+Same as `typing.List`, but value is converted to tuple.
 
-class PetStatus(Enum):
-    AVAILABLE = 0
-    SOLD = 1
-    RESERVED = 2
+#### `typing.Set` with defined subtype
+Same as `typing.List`, but value is converted to set.
 
-class Favourite(DataClass):
-    name: str
-    priority: int = 0
+#### `typing.FrozenSet` with defined subtype
+Same as `typing.List`, but value is converted to frozen-set.
 
-class Pet(DataClass):
-    name: str = "Pimpek"
-    age: int = 0
-    favourites: List[Favourite]
-    status: PetStatus = PetStatus.AVAILABLE
+#### `typing.TypedDict`
+Accept dict which values validates against defined schema.
 
-# Data deserialisation
-
-roxy = Pet.create({
-    "name": "Roxy",
-    "favourites": [
-        {"name": "bones"}, {"name": "balls"}, {"name": "running", "priority": 1}
-    ],
-    "status": 2
-})
-
-assert isinstance(roxy, Pet)
-assert isinstance(roxy.favourites[0], Favourite)
-assert isinstance(roxy.favourites[1], Favourite)
-assert isinstance(roxy.status, PetStatus)
-```
-
-## Supported python types in dataclass
-
-| python type | description | 
-|:--:|:--:|
-|`int`|Checks if value is an integer number|
-|`bool`|Checks if value is valid boolean value|
-|`str`|Checks if value is a string|
-|`float`|Checks if value is a number|
-|`bytes`|Checks if value if byte64 encoded string|
-|subclasses of `enum.Enum`|Checks if value exists within enum definition|
-|`datetime.datetime`| Checks if value is iso compatible datetime|
-|`datetime.date`|Checks if value is iso compatible date|
-|`datetime.time`| Checks if value is iso compatible time|
-|`typing.Any`|Validates against everything|
-|`typing.List` with specified type |Validates list of values|
-|`typing.Set` with specified type |Validates set of values|
-|`typing.Union`|Checks if value conforms one of the provided types|
+### Dataclasses
+All dataclasses are supported and they are validated against defined schema, while serialisation they are converted to dict value 
+containing converted types. 
 
 ## Validators
 
 `Gata` also provides interface for simple validation.
- 
-```python
-from gata import Validator
-
-# Validate email
-Validator.email("test@test.com")
-```
 
 ### List of available validators
 
