@@ -1,4 +1,4 @@
-# Gata [![Build Status](https://travis-ci.org/kodemore/gata.svg?branch=master)](https://travis-ci.org/kodemore/gata) [![codecov](https://codecov.io/gh/kodemore/gata/branch/master/graph/badge.svg)](https://codecov.io/gh/kodemore/gata) [![Maintainability](https://api.codeclimate.com/v1/badges/c224b3a0ece5d2005b0c/maintainability)](https://codeclimate.com/github/kodemore/gata/maintainability)
+# Gata [![Build Status](https://travis-ci.org/kodemore/gata.svg?branch=master)](https://travis-ci.org/kodemore/gata) [![codecov](https://codecov.io/gh/kodemore/gata/branch/master/graph/badge.svg)](https://codecov.io/gh/kodemore/gata) [![Maintainability](https://api.codeclimate.com/v1/badges/00892e0c37a7f1716bdd/maintainability)](https://codeclimate.com/github/kodemore/gata/maintainability)
 Gata is a toolbox library for python's dataclasses which allows to serialise/deserialise/validate complex dataclasses.
 
 # Introduction
@@ -211,6 +211,12 @@ Same as `typing.List`, but value is converted to frozen-set.
 
 #### `typing.TypedDict`
 Accept dict which values validates against defined schema.
+
+#### `typing.Optional`
+Accept value of all supported types with optional modifier.
+
+#### `typing.Union`
+Accept value that is one of specified type in the union type.
 
 ### Dataclasses
 All dataclasses are supported and they are validated against defined schema, while serialisation they are converted to dict value 

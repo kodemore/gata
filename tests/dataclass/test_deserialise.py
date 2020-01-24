@@ -1,6 +1,10 @@
 from datetime import date, datetime, time
-from typing import FrozenSet, List, Set, Tuple
+from typing import FrozenSet, List, Set, Tuple, Optional, Union
+from dataclasses import dataclass
+from decimal import Decimal
+import pytest
 
+from gata.errors import DeserialisationError
 from gata.dataclass.deserialise import deserialise
 from tests.fixtures import Favourite, Pet, PetDict, PetStatus
 
@@ -33,9 +37,16 @@ def test_deserialise_datetime() -> None:
         year=2019, month=1, day=1, hour=13, minute=2, second=1
     )
 
+    assert deserialise(datetime(2019, 1, 1, 1, 1, 1), datetime) == datetime(
+        2019, 1, 1, 1, 1, 1
+    )
+
 
 def test_deserialise_date() -> None:
     assert deserialise("2019-01-20", date) == date(year=2019, month=1, day=20)
+    assert deserialise(date(year=2019, month=1, day=20), date) == date(
+        year=2019, month=1, day=20
+    )
 
 
 def test_deserialise_time() -> None:
@@ -59,6 +70,16 @@ def test_deserialise_null() -> None:
     assert deserialise(None, Set[str]) == set()
     assert deserialise(None, FrozenSet[str]) == frozenset()
     assert deserialise(None, Tuple[str]) == tuple()
+
+
+def test_deserialise_tuple() -> None:
+    assert deserialise([1, 2, 3], Tuple[int, ...]) == tuple([1, 2, 3])
+    assert deserialise([1, 2, 3], Tuple[int, str]) == tuple([1, "2"])
+
+
+def test_fail_deserialise_gerneric_tuple() -> None:
+    with pytest.raises(DeserialisationError):
+        deserialise([1, 2, 3], Tuple)
 
 
 def test_deserialise_list() -> None:
@@ -101,3 +122,52 @@ def test_deserialise_typed_dict() -> None:
 
     assert pet["tags"] == ["tag_a", "tag_b"]
     assert pet["name"] == "Pimpek"
+
+
+@pytest.mark.parametrize(
+    "value,type_definition,expected",
+    [
+        [None, Optional[int], None],
+        [None, Optional[str], None],
+        ["a", Union[int, str], "a"],
+        [1, Optional[int], 1],
+        ["a", Optional[str], "a"],
+        [None, Optional[datetime], None],
+        ["2020-01-01", Optional[date], date(2020, 1, 1)],
+        ["21.123", Union[Decimal, float], Decimal("21.123")],
+        ["21.123", Union[float, Decimal], 21.123],
+    ],
+)
+def test_deserialise_union_primitive_types(value, type_definition, expected) -> None:
+    assert deserialise(value, type_definition) == expected
+
+
+def test_deserialise_union_dataclasses() -> None:
+    @dataclass()
+    class Animal:
+        age: int
+        group: str
+
+    @dataclass()
+    class Dog(Animal):
+        legs: int
+
+    @dataclass()
+    class Fish(Animal):
+        fins: int
+
+    assert isinstance(
+        deserialise(
+            {"age": 10, "group": "fishes", "fins": 2}, Union[Dog, Fish, Animal]
+        ),
+        Fish,
+    )
+    assert isinstance(
+        deserialise(
+            {"age": 10, "group": "fishes", "legs": 2}, Union[Dog, Fish, Animal]
+        ),
+        Dog,
+    )
+    assert isinstance(
+        deserialise({"group": "fishes", "age": 10}, Union[Dog, Fish, Animal]), Animal
+    )

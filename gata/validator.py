@@ -6,6 +6,7 @@ from .validators import (
     validate_date,
     validate_datetime,
     validate_decimal,
+    validate_duration,
     validate_email,
     validate_enum,
     validate_float,
@@ -43,6 +44,7 @@ class Validator:
     datetime = validate_datetime
     date = validate_date
     decimal = validate_decimal
+    duration = validate_duration
     email = validate_email
     enum = validate_enum
     float = validate_float

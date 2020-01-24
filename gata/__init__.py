@@ -1,11 +1,12 @@
 from dataclasses import asdict, is_dataclass
 from typing import Any
 
-from .dataclass.deserialise import deserialise as generic_deserialise
+from .dataclass.deserialise import deserialise_dataclass
 from .dataclass.schema import get_dataclass_schema, validate
-from .dataclass.serialise import serialise as generic_serialise
+from .dataclass.serialise import serialise_dataclass
 from .format import Format
 from .validator import Validator
+from functools import partial
 
 
 def serialise(value: Any) -> dict:
@@ -13,14 +14,14 @@ def serialise(value: Any) -> dict:
     if not is_dataclass(dataclass_class):
         raise ValueError("Passed `value` must be instance of dataclass.")
 
-    return generic_serialise(value, dataclass_class)
+    return serialise_dataclass(value, dataclass_class)
 
 
 def deserialise(value: dict, target_class: Any) -> Any:
     if not is_dataclass(target_class):
         raise ValueError("Passed `target_class` must be valid dataclass.")
 
-    return generic_deserialise(value, target_class)
+    return deserialise_dataclass(value, target_class)
 
 
 def serialisable(cls_=None):
@@ -30,26 +31,12 @@ def serialisable(cls_=None):
                 "`serialisable()` decorator can be only used with dataclasses."
             )
 
-        def _deserialise(value: dict):
-            result = cls_.__new__(cls_)
-            for key, type_ in cls_.__annotations__.items():
-                if key not in value:
-                    setattr(result, key, generic_deserialise(None, type_))
-                    continue
-                setattr(result, key, generic_deserialise(value[key], type_))
-
-            return result
-
         def _serialise(*args):
             self = args[0]
-            serialised = {}
-            for key, type_ in cls_.__annotations__.items():
-                serialised[key] = generic_serialise(getattr(self, key), type_)
-
-            return serialised
+            return serialise_dataclass(self, cls_)
 
         setattr(cls_, "serialise", _serialise)
-        setattr(cls_, "deserialise", _deserialise)
+        setattr(cls_, "deserialise", partial(deserialise_dataclass, source_type=cls_))
         return cls_
 
     if cls_ is None:

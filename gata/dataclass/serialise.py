@@ -15,6 +15,9 @@ from gata.typing import SerialisableType
 from gata.utils import is_typed_dict
 
 
+NoneType = type(None)
+
+
 def serialise_datetype(value: Union[date, datetime, time]) -> str:
     return value.isoformat()
 
@@ -41,8 +44,16 @@ def serialise_tuple(value: Tuple[Any, ...], subtypes: List[Any]) -> List[Any]:
             "Cannot serialise generic tuples, please assure subtype is defined."
         )
     result = []
-    for index in range(len(subtypes)):
-        result.append(serialise(value[index], subtypes[index]))
+    if value is None:
+        return result
+
+    if ... in subtypes:
+        item_type = subtypes[0]
+        for index in range(len(value)):
+            result.append(serialise(value[index], item_type))
+    else:
+        for index in range(len(subtypes)):
+            result.append(serialise(value[index], subtypes[index]))
 
     return result
 
@@ -54,10 +65,27 @@ def serialise_iterable(value: Iterable[Any], subtypes: List[Any]) -> List[Any]:
         )
 
     result = []
+    if value is None:
+        return result
+
     for item in value:
         result.append(serialise(item, subtypes[0]))
 
     return result
+
+
+def serialise_union(value, subtypes: List[Any]) -> Any:
+    # Optional values
+    if value is None and NoneType in subtypes:  # type: ignore
+        return None
+
+    value_type = type(value)
+
+    # Known listed type
+    if value_type in subtypes:
+        return serialise(value, value_type)
+
+    raise SerialisationError(f"Cannot serialise value of type {value_type}")
 
 
 COMPLEX_TYPE_ENCODERS = {
@@ -66,13 +94,14 @@ COMPLEX_TYPE_ENCODERS = {
     set: serialise_iterable,
     frozenset: serialise_iterable,
     Literal: lambda value, subtypes: serialise(value, type(value)),
+    Union: serialise_union,
 }
 
 
 def serialise_dataclass(value: Any, source_type: Any) -> dict:
     result = {}
-    for key, type_ in source_type.__annotations__.items():
-        result[key] = serialise(getattr(value, key), type_)
+    for key, field in source_type.__dataclass_fields__.items():
+        result[key] = serialise(getattr(value, key), field.type)
 
     return result
 
@@ -90,9 +119,6 @@ def serialise(value: Any, source_type: Any) -> Any:
     # Lists, Sets, Tuples, Iterable
     origin_type = getattr(source_type, "__origin__", None)
     if origin_type and origin_type in COMPLEX_TYPE_ENCODERS:
-        if value is None:
-            return []
-
         if origin_type in COMPLEX_TYPE_ENCODERS:
             return COMPLEX_TYPE_ENCODERS[origin_type](value, source_type.__args__)
 

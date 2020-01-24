@@ -1,7 +1,7 @@
 import base64
 import re
 from datetime import date, datetime, time, timedelta
-from decimal import Decimal, DecimalException
+from decimal import Decimal
 from enum import Enum
 from ipaddress import AddressValueError, IPv4Address, IPv6Address
 from typing import (
@@ -253,7 +253,7 @@ def validate_duration(value: Any) -> timedelta:
         return value
     try:
         return parse_iso_duration_string(value)
-    except ValueError:
+    except Exception:
         raise TypeValidationError(expected_type=timedelta)
 
 
@@ -321,7 +321,7 @@ def validate_decimal(value: Any) -> Decimal:
         if not value.is_finite():
             raise TypeValidationError(expected_type=Decimal)
 
-    except DecimalException:
+    except Exception:
         raise TypeValidationError(expected_type=Decimal)
 
     return value
@@ -453,6 +453,7 @@ __all__ = [
     "validate_datetime",
     "validate_date",
     "validate_dict",
+    "validate_duration",
     "validate_typed_dict",
     "validate_decimal",
     "validate_email",
