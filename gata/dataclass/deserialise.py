@@ -20,6 +20,9 @@ from gata.utils import (
 )
 
 
+NoneType = type(None)
+
+
 def deserialise_datetype(value: Union[str, date]) -> date:
     if isinstance(value, date):
         return value
@@ -66,8 +69,13 @@ def deserialise_tuple(value: Tuple[Any, ...], subtypes: List[Any]) -> Tuple[Any,
             "Cannot deserialise generic tuples, please ensure subtype in tuple declaration."
         )
     result = []
-    for index in range(len(subtypes)):
-        result.append(deserialise(value[index], subtypes[index]))
+    if ... in subtypes:
+        item_type = subtypes[0]
+        for index in range(len(value)):
+            result.append(deserialise(value[index], item_type))
+    else:
+        for index in range(len(subtypes)):
+            result.append(deserialise(value[index], subtypes[index]))
 
     return tuple(result)
 
@@ -99,22 +107,55 @@ def deserialise_frozenset(value, subtype) -> FrozenSet:
     return frozenset(result)
 
 
+def deserialise_union(value, subtypes: List[Any]) -> Any:
+    # Optional values
+    if value is None and NoneType in subtypes:  # type: ignore
+        return None
+
+    value_type = type(value)
+
+    # Known listed type
+    if value_type in subtypes:
+        return value
+
+    # dataclass or typed dict
+    dataclasses = [
+        dataclass_type for dataclass_type in subtypes if is_dataclass(dataclass_type)
+    ]
+    if value_type is dict and dataclasses:
+
+        keys = value.keys()
+        for possible_type in dataclasses:
+            if keys == possible_type.__dataclass_fields__.keys():
+                return deserialise(value, possible_type)
+
+    # try to deserialise by subtype
+    for try_type in subtypes:
+        try:
+            return deserialise(value, try_type)
+        except Exception:
+            continue
+
+    raise DeserialisationError(f"Cannot deserialise value to type {value_type}")
+
+
 COMPLEX_TYPE_DECODERS = {
     tuple: deserialise_tuple,
     list: deserialise_list,
     set: deserialise_set,
     frozenset: deserialise_frozenset,
     Literal: lambda value, subtypes: deserialise(value, type(value)),
+    Union: deserialise_union,
 }
 
 
 def deserialise_dataclass(value: Any, source_type: Any) -> dict:
     result = source_type.__new__(source_type)
-    for key, type_ in source_type.__annotations__.items():
+    for key, field in source_type.__dataclass_fields__.items():
         if key not in value:
-            setattr(result, key, deserialise(None, type_))
+            setattr(result, key, deserialise(None, field.type))
             continue
-        setattr(result, key, deserialise(value[key], type_))
+        setattr(result, key, deserialise(value[key], field.type))
 
     return result
 

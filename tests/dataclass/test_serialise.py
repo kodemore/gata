@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from datetime import date, datetime, time
-from typing import Any, FrozenSet, List, Set, Tuple
+from typing import Any, FrozenSet, List, Optional, Set, Tuple, Union
 
 import pytest
 from typing_extensions import Literal
@@ -68,6 +69,7 @@ def test_serialise_null() -> None:
 
 def test_serialise_tuple() -> None:
     assert serialise(("a", "1", "t"), Tuple[str, int, bool]) == ["a", 1, True]
+    assert serialise((1, 2, 3), Tuple[str, ...]) == ["1", "2", "3"]
 
 
 def test_serialise_list() -> None:
@@ -166,3 +168,27 @@ def test_serialise_literal() -> None:
 
 def test_serialise_typed_dict() -> None:
     serialise(PetDict(tags=["a", "b", "c"], name="Pimpek", age=10), PetDict)
+
+
+def test_serialise_union() -> None:
+    assert serialise(None, Optional[int]) is None
+    assert serialise(1, Optional[int]) == 1
+
+
+def test_serialise_union_dataclasses() -> None:
+    @dataclass()
+    class Animal:
+        age: int
+        group: str
+
+    @dataclass()
+    class Dog(Animal):
+        legs: int
+
+    @dataclass()
+    class Fish(Animal):
+        fins: int
+
+    assert serialise(
+        Fish(age=10, group="fishes", fins=2), Union[Dog, Fish, Animal]
+    ) == {"age": 10, "fins": 2, "group": "fishes"}
