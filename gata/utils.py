@@ -1,7 +1,7 @@
 import re
 from datetime import date, datetime, time, timedelta, timezone
 from inspect import cleandoc
-from typing import Any, List, Match
+from typing import Any, List, Match, Union
 
 from typing_extensions import Protocol, runtime
 
@@ -267,6 +267,24 @@ class DocString:
             return DocComponent(component_parts[0], [], matches[2].strip())
 
 
+def noop(value: Any) -> Any:
+    return value
+
+
+NoneType = type(None)
+
+
+def is_optional_type(type_: Any) -> bool:
+    origin_type = getattr(type_, "__origin__", None)
+
+    if not origin_type:
+        return False
+    if origin_type != Union:
+        return False
+
+    return NoneType in type_.__args__  # type: ignore
+
+
 __all__ = [
     "Comparable",
     "is_typed_dict",
@@ -276,4 +294,7 @@ __all__ = [
     "parse_iso_time_string",
     "DocString",
     "timedelta_to_iso_string",
+    "noop",
+    "NoneType",
+    "is_optional_type",
 ]

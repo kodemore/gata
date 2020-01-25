@@ -1,4 +1,5 @@
 from datetime import time, timedelta, timezone
+from typing import Any, Optional, Union
 
 import pytest
 
@@ -6,6 +7,8 @@ from gata.utils import (
     parse_iso_duration_string,
     parse_iso_time_string,
     timedelta_to_iso_string,
+    is_optional_type,
+    NoneType,
 )
 
 
@@ -71,3 +74,16 @@ def test_parse_complex_duration_strings() -> None:
 )
 def test_parse_timedelta_to_iso_string(given: timedelta, expected: str):
     assert timedelta_to_iso_string(given) == expected
+
+
+@pytest.mark.parametrize(
+    "passed_type,expected",
+    [
+        (Optional[int], True),
+        (Optional[float], True),
+        (int, False),
+        (Union[int, NoneType], True),
+    ],
+)
+def test_is_nullable_type(passed_type: Any, expected: bool) -> None:
+    assert is_optional_type(passed_type) is expected

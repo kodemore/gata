@@ -1,5 +1,6 @@
 import re
 from datetime import date, datetime, time
+from dataclasses import dataclass
 from ipaddress import IPv4Address, IPv6Address
 from typing import (
     Dict,
@@ -313,3 +314,17 @@ def test_validate_dataclass() -> None:
         validate({}, Pet)
     except ValidationError as error:
         assert error.context.get("field_name") == "name"
+
+
+def test_validate_nested_nulls() -> None:
+    @dataclass()
+    class B:
+        d: int
+
+    @dataclass()
+    class A:
+        b: B
+        c: str
+
+    with pytest.raises(ValidationError):
+        validate({"c": "c"}, A)

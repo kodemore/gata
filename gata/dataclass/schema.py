@@ -12,10 +12,15 @@ import re
 
 from typing_extensions import Literal
 
-from gata.errors import FieldError, ValidationError, FormatValidationError
+from gata.errors import (
+    FieldError,
+    ValidationError,
+    FormatValidationError,
+    TypeValidationError,
+)
 from gata.format import Format
 from gata.typing import ValidatableType
-from gata.utils import DocString, is_typed_dict
+from gata.utils import DocString, is_typed_dict, noop, is_optional_type
 from gata.validators import (
     validate_all,
     validate_any,
@@ -50,10 +55,6 @@ from gata.validators import (
     validate_url,
     validate_uuid,
 )
-
-
-def _noop(value: Any) -> Any:
-    return value
 
 
 def _validate_against_pattern(value: Any, pattern: Pattern[str]) -> str:
@@ -192,7 +193,7 @@ def map_type_to_validator(type_: Any) -> Callable[[Any], Any]:
     if isclass(type_) and issubclass(type_, Enum):
         return partial(validate_enum, enum_class=type_)
 
-    return _noop
+    return noop
 
 
 def build_min_max_validator(type_: Any, meta: Dict[str, int]) -> Callable[[Any], Any]:
@@ -306,7 +307,13 @@ class ClassSchema:
     def validate(self, value: Dict[str, Any]):
         for key, field in self._attributes.items():
             try:
-                field.validate(value.get(key, None))
+                field_value = value.get(key, None)
+                if field_value is None and isinstance(field, Reference):
+                    if is_optional_type(field.type):
+                        continue
+                    raise FieldError(key, TypeValidationError(expected_type=field.type))
+
+                field.validate(field_value)
             except ValidationError as error:
                 raise FieldError(key, error)
 
