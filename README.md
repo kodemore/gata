@@ -109,7 +109,8 @@ pet.serialise()
 # Validate dict against Pet's schema
 Pet.validate({"name": "Boo", "age": 10, "tags": [], "sold_at": None})
 ```
-    | Note: `@dataclass` decorator must be used after `serialisable` and `validatable` decorators, as gata checks whether decorated class is a dataclass.
+
+> Note: `@dataclass` decorator must be used after `serialisable` and `validatable` decorators, as gata checks whether decorated class is a dataclass.
 
 
 ### Adding metadata to validators
