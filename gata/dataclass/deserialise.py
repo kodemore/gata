@@ -151,7 +151,19 @@ COMPLEX_TYPE_DECODERS = {
 
 def deserialise_dataclass(value: Any, source_type: Any) -> dict:
     result = source_type.__new__(source_type)
+    properties_meta = (
+        getattr(source_type, "Meta") if hasattr(source_type, "Meta") else {}
+    )
     for key, field in source_type.__dataclass_fields__.items():
+        read_only = False
+        if hasattr(properties_meta, key):
+            property_meta = getattr(properties_meta, key)
+            if "read_only" in property_meta and property_meta["read_only"]:
+                read_only = True
+
+        if read_only:
+            continue
+
         if key not in value:
             setattr(result, key, deserialise(None, field.type))
             continue

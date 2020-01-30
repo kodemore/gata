@@ -1,2 +1,1 @@
-from .schema import ClassSchema
-from .schema import get_dataclass_schema
+from .schema import ClassSchema, get_dataclass_schema

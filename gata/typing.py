@@ -62,7 +62,7 @@ class EmailAddress(str, SerialisableType, ValidatableType, SchemaType):
 
 
 @dataclass
-class Duration(str, SerialisableType, SchemaType, ValidatableType):
+class Duration(timedelta, SerialisableType, SchemaType, ValidatableType):
     @classmethod
     def validate(cls, value: Any) -> Any:
         try:
@@ -127,7 +127,7 @@ class Semver(str, SerialisableType, SchemaType, ValidatableType):
         field_schema.update({"format": "semver"})
 
 
-class UUID(str, SerialisableType, SchemaType, ValidatableType):
+class UUID(uuid.UUID, SerialisableType, SchemaType, ValidatableType):
     @classmethod
     def validate(cls, value: Any) -> Any:
         return validate_uuid(value)
@@ -145,7 +145,7 @@ class UUID(str, SerialisableType, SchemaType, ValidatableType):
         field_schema.update({"format": "uuid"})
 
 
-class Date(str, SerialisableType, SchemaType, ValidatableType):
+class Date(date, SerialisableType, SchemaType, ValidatableType):
     @classmethod
     def validate(cls, value: Any) -> Any:
         return validate_date(value)
@@ -163,7 +163,7 @@ class Date(str, SerialisableType, SchemaType, ValidatableType):
         field_schema.update({"format": "date"})
 
 
-class DateTime(str, SerialisableType, SchemaType, ValidatableType):
+class DateTime(datetime, SerialisableType, SchemaType, ValidatableType):
     @classmethod
     def validate(cls, value: Any) -> Any:
         return validate_datetime(value)
@@ -181,7 +181,7 @@ class DateTime(str, SerialisableType, SchemaType, ValidatableType):
         field_schema.update({"format": "date-time"})
 
 
-class Time(str, SerialisableType, SchemaType, ValidatableType):
+class Time(time, SerialisableType, SchemaType, ValidatableType):
     @classmethod
     def validate(cls, value: Any) -> Any:
         return validate_time(value)

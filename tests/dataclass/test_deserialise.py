@@ -6,7 +6,7 @@ import pytest
 
 from gata.errors import DeserialisationError
 from gata.dataclass.deserialise import deserialise
-from tests.fixtures import Favourite, Pet, PetDict, PetStatus
+from tests.fixtures import Favourite, Pet, PetDict, PetStatus, PetWithVirtualProperties
 
 
 def test_deserialise_enums() -> None:
@@ -171,3 +171,11 @@ def test_deserialise_union_dataclasses() -> None:
     assert isinstance(
         deserialise({"group": "fishes", "age": 10}, Union[Dog, Fish, Animal]), Animal
     )
+
+
+def test_read_only_property() -> None:
+    pet = deserialise({"name": "Boo", "favourite_id": 2}, PetWithVirtualProperties)
+
+    assert isinstance(pet, PetWithVirtualProperties)
+    assert pet.name == "Boo"
+    assert pet.favourite_id == 2

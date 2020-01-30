@@ -122,6 +122,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List
 from dataclasses import dataclass
+from gata import MetaProperty
 
 class PetStatus(Enum):
     AVAILABLE = 0
@@ -138,18 +139,20 @@ class Pet:
     status: PetStatus = PetStatus.AVAILABLE
     
     class Meta:
-        name = {"min": 2, "max": 10}  # Minimum name length is 2 maximum is 10
+        name = MetaProperty(min=2, max=10)  # Minimum name length is 2 maximum is 10
         age = {"min": 0, "max": 100}  # Minimum pet's age is 0 and maximum is 100
         tags = {"min": 1}  # List of tags must contain at least one item
 ```
-Inner `Meta` class contains properties, name of the property corresponds to parent class. 
-Each property holds dict value which may contain the following keys:
+Inner `Meta` class contains properties, name of the property corresponds to parent class.
+Each property holds dict value or instance of `gata.MetaProperty` (typed dict) which may contain the following keys:
 
  - `min` - depending on the context it specified be min value or length
  - `max` - depending on the context it specifies maximum value or length
  - `format` - used to specify accepted string's format, available list of formats is available below
  - `multiple_of` - used with numbers to specify that validated value has to be multiplication of given value
  - `pattern` - specifies regex used to validate string value
+ - `read_only` - sets property to read_only mode, which means property will be serialised as usual but skipped during deserialisation and validation if not set
+ - `write_only` - sets property to write_only mode, which means property will be deserialised and validated but not serialised
 
 ### Available string formats (string validators)
  - `date-time`

@@ -85,6 +85,10 @@ def serialise_union(value, subtypes: List[Any]) -> Any:
     if value_type in subtypes:
         return serialise(value, value_type)
 
+    for subtype in subtypes:
+        if issubclass(subtype, value_type):
+            return subtype.serialise(value)
+
     raise SerialisationError(f"Cannot serialise value of type {value_type}")
 
 
@@ -100,7 +104,19 @@ COMPLEX_TYPE_ENCODERS = {
 
 def serialise_dataclass(value: Any, source_type: Any) -> dict:
     result = {}
+    properties_meta = (
+        getattr(source_type, "Meta") if hasattr(source_type, "Meta") else {}
+    )
     for key, field in source_type.__dataclass_fields__.items():
+        write_only = False
+        if hasattr(properties_meta, key):
+            property_meta = getattr(properties_meta, key)
+            if "write_only" in property_meta and property_meta["write_only"]:
+                write_only = True
+
+        if write_only:
+            continue
+
         result[key] = serialise(getattr(value, key), field.type)
 
     return result

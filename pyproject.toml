@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gata"
-version = "2.1.1"
+version = "2.1.2"
 description = "Gata is data validation and transformation library for python."
 authors = [
     "Dawid Kraczkowski <dawid.kraczkowski@gmail.com>"
@@ -12,11 +12,18 @@ homepage = "https://github.com/kodemore/gata"
 repository = "https://github.com/kodemore/gata"
 documentation = "https://github.com/kodemore/gata"
 
-keywords = ["validation", "schema", "dataclass", "formatter"]
+keywords = ["dataclass", "validation", "serialisation", "deserialisation", "schema", "formatter", "loads", "dumps"]
 
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
     "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Libraries :: Python Modules"
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 # Requirements
@@ -32,3 +39,7 @@ pytest-cov = "^2.5"
 pytest-mock = "^1.9"
 mypy = "^0.730.0"
 black = { version = "^19.3b0", python = "^3.6" }
+
+[tool.black]
+
+safe = true

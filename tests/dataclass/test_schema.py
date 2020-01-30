@@ -18,8 +18,9 @@ import pytest
 from typing_extensions import Literal, TypedDict
 
 from gata.dataclass.schema import map_meta_to_validator, map_type_to_validator, validate
+from gata.dataclass.schema import MetaProperty
 from gata.errors import ValidationError
-from tests.fixtures import Pet
+from tests.fixtures import Pet, PetWithVirtualProperties
 
 
 def test_map_int_to_validator() -> None:
@@ -328,3 +329,25 @@ def test_validate_nested_nulls() -> None:
 
     with pytest.raises(ValidationError):
         validate({"c": "c"}, A)
+
+
+def test_validate_read_only_properties_when_empty() -> None:
+    validate({"name": "Poro", "favourite_id": 12}, PetWithVirtualProperties)
+
+
+def test_validate_read_only_properties_when_passed() -> None:
+    validate(
+        {"name": "Poro", "favourite_id": 12, "favourite": {"name": "a", "priority": 2}},
+        PetWithVirtualProperties,
+    )
+
+    with pytest.raises(ValidationError):
+        validate(
+            {"name": "Poro", "favourite_id": 12, "favourite": {"name": "a"}},
+            PetWithVirtualProperties,
+        )
+
+
+def test_validate_fail_when_write_only_properties_are_empty() -> None:
+    with pytest.raises(ValidationError):
+        validate({"name": "Poro"}, PetWithVirtualProperties)

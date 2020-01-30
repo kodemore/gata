@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Pattern, Union
 from uuid import UUID
 import re
 
-from typing_extensions import Literal
+from typing_extensions import Literal, TypedDict
 
 from gata.errors import (
     FieldError,
@@ -55,6 +55,16 @@ from gata.validators import (
     validate_url,
     validate_uuid,
 )
+
+
+class MetaProperty(TypedDict):
+    max: int
+    min: int
+    multiple_of: Union[int, float, Decimal]
+    format: Union[str, Format]
+    pattern: str
+    read_only: bool
+    write_only: bool
 
 
 def _validate_against_pattern(value: Any, pattern: Pattern[str]) -> str:
@@ -294,6 +304,7 @@ class ClassSchema:
         self.type = dataclass_type
         self.class_name = dataclass_type.__name__
         self._attributes: Dict[str, FieldSchema] = {}
+        self.meta = dataclass_type.Meta if hasattr(dataclass_type, "Meta") else None
 
     def __setitem__(self, key: str, value: FieldSchema):
         self._attributes[key] = value
@@ -308,8 +319,14 @@ class ClassSchema:
         for key, field in self._attributes.items():
             try:
                 field_value = value.get(key, None)
-                if field_value is None and isinstance(field, Reference):
-                    if is_optional_type(field.type):
+                if field_value is None:
+                    if isinstance(field, Reference) and is_optional_type(field.type):
+                        continue
+                    if (
+                        self.meta
+                        and hasattr(self.meta, key)
+                        and getattr(self.meta, key).get("read_only", False)
+                    ):
                         continue
                     raise FieldError(key, TypeValidationError(expected_type=field.type))
 
@@ -330,12 +347,11 @@ def get_dataclass_schema(dataclass_class: Any) -> ClassSchema:
     schema = ClassSchema(dataclass_class)
     _SCHEMAS[dataclass_class] = schema
 
-    meta = dataclass_class.Meta if hasattr(dataclass_class, "Meta") else None
     for field, type_ in dataclass_class.__annotations__.items():
         if is_dataclass(type_):
             schema[field] = Reference(type_, {})
         else:
-            field_meta = getattr(meta, field, {}) if meta else {}
+            field_meta = getattr(schema.meta, field, {}) if schema.meta else {}
             schema[field] = FieldSchema(type_, field_meta)
 
     return schema
@@ -353,6 +369,7 @@ __all__ = [
     "FieldSchema",
     "Reference",
     "ClassSchema",
+    "MetaProperty",
     "validate",
     "get_dataclass_schema",
     "map_type_to_validator",

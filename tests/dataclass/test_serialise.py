@@ -7,7 +7,7 @@ from typing_extensions import Literal
 
 from gata.dataclass.serialise import serialise
 from gata.errors import SerialisationError
-from tests.fixtures import Favourite, Pet, PetDict, PetStatus
+from tests.fixtures import Favourite, Pet, PetDict, PetStatus, PetWithVirtualProperties
 
 
 def test_serialise_enums() -> None:
@@ -192,3 +192,14 @@ def test_serialise_union_dataclasses() -> None:
     assert serialise(
         Fish(age=10, group="fishes", fins=2), Union[Dog, Fish, Animal]
     ) == {"age": 10, "fins": 2, "group": "fishes"}
+
+
+def test_write_only_property() -> None:
+    pet = serialise(
+        PetWithVirtualProperties(
+            name="Poro", favourite=Favourite(name="Poro snac", priority=1)
+        ),
+        PetWithVirtualProperties,
+    )
+
+    assert pet == {"name": "Poro", "favourite": {"name": "Poro snac", "priority": 1}}

@@ -3,6 +3,7 @@ from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass, field
 from typing_extensions import TypedDict
+from gata.dataclass.schema import MetaProperty
 
 
 class PetStatus(Enum):
@@ -40,3 +41,14 @@ class Pet:
         tags = {"min": 1}
         name = {"min": 2, "max": 20}
         age = {"min": 0, "max": 100}
+
+
+@dataclass
+class PetWithVirtualProperties:
+    name: str
+    favourite: Favourite
+    favourite_id: int = field(default=None)
+
+    class Meta:
+        favourite_id = MetaProperty(write_only=True)
+        favourite = MetaProperty(read_only=True)

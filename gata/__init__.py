@@ -1,12 +1,31 @@
 from dataclasses import asdict, is_dataclass
-from typing import Any
+from functools import partial
+from typing import Any, Callable, Dict, TypeVar, Union
+
+from typing_extensions import Protocol
 
 from .dataclass.deserialise import deserialise_dataclass
-from .dataclass.schema import get_dataclass_schema, validate
+from .dataclass.schema import MetaProperty, get_dataclass_schema, validate
 from .dataclass.serialise import serialise_dataclass
 from .format import Format
 from .validator import Validator
-from functools import partial
+
+T = TypeVar("T")
+
+
+class Validatable(Protocol):
+    @classmethod
+    def validate(cls, data: Dict[str, Any]) -> None:
+        ...
+
+
+class Serialisable(Protocol):
+    @classmethod
+    def deserialise(cls, data: Dict[str, Any]) -> T:
+        ...
+
+    def serialise(self) -> Dict[str, Any]:
+        ...
 
 
 def serialise(value: Any) -> dict:
@@ -24,8 +43,10 @@ def deserialise(value: dict, target_class: Any) -> Any:
     return deserialise_dataclass(value, target_class)
 
 
-def serialisable(cls_=None):
-    def _attach_serialisable_interface(cls_):
+def serialisable(
+    cls_: T = None,
+) -> Union[T, Serialisable, Callable[[Any], Union[T, Serialisable]]]:
+    def _attach_serialisable_interface(cls_) -> Union[T, Serialisable]:
         if not is_dataclass(cls_):
             raise AssertionError(
                 "`serialisable()` decorator can be only used with dataclasses."
@@ -45,8 +66,10 @@ def serialisable(cls_=None):
     return _attach_serialisable_interface(cls_)
 
 
-def validatable(cls_=None):
-    def _attach_validatable_interface(cls_):
+def validatable(
+    cls_: T = None,
+) -> Union[T, Validatable, Callable[[Any], Union[T, Validatable]]]:
+    def _attach_validatable_interface(cls_) -> Union[T, Validatable]:
         if not is_dataclass(cls_):
             raise AssertionError(
                 "`validatable()` decorator can be only used with dataclasses."
@@ -78,4 +101,7 @@ __all__ = [
     "validate",
     "Format",
     "Validator",
+    "Serialisable",
+    "Validatable",
+    "MetaProperty",
 ]
