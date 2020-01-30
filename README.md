@@ -33,7 +33,7 @@ gata.validate({
     "name": "Boo",
     "age": 10,
     "tags": []
-}) # returns True
+}, Pet) # returns True
 ```
 
 ### Serialising dataclasses
@@ -81,6 +81,35 @@ class Pet:
 
 pet = gata.deserialise({"name": "Boo", "age": 10, "tags": [], "sold_at": None}, Pet) 
 ```
+
+### Useful decorators
+If you prefer more OOP approach you can use `gata.serialisable`, `gata.valiadatable` decorators, consider the following example
+```python
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import List, Optional
+
+from gata import serialisable, validatable
+
+@validatable
+@serialisable
+@dataclass
+class Pet:
+    name: str
+    age: int = field(default=0)
+    tags: List[str] = field(default_factory=list)
+    sold_at: Optional[datetime] = field(default=None)
+
+# Deserialise Pet
+pet = Pet.deserialise({"name": "Boo", "age": 10, "tags": [], "sold_at": None}) 
+
+# Serialise Pet
+pet.serialise()
+
+# Validate dict against Pet's schema
+Pet.validate({"name": "Boo", "age": 10, "tags": [], "sold_at": None})
+```
+ | Note: `@dataclass` decorator must be used after `serialisable` and `validatable` decorators, as gata checks whether decorated class is a dataclass.
 
 
 ### Adding metadata to validators
