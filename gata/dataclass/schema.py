@@ -57,7 +57,7 @@ from gata.validators import (
 )
 
 
-class MetaProperty(TypedDict):
+class PropertyMeta(TypedDict):
     max: int
     min: int
     multiple_of: Union[int, float, Decimal]
@@ -369,7 +369,7 @@ __all__ = [
     "FieldSchema",
     "Reference",
     "ClassSchema",
-    "MetaProperty",
+    "PropertyMeta",
     "validate",
     "get_dataclass_schema",
     "map_type_to_validator",

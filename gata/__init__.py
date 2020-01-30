@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, TypeVar, Union
 from typing_extensions import Protocol
 
 from .dataclass.deserialise import deserialise_dataclass
-from .dataclass.schema import MetaProperty, get_dataclass_schema, validate
+from .dataclass.schema import PropertyMeta, get_dataclass_schema, validate
 from .dataclass.serialise import serialise_dataclass
 from .format import Format
 from .validator import Validator
@@ -103,5 +103,5 @@ __all__ = [
     "Validator",
     "Serialisable",
     "Validatable",
-    "MetaProperty",
+    "PropertyMeta",
 ]

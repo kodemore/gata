@@ -122,7 +122,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List
 from dataclasses import dataclass
-from gata import MetaProperty
+from gata import PropertyMeta
 
 class PetStatus(Enum):
     AVAILABLE = 0
@@ -139,12 +139,12 @@ class Pet:
     status: PetStatus = PetStatus.AVAILABLE
     
     class Meta:
-        name = MetaProperty(min=2, max=10)  # Minimum name length is 2 maximum is 10
+        name = PropertyMeta(min=2, max=10)  # Minimum name length is 2 maximum is 10
         age = {"min": 0, "max": 100}  # Minimum pet's age is 0 and maximum is 100
         tags = {"min": 1}  # List of tags must contain at least one item
 ```
 Inner `Meta` class contains properties, name of the property corresponds to parent class.
-Each property holds dict value or instance of `gata.MetaProperty` (typed dict) which may contain the following keys:
+Each property holds dict value or instance of `gata.PropertyMeta` (typed dict) which may contain the following keys:
 
  - `min` - depending on the context it specified be min value or length
  - `max` - depending on the context it specifies maximum value or length

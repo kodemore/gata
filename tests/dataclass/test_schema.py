@@ -18,7 +18,7 @@ import pytest
 from typing_extensions import Literal, TypedDict
 
 from gata.dataclass.schema import map_meta_to_validator, map_type_to_validator, validate
-from gata.dataclass.schema import MetaProperty
+from gata.dataclass.schema import PropertyMeta
 from gata.errors import ValidationError
 from tests.fixtures import Pet, PetWithVirtualProperties
 
