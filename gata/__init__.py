@@ -28,12 +28,14 @@ class Serialisable(Protocol):
         ...
 
 
-def serialise(value: Any) -> dict:
+def serialise(
+    value: Any, mapping: Dict[str, Union[str, bool, dict, Callable]] = None
+) -> dict:
     dataclass_class = type(value)
     if not is_dataclass(dataclass_class):
         raise ValueError("Passed `value` must be instance of dataclass.")
 
-    return serialise_dataclass(value, dataclass_class)
+    return serialise_dataclass(value, dataclass_class, mapping)
 
 
 def deserialise(value: dict, target_class: Any) -> Any:
@@ -52,9 +54,9 @@ def serialisable(
                 "`serialisable()` decorator can be only used with dataclasses."
             )
 
-        def _serialise(*args):
+        def _serialise(*args, **mapping):
             self = args[0]
-            return serialise_dataclass(self, cls_)
+            return serialise_dataclass(self, cls_, mapping)
 
         setattr(cls_, "serialise", _serialise)
         setattr(cls_, "deserialise", partial(deserialise_dataclass, source_type=cls_))

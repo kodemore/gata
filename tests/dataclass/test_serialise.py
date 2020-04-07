@@ -203,3 +203,41 @@ def test_write_only_property() -> None:
     )
 
     assert pet == {"name": "Poro", "favourite": {"name": "Poro snac", "priority": 1}}
+
+
+def test_serialise_with_mapping() -> None:
+    @dataclass
+    class Pet:
+        name: str
+        status: PetStatus
+        favourites: List[Favourite]
+
+    @dataclass
+    class PetStore:
+        name: str
+        pets: List[Pet]
+
+    tom = Pet(name="Tom", status=PetStatus.AVAILABLE, favourites=[Favourite("bone")])
+    bob = Pet(name="Bob", status=PetStatus.RESERVED, favourites=[Favourite("candy")])
+
+    store = PetStore(name="happy pets", pets=[tom, bob])
+
+    serialised_store = serialise(
+        store,
+        PetStore,
+        mapping={
+            "pets": {
+                "$self": "pet_list",
+                "favourites": {"$self": "favourite_list", "$item": "name"},
+                "status": "pet_status",
+            }
+        },
+    )
+
+    assert serialised_store == {
+        "name": "happy pets",
+        "pet_list": [
+            {"name": "Tom", "favourite_list": ["bone"], "pet_status": 0},
+            {"name": "Bob", "favourite_list": ["candy"], "pet_status": 2},
+        ],
+    }

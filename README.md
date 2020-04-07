@@ -12,6 +12,7 @@ Gata is a toolbox library for python's dataclasses which allows to serialise/des
  - dataclasses validation mechanism
  - support for complex datatypes
  - serialisation/deserialisation mechanism
+ - easy to use field mapping
 
 ### Validating dataclass
 ```python
@@ -62,6 +63,81 @@ pet = Pet(name="Boo", age=10)
 
 gata.serialise(pet)  # {"name": "Boo", "age": 10, "tags": [], "sold_at": None}
 ```
+
+#### Mapping fields in the result
+Serialise method can be fetched with additional `mapping` parameter which tells serialisation mechanism to rename fields
+accordingly to set mapping rules in the returned result. Consider following example:
+
+```python
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import List, Optional
+
+import gata
+
+
+@dataclass
+class Pet:
+    name: str
+    age: int = field(default=0)
+    tags: List[str] = field(default_factory=list)
+    sold_at: Optional[datetime] = field(default=None)
+
+pet = Pet(name="Boo", age=10)
+
+gata.serialise(pet, mapping={
+    "name": "pet_name", # name field will be mapped to `pet_name`
+    "tags": False, # tags field will be excluded from serialisation
+    # rest of the fields will be returned with names taken from dataclass
+})
+```
+
+`mapping` argument must be a dict of `Dict[str, Union[str, bool, callable, dict]]` type. 
+
+##### Mapping behaviour
+When value is a `string`, field name will be simply mapped to corresponding key value.
+
+When value is a `bool(False)` field will not be returned in the serialised value.
+
+When value is a `callable`, value corresponding to mapped key will be passed to callable, which should return tuple.
+First tuple's item will be used as a key for returned value and second is the value that will get returned as a part of serialised object.
+
+Nested mapping is allowed, by passing `Dict[str, Union[str, bool, callable, dict]]` instance as a key value.
+
+##### Nested mapping
+```python
+from dataclasses import dataclass
+from typing import List
+
+import gata
+
+@dataclass
+class Pet:
+    name: str
+    age: int
+
+
+@gata.serialisable
+@dataclass
+class PetStore:
+    name: str
+    pets: List[Pet]
+
+boo = Pet(name="Boo", age=10)
+noo = Pet(name="Noo", age=20)
+
+store = PetStore(name="Happy Pets", pets=[boo, noo])
+
+store.serialise(
+    name="store_name",  # corresponds to PetStore.name property
+    pets={
+        "$self": "pet_list",  # corresponds to PetStore.pets property
+        "name": "pet_name", # corresponds to Pet.name property
+        "age": False # corresponds to Pet.age property
+    }
+)
+```
+
 
 ### Deserialising into dataclasses
 ```python
