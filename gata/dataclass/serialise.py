@@ -10,7 +10,7 @@ from uuid import UUID
 
 from typing_extensions import Literal
 
-from gata.errors import SerialisationError
+from gata.errors import SerialisationError, MetaError
 from gata.typing import SerialisableType
 from gata.utils import is_typed_dict
 
@@ -180,6 +180,24 @@ def serialise_dataclass(
                 write_only = True
 
         if write_only:
+            continue
+
+        custom_serialiser_name = f"serialise_{key}"
+
+        # custom serialiser supports very basic mapping
+        if hasattr(properties_meta, custom_serialiser_name):
+            custom_serialiser = getattr(properties_meta, custom_serialiser_name)
+            if not callable(custom_serialiser):
+                raise MetaError(
+                    f"serialiser {custom_serialiser_name} for {source_type} is not callable,"
+                )
+            result_value = custom_serialiser(getattr(value, key))
+
+            # support very basic mapping
+            if mapping and key in mapping and isinstance(mapping[key], str):
+                result[mapping[key]] = result_value  # type: ignore
+            else:
+                result[key] = result_value
             continue
 
         if mapping:

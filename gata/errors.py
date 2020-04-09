@@ -95,6 +95,10 @@ class TypeMapError(RuntimeError):
     pass
 
 
+class MetaError(RuntimeError):
+    pass
+
+
 class SerialisationError(ValueError, TypeMapError):
     pass
 

@@ -13,6 +13,7 @@ Gata is a toolbox library for python's dataclasses which allows to serialise/des
  - support for complex datatypes
  - serialisation/deserialisation mechanism
  - easy to use field mapping
+ - custom serialisation/deserialisation
 
 ### Validating dataclass
 ```python
@@ -138,6 +139,7 @@ store.serialise(
 )
 ```
 
+> Note: When using custom serialising methods, only field to field mapping is available.
 
 ### Deserialising into dataclasses
 ```python
@@ -229,6 +231,45 @@ Each property holds dict value or instance of `gata.PropertyMeta` (typed dict) w
  - `pattern` - specifies regex used to validate string value
  - `read_only` - sets property to read_only mode, which means property will be serialised as usual but skipped during deserialisation and validation if not set
  - `write_only` - sets property to write_only mode, which means property will be deserialised and validated but not serialised
+
+#### Custom serialisers/deserialisers in metaclass
+
+In case creating custom serialisable type is not an option gata provides simple api for defining
+custom serialisation/deserialisation functions for properties. 
+
+Please consider following example:
+```python
+from typing import List
+from dataclasses import dataclass
+from gata import PropertyMeta
+from bson import ObjectId
+
+@dataclass()
+class Pet:
+    id: ObjectId
+    tags: List[str]
+    name: str = "Boo"
+    age: int = 0
+    
+    class Meta:
+        name = PropertyMeta(min=2, max=10)  # Minimum name length is 2 maximum is 10
+        age = {"min": 0, "max": 100}  # Minimum pet's age is 0 and maximum is 100
+        tags = {"min": 1}  # List of tags must contain at least one item
+        
+        @staticmethod
+        def serialise_id(pet_id: ObjectId) -> str:
+            return str(pet_id)
+        
+        @staticmethod
+        def deserialise_id(pet_id: str) -> ObjectId:
+            return ObjectId(pet_id)
+```
+
+In the above example default serialiser/deserialiser for `id` property has been replaced with methods `serialise_id` and
+`deserialise_id`, keep in mind that naming here is not accidental. 
+
+Property serialisers in `Meta` class must be prefixed with `serialise_` prefix, deserialisers accordingly with `deserialise_` prefix. 
+Serialisation and desarialisation methods both MUST be static methods.
 
 ### Available string formats (string validators)
  - `date-time`

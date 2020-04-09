@@ -179,3 +179,26 @@ def test_read_only_property() -> None:
     assert isinstance(pet, PetWithVirtualProperties)
     assert pet.name == "Boo"
     assert pet.favourite_id == 2
+
+
+def test_deserialise_with_user_defined_deserialiser() -> None:
+    @dataclass
+    class PetWithDeserialiser:
+        name: str
+        status: PetStatus
+        favourites: list
+
+        class Meta:
+            @staticmethod
+            def deserialise_favourites(favourites: List[str]) -> List[Favourite]:
+                return [Favourite(name=favourite) for favourite in favourites]
+
+    pet = deserialise(
+        {"name": "Boo", "status": 0, "favourites": ["bone", "candy"]},
+        PetWithDeserialiser,
+    )
+
+    assert len(pet.favourites) == 2
+    for favourite in pet.favourites:
+        assert isinstance(favourite, Favourite)
+    assert pet.name == "Boo"

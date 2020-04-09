@@ -10,7 +10,7 @@ from uuid import UUID
 
 from typing_extensions import Literal
 
-from gata.errors import DeserialisationError
+from gata.errors import DeserialisationError, MetaError
 from gata.typing import SerialisableType
 from gata.utils import (
     is_typed_dict,
@@ -164,9 +164,22 @@ def deserialise_dataclass(value: Any, source_type: Any) -> dict:
         if read_only:
             continue
 
+        custom_deserialiser_name = f"deserialise_{key}"
+        if hasattr(properties_meta, custom_deserialiser_name):
+            custom_deserialiser = getattr(properties_meta, custom_deserialiser_name)
+            if not callable(custom_deserialiser):
+                raise MetaError(
+                    f"could not use deserialiser {custom_deserialiser_name} in {source_type}, deserialiser must be static method"
+                )
+            setattr(
+                result, key, custom_deserialiser(value[key] if key in value else None)
+            )
+            continue
+
         if key not in value:
             setattr(result, key, deserialise(None, field.type))
             continue
+
         setattr(result, key, deserialise(value[key], field.type))
 
     return result

@@ -100,3 +100,46 @@ def test_serialisable_with_mapping() -> None:
             {"name": "Bob", "favourite_list": [{"name": "candy"}], "pet_status": 2},
         ],
     }
+
+
+def test_serialisable_with_custom_serialisers_deserialisers() -> None:
+    @serialisable
+    @dataclass
+    class Pet:
+        name: str
+        status: PetStatus
+        favourites: List[Favourite]
+
+        class Meta:
+            @staticmethod
+            def serialise_name(name: str) -> str:
+                return f"serialised: {name}"
+
+            @staticmethod
+            def deserialise_favourites(favourites: List[str]) -> List[Favourite]:
+                return [
+                    Favourite(name=favourite) for favourite in favourites if favourite
+                ]
+
+    @serialisable
+    @dataclass
+    class PetStore:
+        name: str
+        pets: List[Pet]
+
+    pet_store = PetStore.deserialise(
+        {
+            "name": "Happy Pets",
+            "pets": [
+                {"name": "Boo", "favourites": ["bone", "candy"]},
+                {"name": "Koo", "favourites": ["seeds"]},
+            ],
+        }
+    )
+
+    assert isinstance(pet_store, PetStore)
+    assert pet_store.name == "Happy Pets"
+    for pet in pet_store.pets:
+        assert isinstance(pet, Pet)
+        for favourite in pet.favourites:
+            assert isinstance(favourite, Favourite)

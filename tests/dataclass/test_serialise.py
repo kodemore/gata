@@ -6,6 +6,7 @@ import pytest
 from typing_extensions import Literal
 
 from gata.dataclass.serialise import serialise
+from gata import PropertyMeta
 from gata.errors import SerialisationError
 from tests.fixtures import Favourite, Pet, PetDict, PetStatus, PetWithVirtualProperties
 
@@ -239,5 +240,38 @@ def test_serialise_with_mapping() -> None:
         "pet_list": [
             {"name": "Tom", "favourite_list": ["bone"], "pet_status": 0},
             {"name": "Bob", "favourite_list": ["candy"], "pet_status": 2},
+        ],
+    }
+
+
+def test_serialise_with_user_defined_serialiser() -> None:
+    @dataclass
+    class Pet:
+        name: str
+        status: PetStatus
+        favourites: List[Favourite]
+
+        class Meta:
+            @staticmethod
+            def serialise_favourites(favourites: List[Favourite]) -> List[str]:
+                return [favourite.name for favourite in favourites]
+
+    @dataclass
+    class PetStore:
+        name: str
+        pets: List[Pet]
+
+    tom = Pet(name="Tom", status=PetStatus.AVAILABLE, favourites=[Favourite("bone")])
+    bob = Pet(name="Bob", status=PetStatus.RESERVED, favourites=[Favourite("candy")])
+
+    store = PetStore(name="happy pets", pets=[tom, bob])
+
+    serialised_store = serialise(store, PetStore)
+
+    assert serialised_store == {
+        "name": "happy pets",
+        "pets": [
+            {"name": "Tom", "favourites": ["bone"], "status": 0},
+            {"name": "Bob", "favourites": ["candy"], "status": 2},
         ],
     }
