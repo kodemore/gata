@@ -12,7 +12,7 @@ from typing_extensions import Literal
 
 from gata.errors import SerialisationError, MetaError
 from gata.typing import SerialisableType
-from gata.utils import is_typed_dict
+from gata.utils import is_typed_dict, module_exists
 
 
 NoneType = type(None)
@@ -36,6 +36,11 @@ TYPE_ENCODERS = {
     bytes: lambda value: b64encode(value).decode("utf8"),
     Decimal: str,
 }
+
+if module_exists("bson"):
+    import bson
+
+    TYPE_ENCODERS[bson.ObjectId] = str
 
 
 def serialise_tuple(

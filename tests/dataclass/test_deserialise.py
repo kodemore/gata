@@ -7,6 +7,7 @@ import pytest
 from gata.errors import DeserialisationError
 from gata.dataclass.deserialise import deserialise
 from tests.fixtures import Favourite, Pet, PetDict, PetStatus, PetWithVirtualProperties
+from bson import ObjectId
 
 
 def test_deserialise_enums() -> None:
@@ -47,6 +48,11 @@ def test_deserialise_date() -> None:
     assert deserialise(date(year=2019, month=1, day=20), date) == date(
         year=2019, month=1, day=20
     )
+
+
+def test_deserialise_object_id() -> None:
+    example_id = ObjectId()
+    assert deserialise(str(example_id), ObjectId) == example_id
 
 
 def test_deserialise_time() -> None:

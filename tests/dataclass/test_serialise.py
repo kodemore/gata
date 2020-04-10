@@ -3,10 +3,10 @@ from datetime import date, datetime, time
 from typing import Any, FrozenSet, List, Optional, Set, Tuple, Union
 
 import pytest
+from bson import ObjectId
 from typing_extensions import Literal
 
 from gata.dataclass.serialise import serialise
-from gata import PropertyMeta
 from gata.errors import SerialisationError
 from tests.fixtures import Favourite, Pet, PetDict, PetStatus, PetWithVirtualProperties
 
@@ -71,6 +71,11 @@ def test_serialise_null() -> None:
 def test_serialise_tuple() -> None:
     assert serialise(("a", "1", "t"), Tuple[str, int, bool]) == ["a", 1, True]
     assert serialise((1, 2, 3), Tuple[str, ...]) == ["1", "2", "3"]
+
+
+def test_serialise_object_id() -> None:
+    example_id = ObjectId()
+    assert serialise(example_id, ObjectId) == str(example_id)
 
 
 def test_serialise_list() -> None:

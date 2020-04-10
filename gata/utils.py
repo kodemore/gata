@@ -285,6 +285,15 @@ def is_optional_type(type_: Any) -> bool:
     return NoneType in type_.__args__  # type: ignore
 
 
+def module_exists(module: str) -> bool:
+    try:
+        __import__(module)
+    except ImportError:
+        return False
+    else:
+        return True
+
+
 __all__ = [
     "Comparable",
     "is_typed_dict",
@@ -297,4 +306,5 @@ __all__ = [
     "noop",
     "NoneType",
     "is_optional_type",
+    "module_exists",
 ]

@@ -17,6 +17,7 @@ from gata.utils import (
     parse_iso_date_string,
     parse_iso_datetime_string,
     parse_iso_time_string,
+    module_exists,
 )
 
 
@@ -58,6 +59,11 @@ TYPE_DECODERS = {
     bytes: b64decode,
     Decimal: Decimal,
 }
+
+if module_exists("bson"):
+    import bson
+
+    TYPE_DECODERS[bson.ObjectId] = bson.ObjectId
 
 
 def deserialise_tuple(value: Tuple[Any, ...], subtypes: List[Any]) -> Tuple[Any, ...]:
