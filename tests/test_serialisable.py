@@ -37,15 +37,6 @@ def test_serialisable_decorator():
     assert deserialised_tom.status is PetStatus.AVAILABLE
 
 
-def test_fail_when_decorate_non_dataclass() -> None:
-
-    with pytest.raises(AssertionError):
-
-        @serialisable()
-        class SomeClass:
-            pass
-
-
 def test_decorator_without_calling_it() -> None:
     @serialisable
     @dataclass()
@@ -143,3 +134,24 @@ def test_serialisable_with_custom_serialisers_deserialisers() -> None:
         assert isinstance(pet, Pet)
         for favourite in pet.favourites:
             assert isinstance(favourite, Favourite)
+
+
+def test_serialise_non_data_class() -> None:
+    @serialisable
+    class Pet:
+        name: str
+        status: PetStatus
+        favourites: List[str]
+
+        def __init__(self, name: str, status: PetStatus, favourites: List[str] = []):
+            self.name = name
+            self.status = status
+            self.favourites = favourites
+
+    pet = Pet("Boo", PetStatus.AVAILABLE, ["bone", "candy"])
+
+    assert pet.serialise() == {
+        "name": "Boo",
+        "status": 0,
+        "favourites": ["bone", "candy"],
+    }

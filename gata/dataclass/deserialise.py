@@ -58,6 +58,7 @@ TYPE_DECODERS = {
     str: str,
     bytes: b64decode,
     Decimal: Decimal,
+    Any: lambda value: value,
 }
 
 if module_exists("bson"):
@@ -216,6 +217,10 @@ def deserialise(value: Any, source_type: Any) -> Any:
     if value is None:
         return None
 
+    # Pre-defined decoders
+    if source_type in TYPE_DECODERS:
+        return TYPE_DECODERS[source_type](value)  # type: ignore
+
     # Gata types
     if issubclass(source_type, SerialisableType):
         return source_type.deserialise(value)
@@ -227,10 +232,6 @@ def deserialise(value: Any, source_type: Any) -> Any:
     # Enums
     if issubclass(source_type, Enum):
         return source_type(value)
-
-    # Pre-defined decoders
-    if source_type in TYPE_DECODERS:
-        return TYPE_DECODERS[source_type](value)  # type: ignore
 
     # Typed Dict
     if isclass(source_type) and is_typed_dict(source_type):

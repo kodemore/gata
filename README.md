@@ -119,7 +119,6 @@ class Pet:
 
 
 @gata.serialisable
-@dataclass
 class PetStore:
     name: str
     pets: List[Pet]
@@ -171,7 +170,6 @@ from gata import serialisable, validatable
 
 @validatable
 @serialisable
-@dataclass
 class Pet:
     name: str
     age: int = field(default=0)
@@ -188,7 +186,7 @@ pet.serialise()
 Pet.validate({"name": "Boo", "age": 10, "tags": [], "sold_at": None})
 ```
 
-> Note: `@dataclass` decorator must be used after `serialisable` and `validatable` decorators, as gata checks whether decorated class is a dataclass.
+> Note: `@dataclass` decorator is not required when using `serialisable` or `validatable` decorators, as gata automatically converts decorated class into dataclass.
 
 
 ### Adding metadata to validators

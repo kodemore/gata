@@ -35,6 +35,7 @@ TYPE_ENCODERS = {
     str: str,
     bytes: lambda value: b64encode(value).decode("utf8"),
     Decimal: str,
+    Any: lambda value: value,
 }
 
 if module_exists("bson"):

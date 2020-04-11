@@ -1,5 +1,5 @@
 from datetime import date, datetime, time
-from typing import FrozenSet, List, Set, Tuple, Optional, Union
+from typing import Any, FrozenSet, List, Set, Tuple, Optional, Union
 from dataclasses import dataclass
 from decimal import Decimal
 import pytest
@@ -146,6 +146,12 @@ def test_deserialise_typed_dict() -> None:
 )
 def test_deserialise_union_primitive_types(value, type_definition, expected) -> None:
     assert deserialise(value, type_definition) == expected
+
+
+def test_deserialise_any() -> None:
+    assert deserialise(1, Any) == 1
+    assert deserialise("string", Any) == "string"
+    assert deserialise(False, Any) is False
 
 
 def test_deserialise_union_dataclasses() -> None:

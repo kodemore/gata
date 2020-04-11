@@ -1,6 +1,6 @@
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, is_dataclass, dataclass as base_dataclass
 from functools import partial
-from typing import Any, Callable, Dict, TypeVar, Union
+from typing import Any, Callable, Dict, TypeVar, Union, Type
 
 from typing_extensions import Protocol
 
@@ -45,54 +45,55 @@ def deserialise(value: dict, target_class: Any) -> Any:
     return deserialise_dataclass(value, target_class)
 
 
+def _convert_to_dataclass(cls: Type[T]) -> Type[T]:
+    return base_dataclass(cls, init=False, repr=False, eq=False)  # type: ignore
+
+
 def serialisable(
-    cls_: T = None,
+    _cls: T = None,
 ) -> Union[T, Serialisable, Callable[[Any], Union[T, Serialisable]]]:
-    def _attach_serialisable_interface(cls_) -> Union[T, Serialisable]:
-        if not is_dataclass(cls_):
-            raise AssertionError(
-                "`serialisable()` decorator can be only used with dataclasses."
-            )
+    def _attach_serialisable_interface(_cls) -> Union[T, Serialisable]:
+        if not is_dataclass(_cls):
+            _cls = _convert_to_dataclass(_cls)
 
         def _serialise(*args, **mapping):
             self = args[0]
-            return serialise_dataclass(self, cls_, mapping)
+            return serialise_dataclass(self, _cls, mapping)
 
-        setattr(cls_, "serialise", _serialise)
-        setattr(cls_, "deserialise", partial(deserialise_dataclass, source_type=cls_))
-        return cls_
+        setattr(_cls, "serialise", _serialise)
+        setattr(_cls, "deserialise", partial(deserialise_dataclass, source_type=_cls))
+        return _cls
 
-    if cls_ is None:
+    if _cls is None:
         return _attach_serialisable_interface
 
-    return _attach_serialisable_interface(cls_)
+    return _attach_serialisable_interface(_cls)
 
 
 def validatable(
-    cls_: T = None,
+    _cls: T = None,
 ) -> Union[T, Validatable, Callable[[Any], Union[T, Validatable]]]:
-    def _attach_validatable_interface(cls_) -> Union[T, Validatable]:
-        if not is_dataclass(cls_):
-            raise AssertionError(
-                "`validatable()` decorator can be only used with dataclasses."
-            )
-        schema = get_dataclass_schema(cls_)
-        old_init = getattr(cls_, "__init__")
+    def _attach_validatable_interface(_cls) -> Union[T, Validatable]:
+        if not is_dataclass(_cls):
+            _cls = _convert_to_dataclass(_cls)
+
+        schema = get_dataclass_schema(_cls)
+        old_init = getattr(_cls, "__init__")
 
         def _init(*args, **kwargs):
             self = args[0]
             old_init(*args, **kwargs)
             schema.validate(asdict(self))
 
-        setattr(cls_, "__init__", _init)
-        setattr(cls_, "validate", lambda value: schema.validate(value))
+        setattr(_cls, "__init__", _init)
+        setattr(_cls, "validate", lambda value: schema.validate(value))
 
-        return cls_
+        return _cls
 
-    if cls_ is None:
+    if _cls is None:
         return _attach_validatable_interface
 
-    return _attach_validatable_interface(cls_)
+    return _attach_validatable_interface(_cls)
 
 
 __all__ = [

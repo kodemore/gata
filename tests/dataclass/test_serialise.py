@@ -138,9 +138,10 @@ def test_fail_serialise_generic_tuple() -> None:
         serialise((1, 2, 3), Tuple)
 
 
-def test_fail_serialise_any() -> None:
-    with pytest.raises(SerialisationError):
-        serialise(1, Any)
+def test_serialise_any() -> None:
+    assert serialise(1, Any) == 1
+    assert serialise("string", Any) == "string"
+    assert serialise(1.23, Any) == 1.23
 
 
 def test_serialise_dataclass() -> None:
