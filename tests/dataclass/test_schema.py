@@ -1,6 +1,6 @@
 import re
-from datetime import date, datetime, time
 from dataclasses import dataclass
+from datetime import date, datetime, time
 from ipaddress import IPv4Address, IPv6Address
 from typing import (
     Dict,
@@ -17,10 +17,21 @@ from typing import (
 import pytest
 from typing_extensions import Literal, TypedDict
 
-from gata.dataclass.schema import map_meta_to_validator, map_type_to_validator, validate
-from gata.dataclass.schema import PropertyMeta
+from gata.dataclass.schema import (
+    Schema,
+    get_dataclass_schema,
+    map_meta_to_validator,
+    map_type_to_validator,
+    validate,
+)
 from gata.errors import ValidationError
 from tests.fixtures import Pet, PetWithVirtualProperties
+
+
+def test_dataclass_schema() -> None:
+    schema = get_dataclass_schema(Pet)
+
+    assert isinstance(schema, Schema)
 
 
 def test_map_int_to_validator() -> None:

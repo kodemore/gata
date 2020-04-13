@@ -257,7 +257,7 @@ def test_serialise_with_user_defined_serialiser() -> None:
         status: PetStatus
         favourites: List[Favourite]
 
-        class Meta:
+        class Schema:
             @staticmethod
             def serialise_favourites(favourites: List[Favourite]) -> List[str]:
                 return [favourite.name for favourite in favourites]

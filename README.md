@@ -62,7 +62,7 @@ class Pet:
 
 pet = Pet(name="Boo", age=10)
 
-gata.serialise(pet)  # {"name": "Boo", "age": 10, "tags": [], "sold_at": None}
+gata.serialisable(pet)  # {"name": "Boo", "age": 10, "tags": [], "sold_at": None}
 ```
 
 #### Mapping fields in the result
@@ -86,7 +86,7 @@ class Pet:
 
 pet = Pet(name="Boo", age=10)
 
-gata.serialise(pet, mapping={
+gata.serialisable(pet, mapping={
     "name": "pet_name", # name field will be mapped to `pet_name`
     "tags": False, # tags field will be excluded from serialisation
     # rest of the fields will be returned with names taken from dataclass
@@ -189,8 +189,8 @@ Pet.validate({"name": "Boo", "age": 10, "tags": [], "sold_at": None})
 > Note: `@dataclass` decorator is not required when using `serialisable` or `validatable` decorators, as gata automatically converts decorated class into dataclass.
 
 
-### Adding metadata to validators
-Metadata can be used for more precise validation rules, eg. validating string length and/or format. 
+### Adding schema to validators
+Schema can be used for more precise validation rules, eg. validating string length and/or format. 
 Consider the following example:
 
 ```python
@@ -198,7 +198,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List
 from dataclasses import dataclass
-from gata import PropertyMeta
+from gata import Field
 
 class PetStatus(Enum):
     AVAILABLE = 0
@@ -214,23 +214,25 @@ class Pet:
     age: int = 0
     status: PetStatus = PetStatus.AVAILABLE
     
-    class Meta:
-        name = PropertyMeta(min=2, max=10)  # Minimum name length is 2 maximum is 10
-        age = {"min": 0, "max": 100}  # Minimum pet's age is 0 and maximum is 100
-        tags = {"min": 1}  # List of tags must contain at least one item
+    class Schema:
+        name = Field(min=2, max=10)  # Minimum name length is 2 maximum is 10
+        age = Field(min=0, max=100)  # Minimum pet's age is 0 and maximum is 100
+        tags = Field(min=1)  # List of tags must contain at least one item
 ```
-Inner `Meta` class contains properties, name of the property corresponds to parent class.
-Each property holds dict value or instance of `gata.PropertyMeta` (typed dict) which may contain the following keys:
+Inner `Schema` class contains properties, name of the property corresponds to parent class.
+Each property must be Field instance. Field constructor accepts following arguments: 
 
- - `min` - depending on the context it specified be min value or length
- - `max` - depending on the context it specifies maximum value or length
- - `format` - used to specify accepted string's format, available list of formats is available below
- - `multiple_of` - used with numbers to specify that validated value has to be multiplication of given value
- - `pattern` - specifies regex used to validate string value
- - `read_only` - sets property to read_only mode, which means property will be serialised as usual but skipped during deserialisation and validation if not set
- - `write_only` - sets property to write_only mode, which means property will be deserialised and validated but not serialised
+ - `min: int` - depending on the context it specified be min value or length
+ - `max: int` - depending on the context it specifies maximum value or length
+ - `string_format: str` - used to specify accepted string's format, available list of formats is available below
+ - `multiple_of: typing.Union[int, float]` - used with numbers to specify that validated value has to be multiplication of given value
+ - `pattern: str` - specifies regex used to validate string value
+ - `read_only: bool` - sets property to read_only mode, which means property will be serialised as usual but skipped during deserialisation and validation if not set
+ - `write_only: bool` - sets property to write_only mode, which means property will be deserialised and validated but not serialised
+ - `serialiser: typing.Callable` - allows to override standard serialiser for property
+ - `deserialiser: typing.Callable` - allows to override standard deserialiser for property
 
-#### Custom serialisers/deserialisers in metaclass
+#### Custom serialisers/deserialisers in schema
 
 In case creating custom serialisable type is not an option gata provides simple api for defining
 custom serialisation/deserialisation functions for properties. 
@@ -239,7 +241,7 @@ Please consider following example:
 ```python
 from typing import List
 from dataclasses import dataclass
-from gata import PropertyMeta
+from gata import Field
 from bson import ObjectId
 
 @dataclass()
@@ -249,11 +251,10 @@ class Pet:
     name: str = "Boo"
     age: int = 0
     
-    class Meta:
-        name = PropertyMeta(min=2, max=10)  # Minimum name length is 2 maximum is 10
-        age = {"min": 0, "max": 100}  # Minimum pet's age is 0 and maximum is 100
-        tags = {"min": 1}  # List of tags must contain at least one item
+    class Schema:
+        name = Field(min=2, max=10, serialiser=lambda name: name.strip()) # serialiser set directly in Field
         
+        # serialiser and deserialiser defined as schema methods        
         @staticmethod
         def serialise_id(pet_id: ObjectId) -> str:
             return str(pet_id)
@@ -266,8 +267,8 @@ class Pet:
 In the above example default serialiser/deserialiser for `id` property has been replaced with methods `serialise_id` and
 `deserialise_id`, keep in mind that naming here is not accidental. 
 
-Property serialisers in `Meta` class must be prefixed with `serialise_` prefix, deserialisers accordingly with `deserialise_` prefix. 
-Serialisation and desarialisation methods both MUST be static methods.
+Property serialisers in `Schema` class must be prefixed with `serialise_` prefix, deserialisers accordingly with `deserialise_` prefix. 
+Serialisation and desarialisation MUST be static methods.
 
 ### Available string formats (string validators)
  - `date-time`
@@ -386,11 +387,10 @@ containing converted types.
  - `Validator.ipv4(value)` checks if passed string is valid ipv4 address
  - `Validator.ipv6(value)` checks if passed string is valid ipv6 address
  - `Validator.number(value, min, max, multiple_of)` checks if passed value is a valid number
+ - `Validator.object_id(value)` checks if passed string is valid bson's object_id value
  - `Validator.semver(value)` checks if passed string is valid semantic versioning number
  - `Validator.time(value, min, max)` checks if passed string is valid iso time
  - `Validator.truthy(value)` checks if passed string is valid truthy expression
  - `Validator.uri(value)` checks if passed string is valid uri
  - `Validator.url(value)` checks if passed string is valid url
  - `Validator.uuid(value)` checks if passed string is valid uuid number
-
-

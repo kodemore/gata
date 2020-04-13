@@ -22,6 +22,7 @@ from typing import (
     Union,
 )
 from uuid import UUID
+from bson import ObjectId
 
 from .errors import (
     ArithmeticValidationError,
@@ -35,7 +36,7 @@ from .errors import (
     UniqueValidationError,
     ValidationError,
 )
-from .format import Format
+from .dataclass.schema import Format
 from .utils import (
     Comparable,
     parse_iso_date_string,
@@ -428,6 +429,13 @@ def validate_url(value: Any) -> str:
     return value
 
 
+def validate_object_id(value: Any) -> ObjectId:
+    try:
+        return ObjectId(value)
+    except ValueError:
+        raise FormatValidationError(expected_format=Format.BSON_OBJECT_ID)
+
+
 def validate_uuid(value: Any) -> UUID:
     try:
         return UUID(value)
@@ -470,6 +478,7 @@ __all__ = [
     "validate_literal",
     "validate_multiple_of",
     "validate_nullable",
+    "validate_object_id",
     "validate_pattern",
     "validate_range",
     "validate_semver",

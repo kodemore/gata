@@ -1,3 +1,4 @@
+import re
 from collections.abc import Iterable, Sequence
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime, time
@@ -6,21 +7,21 @@ from enum import Enum
 from functools import partial
 from inspect import isclass
 from ipaddress import IPv4Address, IPv6Address
-from typing import Any, Callable, Dict, Pattern, Union
+from typing import Any, Callable, Dict, Pattern, Type, Union
 from uuid import UUID
-import re
 
-from typing_extensions import Literal, TypedDict
+from bson import ObjectId
+from typing_extensions import Literal
 
 from gata.errors import (
     FieldError,
-    ValidationError,
     FormatValidationError,
     TypeValidationError,
+    ValidationError,
 )
 from gata.format import Format
 from gata.typing import ValidatableType
-from gata.utils import DocString, is_typed_dict, noop, is_optional_type
+from gata.utils import DocString, is_optional_type, is_typed_dict, noop
 from gata.validators import (
     validate_all,
     validate_any,
@@ -43,6 +44,7 @@ from gata.validators import (
     validate_list,
     validate_multiple_of,
     validate_nullable,
+    validate_object_id,
     validate_pattern,
     validate_range,
     validate_semver,
@@ -55,16 +57,6 @@ from gata.validators import (
     validate_url,
     validate_uuid,
 )
-
-
-class PropertyMeta(TypedDict):
-    max: int
-    min: int
-    multiple_of: Union[int, float, Decimal]
-    format: Union[str, Format]
-    pattern: str
-    read_only: bool
-    write_only: bool
 
 
 def _validate_against_pattern(value: Any, pattern: Pattern[str]) -> str:
@@ -124,7 +116,7 @@ def _build_union_validator(*args) -> Callable[..., Any]:
     return partial(validate_any, validators=validators)
 
 
-def build_typed_dict_validator(**kwargs) -> Callable[..., Any]:
+def _build_typed_dict_validator(**kwargs) -> Callable[..., Any]:
 
     validators = {}
     for key, key_type in kwargs.items():
@@ -165,6 +157,7 @@ _TYPE_VALIDATORS = {
     Pattern: validate_pattern,
     Decimal: validate_decimal,
     UUID: validate_uuid,
+    ObjectId: validate_object_id,
 }
 
 _COMPLEX_TYPE_VALIDATORS = {
@@ -196,8 +189,9 @@ def map_type_to_validator(type_: Any) -> Callable[[Any], Any]:
     if type_ in _TYPE_VALIDATORS:
         return _TYPE_VALIDATORS[type_]  # type: ignore
 
+    # Typed dict
     if is_typed_dict(type_):
-        return build_typed_dict_validator(**type_.__annotations__)
+        return _build_typed_dict_validator(**type_.__annotations__)
 
     # Enums
     if isclass(type_) and issubclass(type_, Enum):
@@ -206,7 +200,7 @@ def map_type_to_validator(type_: Any) -> Callable[[Any], Any]:
     return noop
 
 
-def build_min_max_validator(type_: Any, meta: Dict[str, int]) -> Callable[[Any], Any]:
+def _build_min_max_validator(type_: Any, meta: Dict[str, int]) -> Callable[[Any], Any]:
     min_max_kwargs = {
         "minimum": meta.get("min"),
         "maximum": meta.get("max"),
@@ -231,6 +225,7 @@ _FORMAT_TO_VALIDATOR_MAP = {
     Format.BOOLEAN: validate_boolean,
     Format.SEMVER: validate_semver,
     Format.BYTE: validate_bytes,
+    Format.BSON_OBJECT_ID: validate_object_id,
 }
 
 
@@ -246,7 +241,7 @@ def map_str_format_to_validator(
 def map_meta_to_validator(type_: Any, meta: Dict[str, Any]) -> Callable[[Any], Any]:
     meta_validators = []
     if "min" in meta or "max" in meta:
-        meta_validators.append(build_min_max_validator(type_, meta))
+        meta_validators.append(_build_min_max_validator(type_, meta))
 
     if type_ is str and "format" in meta:
         meta_validators.append(map_str_format_to_validator(meta["format"]))
@@ -269,11 +264,34 @@ def map_meta_to_validator(type_: Any, meta: Dict[str, Any]) -> Callable[[Any], A
     return _validator
 
 
-class FieldSchema:
-    def __init__(self, field_type, field_meta: dict):
-        self.type = field_type
-        self.meta = field_meta
+class Field:
+    def __init__(
+        self,
+        max: int = None,
+        min: int = None,
+        multiple_of: Union[int, float, Decimal] = None,
+        string_format: Union[str, Format] = None,
+        pattern: str = None,
+        read_only: bool = None,
+        write_only: bool = None,
+        serialiser: Callable = None,
+        deserialiser: Callable = None,
+    ):
+        self.min = min
+        self.max = max
+        self.multiple_of = multiple_of
+        self.string_format = string_format
+        self.pattern = pattern
+        self.read_only = read_only
+        self.write_only = write_only
+        self._type = None
         self._validator: Callable = None  # type: ignore
+        self.serialiser = serialiser
+        self.deserialiser = deserialiser
+
+    @property
+    def type(self) -> Type[Any]:
+        return self._type  # type: ignore
 
     @property
     def validator(self) -> Callable[[Any], Any]:
@@ -286,47 +304,43 @@ class FieldSchema:
         return value
 
 
-class Reference(FieldSchema):
-    def __init__(self, field_type, field_meta: dict):
+class Reference(Field):
+    def __init__(self, field_type, read_only: bool = None, write_only: bool = None):
+        super().__init__(read_only=read_only, write_only=write_only)
+        self._type = field_type
         self.reference = get_dataclass_schema(field_type)
-        super().__init__(field_type, field_meta)
 
     @property
     def validator(self) -> Callable[[Any], Any]:
         return self.reference.validate
 
 
-class ClassSchema:
+class Schema:
     def __init__(self, dataclass_type: Any):
-        if not isclass(dataclass_type) or not is_dataclass(dataclass_type):
-            raise ValueError("Passed value is not valid dataclass type.")
+        if not is_dataclass(dataclass_type):
+            raise ValueError("passed value is not valid dataclass type")
         self.doc_string = DocString(dataclass_type)
         self.type = dataclass_type
         self.class_name = dataclass_type.__name__
-        self._attributes: Dict[str, FieldSchema] = {}
-        self.meta = dataclass_type.Meta if hasattr(dataclass_type, "Meta") else None
+        self._fields: Dict[str, Field] = {}
 
-    def __setitem__(self, key: str, value: FieldSchema):
-        self._attributes[key] = value
+    def __setitem__(self, key: str, value: Field):
+        self._fields[key] = value
 
-    def __getitem__(self, key: str) -> FieldSchema:
-        return self._attributes[key]
+    def __getitem__(self, key: str) -> Field:
+        return self._fields[key]
 
     def __contains__(self, key: str) -> bool:
-        return key in self._attributes
+        return key in self._fields
 
     def validate(self, value: Dict[str, Any]):
-        for key, field in self._attributes.items():
+        for key, field in self._fields.items():
             try:
                 field_value = value.get(key, None)
                 if field_value is None:
                     if isinstance(field, Reference) and is_optional_type(field.type):
                         continue
-                    if (
-                        self.meta
-                        and hasattr(self.meta, key)
-                        and getattr(self.meta, key).get("read_only", False)
-                    ):
+                    if field.read_only:
                         continue
                     raise FieldError(key, TypeValidationError(expected_type=field.type))
 
@@ -337,22 +351,43 @@ class ClassSchema:
         return value
 
 
-_SCHEMAS: Dict[Any, ClassSchema] = {}
+_SCHEMAS: Dict[Any, Schema] = {}
 
 
-def get_dataclass_schema(dataclass_class: Any) -> ClassSchema:
+def get_dataclass_schema(dataclass_class: Any) -> Schema:
     if dataclass_class in _SCHEMAS:
         return _SCHEMAS[dataclass_class]
 
-    schema = ClassSchema(dataclass_class)
+    schema = Schema(dataclass_class)
     _SCHEMAS[dataclass_class] = schema
 
-    for field, type_ in dataclass_class.__annotations__.items():
-        if is_dataclass(type_):
-            schema[field] = Reference(type_, {})
-        else:
-            field_meta = getattr(schema.meta, field, {}) if schema.meta else {}
-            schema[field] = FieldSchema(type_, field_meta)
+    schema_fields = object()
+    if hasattr(dataclass_class, "Schema"):
+        schema_fields = dataclass_class.Schema
+
+    for field_name, field in dataclass_class.__dataclass_fields__.items():
+        schema[field_name] = (
+            getattr(schema_fields, field_name)
+            if hasattr(schema_fields, field_name)
+            else Field()
+        )
+        schema[field_name]._type = field.type
+
+        # reference type
+        if is_dataclass(field.type):
+            schema[field_name] = Reference(
+                field.type, schema[field_name].read_only, schema[field_name].write_only
+            )
+
+        custom_serialiser = f"serialise_{field_name}"
+        if hasattr(schema_fields, custom_serialiser):
+            schema[field_name].serialiser = getattr(schema_fields, custom_serialiser)
+
+        custom_deserialiser = f"deserialise_{field_name}"
+        if hasattr(schema_fields, custom_deserialiser):
+            schema[field_name].deserialiser = getattr(
+                schema_fields, custom_deserialiser
+            )
 
     return schema
 
@@ -366,10 +401,10 @@ def validate(value, dataclass_class: Any = None) -> Any:
 
 
 __all__ = [
-    "FieldSchema",
+    "Field",
+    "Format",
     "Reference",
-    "ClassSchema",
-    "PropertyMeta",
+    "Schema",
     "validate",
     "get_dataclass_schema",
     "map_type_to_validator",

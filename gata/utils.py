@@ -1,9 +1,12 @@
 import re
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from inspect import cleandoc
-from typing import Any, List, Match, Union
+from typing import Any, List, Match, Type, TypeVar, Union
 
 from typing_extensions import Protocol, runtime
+
+T = TypeVar("T")
 
 ISO_8601_DATETIME_REGEX = re.compile(
     r"^(\d{4})-?([0-1]\d)-?([0-3]\d)[t\s]?([0-2]\d:?[0-5]\d:?[0-5]\d|23:59:60|235960)(\.\d+)?(z|[+-]\d{2}:\d{2})?$",
@@ -294,7 +297,12 @@ def module_exists(module: str) -> bool:
         return True
 
 
+def convert_to_dataclass(cls: Type[T]) -> Type[T]:
+    return dataclass(cls, init=False, repr=False, eq=False)  # type: ignore
+
+
 __all__ = [
+    "convert_to_dataclass",
     "Comparable",
     "is_typed_dict",
     "parse_iso_datetime_string",

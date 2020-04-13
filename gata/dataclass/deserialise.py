@@ -8,6 +8,7 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import Any, Dict, FrozenSet, List, Set, Tuple, Union
 from uuid import UUID
 
+from bson import ObjectId
 from typing_extensions import Literal
 
 from gata.errors import DeserialisationError, MetaError
@@ -17,9 +18,7 @@ from gata.utils import (
     parse_iso_date_string,
     parse_iso_datetime_string,
     parse_iso_time_string,
-    module_exists,
 )
-
 
 NoneType = type(None)
 
@@ -59,12 +58,8 @@ TYPE_DECODERS = {
     bytes: b64decode,
     Decimal: Decimal,
     Any: lambda value: value,
+    ObjectId: ObjectId,
 }
-
-if module_exists("bson"):
-    import bson
-
-    TYPE_DECODERS[bson.ObjectId] = bson.ObjectId
 
 
 def deserialise_tuple(value: Tuple[Any, ...], subtypes: List[Any]) -> Tuple[Any, ...]:

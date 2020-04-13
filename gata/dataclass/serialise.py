@@ -5,15 +5,16 @@ from decimal import Decimal
 from enum import Enum
 from inspect import isclass
 from ipaddress import IPv4Address, IPv6Address
-from typing import Any, Iterable, List, Tuple, Union, Dict, Callable
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
 from uuid import UUID
 
+from bson import ObjectId
 from typing_extensions import Literal
 
-from gata.errors import SerialisationError, MetaError
+from gata.errors import SerialisationError
 from gata.typing import SerialisableType
-from gata.utils import is_typed_dict, module_exists
-
+from gata.utils import is_typed_dict
+from .schema import get_dataclass_schema
 
 NoneType = type(None)
 
@@ -36,12 +37,8 @@ TYPE_ENCODERS = {
     bytes: lambda value: b64encode(value).decode("utf8"),
     Decimal: str,
     Any: lambda value: value,
+    ObjectId: str,
 }
-
-if module_exists("bson"):
-    import bson
-
-    TYPE_ENCODERS[bson.ObjectId] = str
 
 
 def serialise_tuple(
@@ -175,30 +172,14 @@ def serialise_dataclass(
     mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
 ) -> Dict[str, Any]:
     result = {}  # type: Dict[str, Any]
-    properties_meta = (
-        getattr(source_type, "Meta") if hasattr(source_type, "Meta") else {}
-    )
+    class_schema = get_dataclass_schema(value.__class__)
     for key, field in source_type.__dataclass_fields__.items():
-        write_only = False
-        if hasattr(properties_meta, key):
-            property_meta = getattr(properties_meta, key)
-            if "write_only" in property_meta and property_meta["write_only"]:
-                write_only = True
-
-        if write_only:
+        schema_field = class_schema[key]
+        if schema_field.write_only:
             continue
 
-        custom_serialiser_name = f"serialise_{key}"
-
-        # custom serialiser supports very basic mapping
-        if hasattr(properties_meta, custom_serialiser_name):
-            custom_serialiser = getattr(properties_meta, custom_serialiser_name)
-            if not callable(custom_serialiser):
-                raise MetaError(
-                    f"serialiser {custom_serialiser_name} for {source_type} is not callable,"
-                )
-            result_value = custom_serialiser(getattr(value, key))
-
+        if schema_field.serialiser:
+            result_value = schema_field.serialiser(getattr(value, key))
             # support very basic mapping
             if mapping and key in mapping and isinstance(mapping[key], str):
                 result[mapping[key]] = result_value  # type: ignore

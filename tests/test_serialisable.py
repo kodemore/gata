@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 
-from gata import serialisable, serialise
+from gata import serialisable
 from tests.fixtures import Favourite, PetStatus
 
 

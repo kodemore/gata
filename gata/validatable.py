@@ -1,3 +1,10 @@
+from dataclasses import asdict, is_dataclass
+from typing import Any, Callable, Dict, TypeVar, Union
+
+from typing_extensions import Protocol
+
+from .dataclass.schema import get_dataclass_schema
+from .utils import convert_to_dataclass
 from .validators import (
     validate_all,
     validate_any,
@@ -22,6 +29,7 @@ from .validators import (
     validate_literal,
     validate_multiple_of,
     validate_nullable,
+    validate_object_id,
     validate_pattern,
     validate_range,
     validate_semver,
@@ -33,6 +41,40 @@ from .validators import (
     validate_url,
     validate_uuid,
 )
+
+T = TypeVar("T")
+
+
+class Validatable(Protocol):
+    @classmethod
+    def validate(cls, data: Dict[str, Any]) -> None:
+        ...
+
+
+def validatable(
+    _cls: T = None,
+) -> Union[T, Validatable, Callable[[Any], Union[T, Validatable]]]:
+    def _attach_validatable_interface(_cls) -> Union[T, Validatable]:
+        if not is_dataclass(_cls):
+            _cls = convert_to_dataclass(_cls)
+
+        schema = get_dataclass_schema(_cls)
+        old_init = getattr(_cls, "__init__")
+
+        def _init(*args, **kwargs):
+            self = args[0]
+            old_init(*args, **kwargs)
+            schema.validate(asdict(self))
+
+        setattr(_cls, "__init__", _init)
+        setattr(_cls, "validate", lambda value: schema.validate(value))
+
+        return _cls
+
+    if _cls is None:
+        return _attach_validatable_interface
+
+    return _attach_validatable_interface(_cls)
 
 
 class Validator:
@@ -59,6 +101,7 @@ class Validator:
     literal = validate_literal
     multiple_of = validate_multiple_of
     nullable = validate_nullable
+    object_id = validate_object_id
     pattern = validate_pattern
     range = validate_range
     semver = validate_semver
@@ -71,4 +114,4 @@ class Validator:
     uuid = validate_uuid
 
 
-__all__ = ["Validator"]
+__all__ = ["validatable", "Validatable", "Validator"]

@@ -7,7 +7,7 @@ from gata import typing, validatable, serialisable
 def test_gata_types() -> None:
     @validatable
     @serialisable
-    @dataclass()
+    @dataclass
     class BoJack:
         name: str
         address: typing.EmailAddress
