@@ -9,7 +9,7 @@ T = TypeVar("T")
 def transform(
     value: Union[Serialisable, Any],
     transform_to: Type[T],
-    mapping: Dict[str, Union[str, bool, dict, Callable]],
+    mapping: Dict[str, Union[str, bool, dict, Callable]] = None,
 ) -> T:
     if not is_dataclass(transform_to):
         raise ValueError(
