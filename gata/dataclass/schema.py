@@ -13,12 +13,7 @@ from uuid import UUID
 from bson import ObjectId
 from typing_extensions import Literal
 
-from gata.errors import (
-    FieldError,
-    FormatValidationError,
-    TypeValidationError,
-    ValidationError,
-)
+from gata.errors import FieldError, FormatValidationError, TypeValidationError, ValidationError
 from gata.format import Format
 from gata.typing import ValidatableType
 from gata.utils import DocString, is_optional_type, is_typed_dict, noop
@@ -68,12 +63,12 @@ def _validate_against_pattern(value: Any, pattern: Pattern[str]) -> str:
 
 def _build_list_validator(*args) -> Callable[..., Any]:
     item_validator = map_type_to_validator(args[0])
-    return partial(validate_list, item_validator=item_validator,)
+    return partial(validate_list, item_validator=item_validator)
 
 
 def _build_set_validator(*args) -> Callable[..., Any]:
     item_validator = map_type_to_validator(args[0])
-    return partial(validate_set, item_validator=item_validator,)
+    return partial(validate_set, item_validator=item_validator)
 
 
 def _build_tuple_validator(*args) -> Callable[..., Any]:
@@ -81,26 +76,24 @@ def _build_tuple_validator(*args) -> Callable[..., Any]:
     for arg_type in args:
         item_validators.append(map_type_to_validator(arg_type))
 
-    return partial(validate_tuple, item_validators=item_validators,)
+    return partial(validate_tuple, item_validators=item_validators)
 
 
 def _build_frozenset_validator(*args) -> Callable[..., Any]:
     item_validator = map_type_to_validator(args[0])
-    return partial(validate_frozenset, item_validator=item_validator,)
+    return partial(validate_frozenset, item_validator=item_validator)
 
 
 def _build_iterable_validator(*args) -> Callable[..., Any]:
     item_validator = map_type_to_validator(args[0])
-    return partial(validate_iterable, item_validator=item_validator,)
+    return partial(validate_iterable, item_validator=item_validator)
 
 
 def _build_dict_validator(*args) -> Callable[..., Any]:
     key_validator = map_type_to_validator(args[0])
     value_validator = map_type_to_validator(args[1])
 
-    return partial(
-        validate_dict, key_validator=key_validator, value_validator=value_validator
-    )
+    return partial(validate_dict, key_validator=key_validator, value_validator=value_validator)
 
 
 def _build_union_validator(*args) -> Callable[..., Any]:
@@ -201,10 +194,7 @@ def map_type_to_validator(type_: Any) -> Callable[[Any], Any]:
 
 
 def _build_min_max_validator(type_: Any, meta: Dict[str, int]) -> Callable[[Any], Any]:
-    min_max_kwargs = {
-        "minimum": meta.get("min"),
-        "maximum": meta.get("max"),
-    }
+    min_max_kwargs = {"minimum": meta.get("min"), "maximum": meta.get("max")}
     if type_ in (int, float, Decimal):
         return partial(validate_range, **min_max_kwargs)
     else:
@@ -229,9 +219,7 @@ _FORMAT_TO_VALIDATOR_MAP = {
 }
 
 
-def map_str_format_to_validator(
-    format_name: Union[str, Format]
-) -> Callable[[Any], Any]:
+def map_str_format_to_validator(format_name: Union[str, Format]) -> Callable[[Any], Any]:
     if isinstance(format_name, str):
         format_name = Format(format_name)
 
@@ -247,9 +235,7 @@ def map_meta_to_validator(type_: Any, meta: Dict[str, Any]) -> Callable[[Any], A
         meta_validators.append(map_str_format_to_validator(meta["format"]))
 
     if "multiple_of" in meta:
-        meta_validators.append(
-            partial(validate_multiple_of, multiple_of=meta["multiple_of"])
-        )
+        meta_validators.append(partial(validate_multiple_of, multiple_of=meta["multiple_of"]))
 
     if "pattern" in meta:
         pattern = re.compile(meta["pattern"], re.I)
@@ -338,9 +324,7 @@ class Schema:
             try:
                 field_value = value.get(key, None)
                 if field_value is None:
-                    if isinstance(field, Reference) and is_optional_type(field.type):
-                        continue
-                    if field.read_only:
+                    if is_optional_type(field.type) or field.read_only:
                         continue
                     raise FieldError(key, TypeValidationError(expected_type=field.type))
 
@@ -366,18 +350,12 @@ def get_dataclass_schema(dataclass_class: Any) -> Schema:
         schema_fields = dataclass_class.Schema
 
     for field_name, field in dataclass_class.__dataclass_fields__.items():
-        schema[field_name] = (
-            getattr(schema_fields, field_name)
-            if hasattr(schema_fields, field_name)
-            else Field()
-        )
+        schema[field_name] = getattr(schema_fields, field_name) if hasattr(schema_fields, field_name) else Field()
         schema[field_name]._type = field.type
 
         # reference type
         if is_dataclass(field.type):
-            schema[field_name] = Reference(
-                field.type, schema[field_name].read_only, schema[field_name].write_only
-            )
+            schema[field_name] = Reference(field.type, schema[field_name].read_only, schema[field_name].write_only)
 
         custom_serialiser = f"serialise_{field_name}"
         if hasattr(schema_fields, custom_serialiser):
@@ -385,9 +363,7 @@ def get_dataclass_schema(dataclass_class: Any) -> Schema:
 
         custom_deserialiser = f"deserialise_{field_name}"
         if hasattr(schema_fields, custom_deserialiser):
-            schema[field_name].deserialiser = getattr(
-                schema_fields, custom_deserialiser
-            )
+            schema[field_name].deserialiser = getattr(schema_fields, custom_deserialiser)
 
     return schema
 

@@ -7,18 +7,12 @@ T = TypeVar("T")
 
 
 def transform(
-    value: Union[Serialisable, Any],
-    transform_to: Type[T],
-    mapping: Dict[str, Union[str, bool, dict, Callable]] = None,
+    value: Union[Serialisable, Any], transform_to: Type[T], mapping: Dict[str, Union[str, bool, dict, Callable]] = None
 ) -> T:
     if not is_dataclass(transform_to):
-        raise ValueError(
-            "transform_to argument must be either dataclass or serialisable class"
-        )
+        raise ValueError("transform_to argument must be either dataclass or serialisable class")
     if not is_dataclass(value):
-        raise ValueError(
-            "value argument must be either dataclass or serialisable instance"
-        )
+        raise ValueError("value argument must be either dataclass or serialisable instance")
 
     all_fields = serialise(value, mapping) if mapping else serialise(value)
     allowed_fields = transform_to.__dataclass_fields__.keys()  # type: ignore

@@ -68,9 +68,7 @@ class Duration(timedelta, SerialisableType, SchemaType, ValidatableType):
         try:
             parse_iso_duration_string(value)
         except ValueError:
-            raise ValidationError(
-                "Passed value must be valid ISO-8601 duration expression."
-            )
+            raise ValidationError("Passed value must be valid ISO-8601 duration expression.")
 
         return value
 

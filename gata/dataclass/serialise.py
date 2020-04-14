@@ -42,14 +42,10 @@ TYPE_ENCODERS = {
 
 
 def serialise_tuple(
-    value: Tuple[Any, ...],
-    subtypes: List[Any],
-    mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
+    value: Tuple[Any, ...], subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None
 ) -> List[Any]:
     if not subtypes:
-        raise SerialisationError(
-            "Cannot serialise generic tuples, please assure subtype is defined."
-        )
+        raise SerialisationError("Cannot serialise generic tuples, please assure subtype is defined.")
     result = []
     if value is None:
         return result
@@ -66,14 +62,10 @@ def serialise_tuple(
 
 
 def serialise_iterable(
-    value: Iterable[Any],
-    subtypes: List[Any],
-    mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
+    value: Iterable[Any], subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None
 ) -> List[Any]:
     if not subtypes:
-        raise SerialisationError(
-            "Cannot serialise generic iterables please assure subtype is defined between [ and ]"
-        )
+        raise SerialisationError("Cannot serialise generic iterables please assure subtype is defined between [ and ]")
 
     result = []
     if value is None:
@@ -88,11 +80,7 @@ def serialise_iterable(
     return result
 
 
-def serialise_union(
-    value,
-    subtypes: List[Any],
-    mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
-) -> Any:
+def serialise_union(value, subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None) -> Any:
     # Optional values
     if value is None and NoneType in subtypes:  # type: ignore
         return None
@@ -121,11 +109,7 @@ COMPLEX_TYPE_ENCODERS = {
 
 
 def _add_key_to_result(
-    result: Dict[str, Any],
-    key: str,
-    value: Any,
-    field_type: Any,
-    mapping: Dict[str, Union[bool, str, dict, Callable]],
+    result: Dict[str, Any], key: str, value: Any, field_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]]
 ) -> None:
     if mapping is None or key not in mapping:
         result[key] = serialise(value, field_type)
@@ -161,15 +145,11 @@ def _add_key_to_result(
         result[user_serialised[0]] = user_serialised[1]
         return None
 
-    raise ValueError(
-        f"unsupported mapping option for key {key}, mapping supports boo, str, dict, callable values only"
-    )
+    raise ValueError(f"unsupported mapping option for key {key}, mapping supports boo, str, dict, callable values only")
 
 
 def serialise_dataclass(
-    value: Any,
-    source_type: Any,
-    mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
+    value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None
 ) -> Dict[str, Any]:
     result = {}  # type: Dict[str, Any]
     class_schema = get_dataclass_schema(value.__class__)
@@ -197,9 +177,7 @@ def serialise_dataclass(
 
 
 def serialise_typed_dict(
-    value: Any,
-    source_type: Any,
-    mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
+    value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None
 ) -> Dict[str, Any]:
     result = {}  # type: Dict[str, Any]
     for key, type_ in source_type.__annotations__.items():
@@ -212,11 +190,7 @@ def serialise_typed_dict(
     return result
 
 
-def serialise(
-    value: Any,
-    source_type: Any,
-    mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
-) -> Any:
+def serialise(value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None) -> Any:
 
     # Lists, Sets, Tuples, Iterable
     origin_type = getattr(source_type, "__origin__", None)

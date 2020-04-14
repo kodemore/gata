@@ -67,16 +67,12 @@ class MaximumBoundError(BoundValidationError):
 
 class MinimumLengthError(LengthValidationError):
     code = "minimum_length"
-    message = (
-        "Passed value's length must be greater than set minimum `{expected_minimum}`."
-    )
+    message = "Passed value's length must be greater than set minimum `{expected_minimum}`."
 
 
 class MaximumLengthError(LengthValidationError):
     code = "maximum_length"
-    message = (
-        "Passed value's length must be lower than set maximum `{expected_maximum}`."
-    )
+    message = "Passed value's length must be lower than set maximum `{expected_maximum}`."
 
 
 class FieldError(ValidationError):

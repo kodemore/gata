@@ -72,14 +72,8 @@ def validate_any(value: Any, validators: Iterable[Callable]) -> Any:
     raise ValidationError("Value could not be validated", code="any_error")
 
 
-def validate_iterable(
-    value: Any, item_validator: Callable = None, unique: bool = False
-) -> Collection[Any]:
-    if (
-        not isinstance(value, Collection)
-        or isinstance(value, str)
-        or isinstance(value, dict)
-    ):
+def validate_iterable(value: Any, item_validator: Callable = None, unique: bool = False) -> Collection[Any]:
+    if not isinstance(value, Collection) or isinstance(value, str) or isinstance(value, dict):
         raise IterableValidationError()
 
     if isinstance(value, Sized) and unique and not len(set(value)) == len(value):
@@ -204,9 +198,7 @@ def validate_datetime(value: Any) -> datetime:
         raise TypeValidationError(expected_type=datetime)
 
 
-def validate_dict(
-    value: Any, key_validator: Callable[..., Any], value_validator: Callable[..., Any]
-) -> dict:
+def validate_dict(value: Any, key_validator: Callable[..., Any], value_validator: Callable[..., Any]) -> dict:
     if not isinstance(value, dict):
         raise TypeValidationError(expected_type=dict)
 
@@ -217,9 +209,7 @@ def validate_dict(
     return result
 
 
-def validate_typed_dict(
-    value: Any, validator_map: Dict[str, Callable[..., Any]]
-) -> dict:
+def validate_typed_dict(value: Any, validator_map: Dict[str, Callable[..., Any]]) -> dict:
     if not isinstance(value, dict):
         raise TypeValidationError(expected_type=dict)
 
@@ -286,10 +276,7 @@ def validate_enum(value: Any, enum_class: Type[Enum]) -> Enum:
         raise TypeValidationError(expected_type=enum_class)
 
 
-HOSTNAME_REGEX = re.compile(
-    r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*$",
-    re.I,
-)
+HOSTNAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*$", re.I)
 
 
 def validate_hostname(value: str) -> str:
@@ -342,9 +329,7 @@ def validate_ipv6(value: Any) -> IPv6Address:
         raise FormatValidationError(expected_format=Format.IPV6)
 
 
-def validate_length(
-    value: Any, minimum: Optional[int] = None, maximum: Optional[int] = None
-) -> Any:
+def validate_length(value: Any, minimum: Optional[int] = None, maximum: Optional[int] = None) -> Any:
     length = len(value)
 
     if minimum is not None and length < minimum:
@@ -356,13 +341,10 @@ def validate_length(
     return value
 
 
-def validate_multiple_of(
-    value: Union[float, int], multiple_of: Union[float, int]
-) -> Union[float, int]:
+def validate_multiple_of(value: Union[float, int], multiple_of: Union[float, int]) -> Union[float, int]:
     if not value % multiple_of == 0:
         raise ArithmeticValidationError(
-            f"Passed value must be multiplication of {multiple_of}",
-            code="multiple_of_error",
+            f"Passed value must be multiplication of {multiple_of}", code="multiple_of_error"
         )
 
     return value
@@ -375,11 +357,7 @@ def validate_nullable(value: Any, validator: Callable) -> Any:
     return validator(value)
 
 
-def validate_range(
-    value: Any,
-    minimum: Optional[Comparable] = None,
-    maximum: Optional[Comparable] = None,
-) -> Any:
+def validate_range(value: Any, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None) -> Any:
 
     if minimum is not None and value < minimum:
         raise MinimumBoundError(expected_minimum=minimum)
@@ -391,8 +369,7 @@ def validate_range(
 
 
 SEMVER_REGEX = re.compile(
-    r"^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)(?:\+([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)$",
-    re.I,
+    r"^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)(?:\+([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)$", re.I
 )
 
 
@@ -446,9 +423,7 @@ def validate_uuid(value: Any) -> UUID:
 def validate_literal(value: Any, literal_type: Type) -> Any:
     if value in literal_type.__args__:
         return value
-    raise ValidationError(
-        f"Passed value must be within listed literals.", code="literal_error"
-    )
+    raise ValidationError(f"Passed value must be within listed literals.", code="literal_error")
 
 
 __all__ = [

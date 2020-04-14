@@ -24,16 +24,11 @@ def test_transform_object() -> None:
         interests: List[str]
 
     user_entity = UserEntity(
-        user_name="Bob",
-        user_email="bob@email.com",
-        user_id=12,
-        interests=[UserInterest(name="baseball")],
+        user_name="Bob", user_email="bob@email.com", user_id=12, interests=[UserInterest(name="baseball")]
     )
 
     user_resource = transform(
-        user_entity,
-        UserResource,
-        {"user_email": "email", "user_id": "id", "interests": {"$item": "name"}},
+        user_entity, UserResource, {"user_email": "email", "user_id": "id", "interests": {"$item": "name"}}
     )
 
     assert isinstance(user_resource, UserResource)

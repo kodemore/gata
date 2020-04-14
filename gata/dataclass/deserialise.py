@@ -13,12 +13,7 @@ from typing_extensions import Literal
 
 from gata.errors import DeserialisationError, MetaError
 from gata.typing import SerialisableType
-from gata.utils import (
-    is_typed_dict,
-    parse_iso_date_string,
-    parse_iso_datetime_string,
-    parse_iso_time_string,
-)
+from gata.utils import is_typed_dict, parse_iso_date_string, parse_iso_datetime_string, parse_iso_time_string
 
 NoneType = type(None)
 
@@ -67,9 +62,7 @@ def deserialise_tuple(value: Tuple[Any, ...], subtypes: List[Any]) -> Tuple[Any,
         return tuple()
 
     if not subtypes:
-        raise DeserialisationError(
-            "Cannot deserialise generic tuples, please ensure subtype in tuple declaration."
-        )
+        raise DeserialisationError("Cannot deserialise generic tuples, please ensure subtype in tuple declaration.")
     result = []
     if ... in subtypes:
         item_type = subtypes[0]
@@ -121,9 +114,7 @@ def deserialise_union(value, subtypes: List[Any]) -> Any:
         return value
 
     # dataclass or typed dict
-    dataclasses = [
-        dataclass_type for dataclass_type in subtypes if is_dataclass(dataclass_type)
-    ]
+    dataclasses = [dataclass_type for dataclass_type in subtypes if is_dataclass(dataclass_type)]
     if value_type is dict and dataclasses:
 
         keys = value.keys()
@@ -153,9 +144,7 @@ COMPLEX_TYPE_DECODERS = {
 
 def deserialise_dataclass(value: Any, source_type: Any) -> dict:
     result = source_type.__new__(source_type)
-    properties_meta = (
-        getattr(source_type, "Meta") if hasattr(source_type, "Meta") else {}
-    )
+    properties_meta = getattr(source_type, "Meta") if hasattr(source_type, "Meta") else {}
     for key, field in source_type.__dataclass_fields__.items():
         read_only = False
         if hasattr(properties_meta, key):
@@ -173,9 +162,7 @@ def deserialise_dataclass(value: Any, source_type: Any) -> dict:
                 raise MetaError(
                     f"could not use deserialiser {custom_deserialiser_name} in {source_type}, deserialiser must be static method"
                 )
-            setattr(
-                result, key, custom_deserialiser(value[key] if key in value else None)
-            )
+            setattr(result, key, custom_deserialiser(value[key] if key in value else None))
             continue
 
         if key not in value:

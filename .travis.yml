@@ -29,11 +29,9 @@ jobs:
     - stage: linting
       python: "3.7"
       install:
-        - pip install black
-        - pip install mypy
+        - pip install pre-commit
       script:
-        - black .
-        - mypy . --ignore-missing-imports
+        - pre-commit
     - stage: codecov
       python: "3.7"
       script:

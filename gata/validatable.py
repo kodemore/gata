@@ -51,9 +51,7 @@ class Validatable(Protocol):
         ...
 
 
-def validatable(
-    _cls: T = None,
-) -> Union[T, Validatable, Callable[[Any], Union[T, Validatable]]]:
+def validatable(_cls: T = None,) -> Union[T, Validatable, Callable[[Any], Union[T, Validatable]]]:
     def _attach_validatable_interface(_cls) -> Union[T, Validatable]:
         if not is_dataclass(_cls):
             _cls = convert_to_dataclass(_cls)

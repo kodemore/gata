@@ -36,10 +36,7 @@ def test_serialise_bool() -> None:
 
 def test_serialise_datetime() -> None:
     assert (
-        serialise(
-            datetime(year=2019, month=1, day=1, hour=13, minute=2, second=1), datetime
-        )
-        == "2019-01-01T13:02:01"
+        serialise(datetime(year=2019, month=1, day=1, hour=13, minute=2, second=1), datetime) == "2019-01-01T13:02:01"
     )
 
 
@@ -81,11 +78,7 @@ def test_serialise_object_id() -> None:
 def test_serialise_list() -> None:
     assert serialise(["a", "b", "c"], List[str]) == ["a", "b", "c"]
     assert serialise(
-        [
-            date(year=2019, month=1, day=20),
-            date(year=2019, month=2, day=20),
-            date(year=2019, month=3, day=20),
-        ],
+        [date(year=2019, month=1, day=20), date(year=2019, month=2, day=20), date(year=2019, month=3, day=20)],
         List[date],
     ) == ["2019-01-20", "2019-02-20", "2019-03-20"]
     assert serialise(None, List[str]) == []
@@ -100,11 +93,7 @@ def test_serialise_set() -> None:
     assert "c" in serialised_set
 
     serialised_dates = serialise(
-        {
-            date(year=2019, month=1, day=20),
-            date(year=2019, month=2, day=20),
-            date(year=2019, month=3, day=20),
-        },
+        {date(year=2019, month=1, day=20), date(year=2019, month=2, day=20), date(year=2019, month=3, day=20)},
         Set[date],
     )
     assert isinstance(serialised_set, list)
@@ -145,10 +134,7 @@ def test_serialise_any() -> None:
 
 
 def test_serialise_dataclass() -> None:
-    assert serialise(Favourite("Test Name", 12), Favourite) == {
-        "name": "Test Name",
-        "priority": 12,
-    }
+    assert serialise(Favourite("Test Name", 12), Favourite) == {"name": "Test Name", "priority": 12}
 
 
 def test_serialise_frozenset() -> None:
@@ -162,10 +148,7 @@ def test_serialise_complex_dataclass() -> None:
 
     assert result["name"] == "Pimpek"
     assert result["tags"] == []
-    assert result["favourites"] == [
-        {"name": "fav_1", "priority": 0},
-        {"name": "fav_2", "priority": 0},
-    ]
+    assert result["favourites"] == [{"name": "fav_1", "priority": 0}, {"name": "fav_2", "priority": 0}]
     assert result["status"] == 0
 
 
@@ -196,16 +179,16 @@ def test_serialise_union_dataclasses() -> None:
     class Fish(Animal):
         fins: int
 
-    assert serialise(
-        Fish(age=10, group="fishes", fins=2), Union[Dog, Fish, Animal]
-    ) == {"age": 10, "fins": 2, "group": "fishes"}
+    assert serialise(Fish(age=10, group="fishes", fins=2), Union[Dog, Fish, Animal]) == {
+        "age": 10,
+        "fins": 2,
+        "group": "fishes",
+    }
 
 
 def test_write_only_property() -> None:
     pet = serialise(
-        PetWithVirtualProperties(
-            name="Poro", favourite=Favourite(name="Poro snac", priority=1)
-        ),
+        PetWithVirtualProperties(name="Poro", favourite=Favourite(name="Poro snac", priority=1)),
         PetWithVirtualProperties,
     )
 

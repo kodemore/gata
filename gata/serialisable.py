@@ -20,9 +20,7 @@ class Serialisable(Protocol):
         ...
 
 
-def serialise(
-    value: Any, mapping: Dict[str, Union[str, bool, dict, Callable]] = None
-) -> dict:
+def serialise(value: Any, mapping: Dict[str, Union[str, bool, dict, Callable]] = None) -> dict:
     dataclass_class = type(value)
     if not is_dataclass(dataclass_class):
         raise ValueError("Passed `value` must be instance of dataclass.")
@@ -37,9 +35,7 @@ def deserialise(value: dict, target_class: Any) -> Any:
     return deserialise_dataclass(value, target_class)
 
 
-def serialisable(
-    _cls: T = None,
-) -> Union[T, Serialisable, Callable[[Any], Union[T, Serialisable]]]:
+def serialisable(_cls: T = None,) -> Union[T, Serialisable, Callable[[Any], Union[T, Serialisable]]]:
     def _attach_serialisable_interface(_cls) -> Union[T, Serialisable]:
         if not is_dataclass(_cls):
             _cls = convert_to_dataclass(_cls)

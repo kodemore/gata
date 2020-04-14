@@ -18,10 +18,7 @@ from gata.utils import (
         ("202010", time(hour=20, minute=20, second=10)),
         ("20:20:10", time(hour=20, minute=20, second=10)),
         ("20:20:10Z", time(hour=20, minute=20, second=10, tzinfo=timezone.utc)),
-        (
-            "20:20:10+02:00",
-            time(hour=20, minute=20, second=10, tzinfo=timezone(timedelta(hours=2))),
-        ),
+        ("20:20:10+02:00", time(hour=20, minute=20, second=10, tzinfo=timezone(timedelta(hours=2)))),
     ],
 )
 def test_parse_iso_time_string(given, expected) -> None:
@@ -77,13 +74,7 @@ def test_parse_timedelta_to_iso_string(given: timedelta, expected: str):
 
 
 @pytest.mark.parametrize(
-    "passed_type,expected",
-    [
-        (Optional[int], True),
-        (Optional[float], True),
-        (int, False),
-        (Union[int, NoneType], True),
-    ],
+    "passed_type,expected", [(Optional[int], True), (Optional[float], True), (int, False), (Union[int, NoneType], True)]
 )
 def test_is_nullable_type(passed_type: Any, expected: bool) -> None:
     assert is_optional_type(passed_type) is expected

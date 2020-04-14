@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 import pytest
 
-from gata import validatable, Field
+from gata import validatable, Field, serialisable
 from tests.fixtures import Favourite, PetStatus
 
 
@@ -45,4 +45,15 @@ def test_meta_properties_validation() -> None:
         class Schema:
             favourites = Field(min=3)
 
-    a = 1
+
+def test_optional_fields() -> None:
+    @validatable
+    @serialisable
+    class OptionalFieldsTestCase:
+        optional_string: Optional[str]
+        optional_int: Optional[int]
+        optional_float: Optional[float]
+
+    assert OptionalFieldsTestCase.validate({"optional_string": "a"})
+    assert OptionalFieldsTestCase.validate({"optional_int": 12})
+    assert OptionalFieldsTestCase.validate({"optional_float": 12.1})
