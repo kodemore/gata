@@ -16,7 +16,11 @@ def test_serialisable_decorator():
     pet = SerialisablePet(name="Tom", status=PetStatus.AVAILABLE, favourites=[Favourite("bone")])
 
     assert hasattr(pet, "serialise")
-    assert pet.serialise() == {"favourites": [{"name": "bone", "priority": 0}], "name": "Tom", "status": 0}
+    assert pet.serialise() == {
+        "favourites": [{"name": "bone", "priority": 0}],
+        "name": "Tom",
+        "status": 0,
+    }
 
     assert hasattr(SerialisablePet, "deserialise")
     deserialised_tom = SerialisablePet.deserialise(
@@ -38,7 +42,11 @@ def test_decorator_without_calling_it() -> None:
         favourites: List[Favourite]
 
     pet = SerialisablePet(name="Tom", status=PetStatus.AVAILABLE, favourites=[Favourite("bone")])
-    assert pet.serialise() == {"favourites": [{"name": "bone", "priority": 0}], "name": "Tom", "status": 0}
+    assert pet.serialise() == {
+        "favourites": [{"name": "bone", "priority": 0}],
+        "name": "Tom",
+        "status": 0,
+    }
 
 
 def test_serialisable_with_mapping() -> None:
@@ -99,7 +107,7 @@ def test_serialisable_with_custom_serialisers_deserialisers() -> None:
     pet_store = PetStore.deserialise(
         {
             "name": "Happy Pets",
-            "pets": [{"name": "Boo", "favourites": ["bone", "candy"]}, {"name": "Koo", "favourites": ["seeds"]}],
+            "pets": [{"name": "Boo", "favourites": ["bone", "candy"]}, {"name": "Koo", "favourites": ["seeds"]},],
         }
     )
 
@@ -125,4 +133,8 @@ def test_serialise_non_data_class() -> None:
 
     pet = Pet("Boo", PetStatus.AVAILABLE, ["bone", "candy"])
 
-    assert pet.serialise() == {"name": "Boo", "status": 0, "favourites": ["bone", "candy"]}
+    assert pet.serialise() == {
+        "name": "Boo",
+        "status": 0,
+        "favourites": ["bone", "candy"],
+    }

@@ -276,7 +276,7 @@ def validate_enum(value: Any, enum_class: Type[Enum]) -> Enum:
         raise TypeValidationError(expected_type=enum_class)
 
 
-HOSTNAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*$", re.I)
+HOSTNAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*$", re.I,)
 
 
 def validate_hostname(value: str) -> str:
@@ -344,7 +344,7 @@ def validate_length(value: Any, minimum: Optional[int] = None, maximum: Optional
 def validate_multiple_of(value: Union[float, int], multiple_of: Union[float, int]) -> Union[float, int]:
     if not value % multiple_of == 0:
         raise ArithmeticValidationError(
-            f"Passed value must be multiplication of {multiple_of}", code="multiple_of_error"
+            f"Passed value must be multiplication of {multiple_of}", code="multiple_of_error",
         )
 
     return value
@@ -357,7 +357,7 @@ def validate_nullable(value: Any, validator: Callable) -> Any:
     return validator(value)
 
 
-def validate_range(value: Any, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None) -> Any:
+def validate_range(value: Any, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None,) -> Any:
 
     if minimum is not None and value < minimum:
         raise MinimumBoundError(expected_minimum=minimum)
@@ -369,7 +369,7 @@ def validate_range(value: Any, minimum: Optional[Comparable] = None, maximum: Op
 
 
 SEMVER_REGEX = re.compile(
-    r"^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)(?:\+([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)$", re.I
+    r"^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)(?:\+([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)$", re.I,
 )
 
 

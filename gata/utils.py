@@ -14,7 +14,8 @@ ISO_8601_DATETIME_REGEX = re.compile(
 )
 ISO_8601_DATE_REGEX = re.compile(r"^(\d{4})-?([0-1]\d)-?([0-3]\d)$", re.I)
 ISO_8601_TIME_REGEX = re.compile(
-    r"^(?P<time>[0-2]\d:?[0-5]\d:?[0-5]\d|23:59:60|235960)(?P<microseconds>\.\d+)?(?P<tzpart>z|[+-]\d{2}:\d{2})?$", re.I
+    r"^(?P<time>[0-2]\d:?[0-5]\d:?[0-5]\d|23:59:60|235960)(?P<microseconds>\.\d+)?(?P<tzpart>z|[+-]\d{2}:\d{2})?$",
+    re.I,
 )
 
 ISO_8601_TIME_DURATION_REGEX = re.compile(

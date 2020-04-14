@@ -29,9 +29,11 @@ jobs:
     - stage: linting
       python: "3.7"
       install:
-        - pip install pre-commit
+        - pip install black
+        - pip install mypy
       script:
-        - pre-commit
+        - black --line-length 120 --skip-string-normalization .
+        - mypy .
     - stage: codecov
       python: "3.7"
       script:

@@ -13,7 +13,12 @@ from typing_extensions import Literal
 
 from gata.errors import DeserialisationError, MetaError
 from gata.typing import SerialisableType
-from gata.utils import is_typed_dict, parse_iso_date_string, parse_iso_datetime_string, parse_iso_time_string
+from gata.utils import (
+    is_typed_dict,
+    parse_iso_date_string,
+    parse_iso_datetime_string,
+    parse_iso_time_string,
+)
 
 NoneType = type(None)
 

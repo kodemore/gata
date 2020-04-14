@@ -13,7 +13,12 @@ from uuid import UUID
 from bson import ObjectId
 from typing_extensions import Literal
 
-from gata.errors import FieldError, FormatValidationError, TypeValidationError, ValidationError
+from gata.errors import (
+    FieldError,
+    FormatValidationError,
+    TypeValidationError,
+    ValidationError,
+)
 from gata.format import Format
 from gata.typing import ValidatableType
 from gata.utils import DocString, is_optional_type, is_typed_dict, noop

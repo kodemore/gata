@@ -10,7 +10,7 @@ def test_valid_values(value: str):
 
 
 @pytest.mark.parametrize(
-    "value", ("1", "1.0", "1.0.0-.123", "1.0.0-...", "1.0.0-123.", "1.0.0-+", "1.0.0-+123", "1.0.0-")
+    "value", ("1", "1.0", "1.0.0-.123", "1.0.0-...", "1.0.0-123.", "1.0.0-+", "1.0.0-+123", "1.0.0-",),
 )
 def test_invalid_values(value: str):
     with pytest.raises(ValidationError):
