@@ -62,7 +62,7 @@ class Pet:
 
 pet = Pet(name="Boo", age=10)
 
-gata.serialisable(pet)  # {"name": "Boo", "age": 10, "tags": [], "sold_at": None}
+gata.serialise(pet)  # {"name": "Boo", "age": 10, "tags": [], "sold_at": None}
 ```
 
 #### Mapping fields in the result
@@ -86,7 +86,7 @@ class Pet:
 
 pet = Pet(name="Boo", age=10)
 
-gata.serialisable(pet, mapping={
+gata.serialise(pet, mapping={
     "name": "pet_name", # name field will be mapped to `pet_name`
     "tags": False, # tags field will be excluded from serialisation
     # rest of the fields will be returned with names taken from dataclass
