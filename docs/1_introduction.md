@@ -9,7 +9,7 @@ interface allows you to ditch library in every moment and also to introduce libr
 Unlike other libraries, there is no configuration to learn, no schema's micro language, 
 just use built-in python's typing library.
 
-## Example
+#### Example
 
 ```python
 from dataclasses import dataclass

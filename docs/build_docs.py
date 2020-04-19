@@ -26,7 +26,7 @@ def convert_filename_to_text(filename: str) -> str:
 
 
 def get_all_md_files() -> Generator:
-    for filename in DOCS_DIRECTORY.glob("**/*.md"):
+    for filename in sorted(DOCS_DIRECTORY.glob("**/*.md")):
         file = open(filename)
         yield filename, file.read()
 
@@ -36,6 +36,10 @@ def find_code_blocks(contents: str) -> Iterable:
 
 
 def find_topics(contents: str) -> Iterable[Tuple[int, str]]:
+    # remove code blocks before finding topics
+    for code_block in find_code_blocks(contents):
+        contents = contents.replace(code_block, "")
+
     for item in TOPIC_REGEX.findall(contents):
         yield len(item[0]), item[1]
 
@@ -52,16 +56,28 @@ if __name__ == '__main__':
         section_name = convert_filename_to_text(file.name)
         section_topics = []
         for level, topic in find_topics(contents):
+            if level > 3:
+                continue
             section_topics.append({"name": topic, "level": level})
 
         index.append({
             "section": section_name,
             "topics": section_topics,
+            "file": file.name,
         })
 
         for code_block in find_code_blocks(contents):
             if has_file_reference(code_block):
                 a = 1
 
+    readme_contents = open(PROJECT_DIR / ".README.md").read()
+    toc = ""
+    for section in index:
+        toc += f"\n### [{section['section']}](docs/{section['file']})\n"
+        for topic in section['topics']:
+            toc += "\n" + ("  " * topic["level"]) + f"* [{topic['name']}](docs/{section['file']}#{slugify(topic['name'])})"
 
-    a = 1
+    readme_contents += toc
+
+    with open(PROJECT_DIR / "README.md", "w") as readme_file:
+        readme_file.write(readme_contents)
