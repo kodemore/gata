@@ -90,5 +90,11 @@ assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name'
   * [ Serialising gata's dataclasses](docs/6_serialisation.md#serialising-gatas-dataclasses)
   * [ Serialising python's dataclasses](docs/6_serialisation.md#serialising-pythons-dataclasses)
   * [ Mapping fields](docs/6_serialisation.md#mapping-fields)
+* [ Turn off validation during instantiation](docs/6_serialisation.md#turn-off-validation-during-instantiation)
+* [ file://examples/mapping_fields.py](docs/6_serialisation.md#fileexamplesmapping_fieldspy)
     * [ Nested mapping](docs/6_serialisation.md#nested-mapping)
-### [ Detailed object schema](docs/7_detailed_schemas.md)
+* [ file://examples/nested_mapping_example.py](docs/6_serialisation.md#fileexamplesnested_mapping_examplepy)
+### [ Detailed schema](docs/7_detailed_schemas.md)
+
+  * [ `gata.Field` properties](docs/7_detailed_schemas.md#gatafield-properties)
+    * [ Available string formats](docs/7_detailed_schemas.md#available-string-formats)
