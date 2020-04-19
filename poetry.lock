@@ -29,14 +29,6 @@ docs = ["sphinx", "zope.interface"]
 tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface"]
 
 [[package]]
-category = "main"
-description = "Python benchmarker / benchmarking framework"
-name = "benchmark"
-optional = false
-python-versions = "*"
-version = "0.1.5"
-
-[[package]]
 category = "dev"
 description = "The uncompromising code formatter."
 marker = "python_version >= \"3.6\" and python_version < \"4.0\""
@@ -374,7 +366,7 @@ python-versions = "*"
 version = "1.4.1"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Backported and Experimental Type Hints for Python 3.5+"
 name = "typing-extensions"
 optional = false
@@ -425,7 +417,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "f28d3bd97aef2de63320552f602663185983b584e33f982c3f1d53659cbe1d24"
+content-hash = "979d7eef24a7bde3c5aed9573ab2246a3a74cc2a775103fd3a584f1d730165c5"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -440,9 +432,6 @@ atomicwrites = [
 attrs = [
     {file = "attrs-19.3.0-py2.py3-none-any.whl", hash = "sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c"},
     {file = "attrs-19.3.0.tar.gz", hash = "sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"},
-]
-benchmark = [
-    {file = "benchmark-0.1.5.tar.gz", hash = "sha256:0f87b25665831d2ed8e15e6826fa489e0b3b66db30ec6881d3200b5b32fd7c23"},
 ]
 black = [
     {file = "black-19.10b0-py36-none-any.whl", hash = "sha256:1b30e59be925fafc1ee4565e5e08abef6b03fe455102883820fe5ee2e4734e0b"},

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gata"
-version = "2.7.0"
+version = "2.7.1"
 description = "Gata is data validation and transformation library for python."
 authors = [
     "Dawid Kraczkowski <dawid.kraczkowski@gmail.com>"
@@ -30,6 +30,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7"
 bson = "^0.5.9"
+typing_extensions = "^3.7.4"
 
 [tool.poetry.dev-dependencies]
 black = { version = "^19.3b0", python = "^3.6" }
