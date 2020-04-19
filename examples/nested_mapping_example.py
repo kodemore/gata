@@ -37,14 +37,11 @@ serialised_album = album.serialise(
     song_list={
         "$self": "songs",  # song_list field will be mapped to `songs`
         "$item": "title",  # and each song now becomes now just a string with its `title`
-    }
+    },
 )
 
 assert serialised_album == {
     "name": "Best of AC/DC",
     "artist_name": "AC/DC",
-    "songs": [
-        "Whole lotta rosie",
-        "Thunderstruck",
-    ]
+    "songs": ["Whole lotta rosie", "Thunderstruck",],
 }

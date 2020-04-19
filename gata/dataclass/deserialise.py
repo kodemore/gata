@@ -146,7 +146,7 @@ COMPLEX_TYPE_DECODERS = {
 def deserialise_dataclass(value: Any, source_type: Any) -> dict:
     result = source_type.__new__(source_type)
     schema = get_dataclass_schema(source_type)
-    for key, field in schema:
+    for key, field in schema:  # type: ignore
         if field.read_only:
             continue
 

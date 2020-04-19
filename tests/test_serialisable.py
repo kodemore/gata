@@ -53,7 +53,9 @@ def test_serialisable_with_mapping() -> None:
     store = PetStore(name="happy pets", pets=[tom, bob])
 
     assert hasattr(store, "serialise")
-    assert store.serialise(pets={"$self": "pet_list", "favourites": {"$self": "favourite_list", "priority": False}, "status": "pet_status"}) == {
+    assert store.serialise(
+        pets={"$self": "pet_list", "favourites": {"$self": "favourite_list", "priority": False}, "status": "pet_status"}
+    ) == {
         "name": "happy pets",
         "pet_list": [
             {"name": "Tom", "favourite_list": [{"name": "bone"}], "pet_status": 0},

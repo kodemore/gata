@@ -13,7 +13,9 @@ class Pet:
     age: int = 0
 
     class Schema:
-        name = Field(minimum=2, maximum=10, serialiser=lambda name: name.strip())  # serialiser set directly in the Field
+        name = Field(
+            minimum=2, maximum=10, serialiser=lambda name: name.strip()
+        )  # serialiser set directly in the Field
 
         # serialiser and deserialiser defined as schema methods
         @staticmethod

@@ -27,7 +27,7 @@ class Serialisable(Protocol):
         ...
 
 
-def serialise(value: Any, mapping: Dict[str, Union[str, bool, dict, Callable]] = None) -> dict:
+def serialise(value: Any, mapping: Dict[str, Union[str, bool, dict, Callable]] = None) -> Union[Any, Dict[str, Any]]:
     dataclass_class = type(value)
     if not is_dataclass(dataclass_class):
         raise ValueError("Passed `value` must be instance of dataclass.")
@@ -73,11 +73,11 @@ def dataclass(
             if old_init != object.__init__:
                 old_init(*args, **kwargs)
                 if validate:
-                    _cls.validate(self.serialise())
+                    _cls.validate(self.serialise())  # type: ignore
                 return None
             if validate:
                 schema.validate(kwargs)
-            for key, schema_field in schema:
+            for key, schema_field in schema:  # type: ignore
                 if schema_field.read_only:
                     continue
 

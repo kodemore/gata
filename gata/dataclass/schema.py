@@ -237,7 +237,7 @@ UNDEFINED = _Undefined()
 
 
 class Field:
-    def __init__(
+    def __init__(  # type: ignore
         self,
         maximum: int = None,
         minimum: int = None,
@@ -248,7 +248,7 @@ class Field:
         write_only: bool = None,
         serialiser: Callable = None,
         deserialiser: Callable = None,
-        default: Any = UNDEFINED,
+        default: Any = None,
         default_factory: Callable = UNDEFINED,
     ):
         self.minimum = minimum

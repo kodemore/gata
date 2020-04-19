@@ -42,7 +42,7 @@ TYPE_ENCODERS = {
 
 
 def serialise_tuple(
-    value: Tuple[Any, ...], subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
+    value: Tuple[Any, ...], subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None
 ) -> List[Any]:
     if not subtypes:
         raise SerialisationError("Cannot serialise generic tuples, please assure subtype is defined.")
@@ -62,7 +62,7 @@ def serialise_tuple(
 
 
 def serialise_iterable(
-    value: Iterable[Any], subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
+    value: Iterable[Any], subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None
 ) -> List[Any]:
     if not subtypes:
         raise SerialisationError("Cannot serialise generic iterables please assure subtype is defined between [ and ]")
@@ -77,7 +77,7 @@ def serialise_iterable(
     return result
 
 
-def serialise_union(value, subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None,) -> Any:
+def serialise_union(value, subtypes: List[Any], mapping: Dict[str, Union[bool, str, dict, Callable]] = None) -> Any:
     # Optional values
     if value is None and NoneType in subtypes:  # type: ignore
         return None
@@ -106,7 +106,7 @@ COMPLEX_TYPE_ENCODERS = {
 
 
 def _add_key_to_result(
-    result: Dict[str, Any], key: str, value: Any, field_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]],
+    result: Dict[str, Any], key: str, value: Any, field_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]]
 ) -> None:
     if mapping is None or key not in mapping:
         result[key] = serialise(value, field_type)
@@ -135,8 +135,8 @@ def _add_key_to_result(
 
 
 def serialise_dataclass(
-    value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
-) -> Union[str, Dict[str, Any]]:
+    value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None
+) -> Union[Any, Dict[str, Any]]:
     result = {}  # type: Dict[str, Any]
     class_schema = get_dataclass_schema(value.__class__)
     for key, field in source_type.__dataclass_fields__.items():
@@ -160,13 +160,13 @@ def serialise_dataclass(
         result[key] = serialise(getattr(value, key), field.type)
 
     if mapping and "$item" in mapping:
-        return result[mapping["$item"]]
+        return result.get(mapping["$item"], None)  # type: ignore
 
     return result
 
 
 def serialise_typed_dict(
-    value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
+    value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None
 ) -> Dict[str, Any]:
     result = {}  # type: Dict[str, Any]
     for key, type_ in source_type.__annotations__.items():
@@ -179,7 +179,7 @@ def serialise_typed_dict(
     return result
 
 
-def serialise(value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None,) -> Any:
+def serialise(value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None) -> Any:
 
     # Lists, Sets, Tuples, Iterable
     origin_type = getattr(source_type, "__origin__", None)

@@ -16,4 +16,6 @@ class User:
         age = Field(minimum=1, maximum=120)  # min user's age is 1 maximum is 120
 
 
-bob = User(email="valid@email.com", name="Bob", age=121)  # gata.errors.FieldError: Field error `age`: Passed value must be lower than set maximum `120`
+bob = User(
+    email="valid@email.com", name="Bob", age=121
+)  # gata.errors.FieldError: Field error `age`: Passed value must be lower than set maximum `120`
