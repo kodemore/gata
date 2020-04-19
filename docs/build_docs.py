@@ -82,8 +82,12 @@ if __name__ == '__main__':
     readme_contents = open(PROJECT_DIR / ".README.md").read()
     toc = ""
     for section in index:
-        toc += f"\n### [{section['section']}](docs/{section['file']})\n"
+        first = True
         for topic in section['topics']:
+            if first:
+                toc += f"\n### [{topic['name']}](docs/{section['file']})\n"
+                first = False
+                continue
             toc += "\n" + ("  " * topic["level"]) + f"* [{topic['name']}](docs/{section['file']}#{slugify(topic['name'])})"
 
     readme_contents += toc

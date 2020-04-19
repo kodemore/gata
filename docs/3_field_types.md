@@ -97,7 +97,7 @@ While deserialisation and serialisation will be treated as usual string.
 
 ### `gata.typing.Duration`
 Validates whether the value is a valid ISO-8601 duration expression. 
-While deserialisation value will be cast to `datetime.duration`, 
+While deserialisation value will be cast to `datetime.timedelta`, 
 while serialisation value will be converted back to valid ISO-8601 duration expression.
 
 ### `gata.typing.URI`

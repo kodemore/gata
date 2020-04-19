@@ -48,16 +48,12 @@ assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name'
 
 ## Documentation
 
-### [Introduction](docs/1_introduction.md)
+### [ Defining dataclass](docs/2_defining_dataclass.md)
 
-### [Defining dataclass](docs/2_defining_dataclass.md)
-
-  * [ Defining dataclass](docs/2_defining_dataclass.md#defining-dataclass)
     * [ Defining dataclass with python's native dataclass](docs/2_defining_dataclass.md#defining-dataclass-with-pythons-native-dataclass)
     * [ Defining dataclass with gata](docs/2_defining_dataclass.md#defining-dataclass-with-gata)
-### [Field types](docs/3_field_types.md)
+### [ Field types](docs/3_field_types.md)
 
-  * [ Field types](docs/3_field_types.md#field-types)
     * [ Supported standard library types](docs/3_field_types.md#supported-standard-library-types)
       * [ Primitive types](docs/3_field_types.md#primitive-types)
       * [ Date-related types](docs/3_field_types.md#date-related-types)
@@ -76,16 +72,14 @@ assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name'
       * [ `gata.typing.DateTime`](docs/3_field_types.md#gatatypingdatetime)
       * [ `gata.typing.Time`](docs/3_field_types.md#gatatypingtime)
     * [ Defining custom types](docs/3_field_types.md#defining-custom-types)
-### [Validation](docs/4_validation.md)
+### [ Validation](docs/4_validation.md)
 
-  * [ Validation](docs/4_validation.md#validation)
     * [ Automatic validation](docs/4_validation.md#automatic-validation)
       * [ Performing post initialisation processing](docs/4_validation.md#performing-post-initialisation-processing)
     * [ Manual validation](docs/4_validation.md#manual-validation)
     * [ Extra validators](docs/4_validation.md#extra-validators)
-### [Deserialisation](docs/5_deserialisation.md)
+### [ Deserialisation](docs/5_deserialisation.md)
 
-  * [ Deserialisation](docs/5_deserialisation.md#deserialisation)
     * [ Automatic deserialisation](docs/5_deserialisation.md#automatic-deserialisation)
     * [ Manual deserialisation](docs/5_deserialisation.md#manual-deserialisation)
     * [ Nested deserialisation](docs/5_deserialisation.md#nested-deserialisation)
