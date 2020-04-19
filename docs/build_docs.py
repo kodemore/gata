@@ -88,7 +88,7 @@ if __name__ == '__main__':
                 toc += f"\n### [{topic['name']}](docs/{section['file']})\n"
                 first = False
                 continue
-            toc += "\n" + ("  " * topic["level"]) + f"* [{topic['name']}](docs/{section['file']}#{slugify(topic['name'])})"
+            toc += "\n" + ("  " * (topic["level"] - 1)) + f"* [{topic['name']}](docs/{section['file']}#{slugify(topic['name'])})"
 
     readme_contents += toc
 
