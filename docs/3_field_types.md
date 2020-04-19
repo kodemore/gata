@@ -143,11 +143,13 @@ from gata import dataclass
 from gata.errors import ValidationError
 from gata.typing import SerialisableType, ValidatableType
 
-UK_POST_CODE_REGEX = re.compile("^([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([AZa-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z])))) [0-9][A-Za-z]{2})$")
+UK_POST_CODE_REGEX = re.compile(
+    "^([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([AZa-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z])))) [0-9][A-Za-z]{2})$"
+)
 
 
-class UKPostCode(str, SerialisableType, ValidatableType):  # Custom type must implement those two protocols
-    @classmethod  # its important to keep all these three methods as class'  methods
+class UKPostCode(str, SerialisableType, ValidatableType):
+    @classmethod
     def validate(cls, value: Any) -> Any:
         if UK_POST_CODE_REGEX.match(value):
             return value
@@ -168,10 +170,17 @@ class User:
     post_code: UKPostCode
     age: int
 
-valid_user = User(name="Bob", post_code="SW16 5QW", age=22)
+
+bob = User(name="Bob", post_code="SW16 5QW", age=22)
 
 try:
-    invalid_user = User(name="Tom", post_code="123111", age=28)
+    failed_tom = User(name="Tom", post_code="123111", age=28)
+except ValidationError as error:
+    ...
+
+# file://examples/custom_type.py
+```
+(name="Tom", post_code="123111", age=28)
 except ValidationError as error:
     ...
 

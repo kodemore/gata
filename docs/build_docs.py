@@ -50,8 +50,10 @@ def replace_code_block_in_file(file: Path, code_block: str) -> None:
         sample_code_filename = reference.group(1)
         sample_code = open(PROJECT_DIR / sample_code_filename).read()
         sample_code += "\n" + reference.group(0)
+        sample_code = "```python\n" + sample_code + "\n```"
         doc_file = file.open("r+")
         doc_contents = doc_file.read().replace(code_block, sample_code)
+        doc_file.seek(0)
         doc_file.write(doc_contents)
 
     except IndexError:
