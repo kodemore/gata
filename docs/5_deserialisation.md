@@ -33,7 +33,7 @@ raw_album = {
         "Ramble On",
         "Moby Dick",
         "Bring It On Home",
-    ]
+    ],
 }
 
 led_zeppelin_I = Album(**raw_album)
@@ -81,7 +81,7 @@ raw_album = {
         "Ramble On",
         "Moby Dick",
         "Bring It On Home",
-    ]
+    ],
 }
 
 led_zeppelin_I = deserialise(raw_album, Album)
@@ -128,21 +128,13 @@ class Album:
 
 raw_album = {
     "name": "Led Zeppelin I",
-    "artist": {
-        "name": "Led Zeppelin"
-    },
+    "artist": {"name": "Led Zeppelin"},
     "release_year": 1969,
     "some_unknown_field": False,
     "song_list": [
-        {
-            "title": "Whole Lotta Love",
-            "length": "PT5M34S",
-        },
-        {
-            "title": "What Is and What Should Never Be",
-            "length": "PT4M46S",
-        },
-    ]
+        {"title": "Whole Lotta Love", "length": "PT5M34S",},
+        {"title": "What Is and What Should Never Be", "length": "PT4M46S",},
+    ],
 }
 
 led_zeppelin_I = Album(**raw_album)

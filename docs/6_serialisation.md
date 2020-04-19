@@ -34,5 +34,7 @@ assert led_zeppelin_I.serialise() == {
     "song_list": None,
 }
 
+assert dict(led_zeppelin_I) == led_zeppelin_I.serialise()
+
 # file://examples/serialising_gata_dataclass.py
 ```
