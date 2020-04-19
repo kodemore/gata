@@ -44,10 +44,18 @@ def find_topics(contents: str) -> Iterable[Tuple[int, str]]:
         yield len(item[0]), item[1]
 
 
-def has_file_reference(code_block: str) -> bool:
+def replace_code_block_in_file(file: Path, code_block: str) -> None:
     reference = FILE_REFERENCE_REGEX.search(code_block)
+    try:
+        sample_code_filename = reference.group(1)
+        sample_code = open(PROJECT_DIR / sample_code_filename).read()
+        sample_code += "\n" + reference.group(0)
+        doc_file = file.open("r+")
+        doc_contents = doc_file.read().replace(code_block, sample_code)
+        doc_file.write(doc_contents)
 
-    return False
+    except IndexError:
+        return None
 
 
 if __name__ == '__main__':
@@ -67,8 +75,7 @@ if __name__ == '__main__':
         })
 
         for code_block in find_code_blocks(contents):
-            if has_file_reference(code_block):
-                a = 1
+            replace_code_block_in_file(file, code_block)
 
     readme_contents = open(PROJECT_DIR / ".README.md").read()
     toc = ""
