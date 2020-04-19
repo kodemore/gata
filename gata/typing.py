@@ -61,7 +61,6 @@ class EmailAddress(str, SerialisableType, ValidatableType, SchemaType):
         field_schema.update({"format": "email"})
 
 
-@dataclass
 class Duration(timedelta, SerialisableType, SchemaType, ValidatableType):
     @classmethod
     def validate(cls, value: Any) -> Any:

@@ -52,11 +52,8 @@ def test_serialisable_with_mapping() -> None:
 
     store = PetStore(name="happy pets", pets=[tom, bob])
 
-    def map_favourites(favorites: List[Favourite]) -> (str, list):
-        return "favourite_list", [{"name": favorites[0].name}]
-
     assert hasattr(store, "serialise")
-    assert store.serialise(pets={"$self": "pet_list", "favourites": map_favourites, "status": "pet_status"}) == {
+    assert store.serialise(pets={"$self": "pet_list", "favourites": {"$self": "favourite_list", "priority": False}, "status": "pet_status"}) == {
         "name": "happy pets",
         "pet_list": [
             {"name": "Tom", "favourite_list": [{"name": "bone"}], "pet_status": 0},

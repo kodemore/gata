@@ -312,7 +312,7 @@ class Reference(Field):
 class Schema:
     def __init__(self, dataclass_type: Any):
         if not is_dataclass(dataclass_type):
-            raise ValueError("passed value is not valid dataclass type")
+            raise ValueError(f"passed value {dataclass_type} is not valid dataclass type")
         self.doc_string = DocString(dataclass_type)
         self.type = dataclass_type
         self.class_name = dataclass_type.__name__

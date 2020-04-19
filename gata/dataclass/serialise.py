@@ -74,9 +74,6 @@ def serialise_iterable(
     for item in value:
         result.append(serialise(item, subtypes[0], mapping))
 
-    if mapping and "$item" in mapping:
-        return [item[mapping["$item"]] for item in result if mapping["$item"] in item]
-
     return result
 
 
@@ -134,23 +131,12 @@ def _add_key_to_result(
             result[key] = serialise(value, field_type, item_key)
         return None
 
-    if callable(item_key):
-        user_serialised = item_key(value)  # type: Tuple[str, Any]
-        if not isinstance(user_serialised[0], str):
-            raise ValueError(
-                f"user mapping returned invalid value for key {key},callable should return field name and field value,"
-                + "please refer to mapping section in gata's documentation"
-            )
-
-        result[user_serialised[0]] = user_serialised[1]
-        return None
-
     raise ValueError(f"unsupported mapping option for key {key}, mapping supports boo, str, dict, callable values only")
 
 
 def serialise_dataclass(
     value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None,
-) -> Dict[str, Any]:
+) -> Union[str, Dict[str, Any]]:
     result = {}  # type: Dict[str, Any]
     class_schema = get_dataclass_schema(value.__class__)
     for key, field in source_type.__dataclass_fields__.items():
@@ -172,6 +158,9 @@ def serialise_dataclass(
             continue
 
         result[key] = serialise(getattr(value, key), field.type)
+
+    if mapping and "$item" in mapping:
+        return result[mapping["$item"]]
 
     return result
 
