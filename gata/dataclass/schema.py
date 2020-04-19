@@ -249,7 +249,7 @@ class Field:
         serialiser: Callable = None,
         deserialiser: Callable = None,
         default: Any = None,
-        default_factory: Callable = UNDEFINED,
+        default_factory: Callable = UNDEFINED,  # type: ignore
     ):
         self.minimum = minimum
         self.maximum = maximum
