@@ -180,9 +180,3 @@ except ValidationError as error:
 
 # file://examples/custom_type.py
 ```
-(name="Tom", post_code="123111", age=28)
-except ValidationError as error:
-    ...
-
-# file://examples/custom_type.py
-```
