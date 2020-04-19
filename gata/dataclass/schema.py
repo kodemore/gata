@@ -388,7 +388,7 @@ def get_dataclass_schema(dataclass_class: Any) -> Schema:
 
 def validate(value, dataclass_class: Any = None) -> Any:
     if dataclass_class is None:
-        if not hasattr(value, '__class__'):
+        if not hasattr(value, "__class__"):
             raise ValueError(f"could not validate value {value}, please provide dataclass_class parameter")
         dataclass_class = value.__class__
 

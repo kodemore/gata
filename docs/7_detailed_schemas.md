@@ -1,0 +1,1 @@
+# Detailed object schema

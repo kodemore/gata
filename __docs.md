@@ -1,13 +1,4 @@
 
-
-
-### Serialising dataclasses
-Gata serialisation mechanism is a better alternative to well known `dataclasses.asdict` function.
-Differences between `gata`'s serialiser and `asdict` function are:
- - `gata` ensures that returned value matches annotated type
- - `gata` knows how to serialise datetime values, sets, typed lists, typed sets, typed dicts, enums and more
- - `gata` gives easy interface to implement custom serialisers for your custom defined types
-
 ```python
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -102,54 +93,6 @@ store.serialise(
 ```
 
 > Note: When using custom serialising methods, only field to field mapping is available.
-
-### Deserialising into dataclasses
-```python
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Optional
-
-import gata
-
-
-@dataclass
-class Pet:
-    name: str
-    age: int = field(default=0)
-    tags: List[str] = field(default_factory=list)
-    sold_at: Optional[datetime] = field(default=None)
-
-pet = gata.deserialise({"name": "Boo", "age": 10, "tags": [], "sold_at": None}, Pet)
-```
-
-### Useful decorators
-If you prefer more OOP approach you can use `gata.serialisable`, `gata.valiadatable` decorators, consider the following example
-```python
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Optional
-
-from gata import serialisable, validatable
-
-@validatable
-@serialisable
-class Pet:
-    name: str
-    age: int = field(default=0)
-    tags: List[str] = field(default_factory=list)
-    sold_at: Optional[datetime] = field(default=None)
-
-# Deserialise Pet
-pet = Pet.deserialise({"name": "Boo", "age": 10, "tags": [], "sold_at": None})
-
-# Serialise Pet
-pet.serialise()
-
-# Validate dict against Pet's schema
-Pet.validate({"name": "Boo", "age": 10, "tags": [], "sold_at": None})
-```
-
-> Note: `@dataclass` decorator is not required when using `serialisable` or `validatable` decorators, as gata automatically converts decorated class into dataclass.
 
 
 ### Adding schema to validators

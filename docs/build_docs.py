@@ -60,7 +60,7 @@ def replace_code_block_in_file(file: Path, code_block: str) -> None:
         return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     index = []
     for file, contents in get_all_md_files():
         section_name = convert_filename_to_text(file.name)
@@ -70,11 +70,9 @@ if __name__ == '__main__':
                 continue
             section_topics.append({"name": topic, "level": level})
 
-        index.append({
-            "section": section_name,
-            "topics": section_topics,
-            "file": file.name,
-        })
+        index.append(
+            {"section": section_name, "topics": section_topics, "file": file.name,}
+        )
 
         for code_block in find_code_blocks(contents):
             replace_code_block_in_file(file, code_block)
@@ -83,12 +81,16 @@ if __name__ == '__main__':
     toc = ""
     for section in index:
         first = True
-        for topic in section['topics']:
+        for topic in section["topics"]:
             if first:
                 toc += f"\n### [{topic['name']}](docs/{section['file']})\n"
                 first = False
                 continue
-            toc += "\n" + ("  " * (topic["level"] - 1)) + f"* [{topic['name']}](docs/{section['file']}#{slugify(topic['name'])})"
+            toc += (
+                "\n"
+                + ("  " * (topic["level"] - 1))
+                + f"* [{topic['name']}](docs/{section['file']}#{slugify(topic['name'])})"
+            )
 
     readme_contents += toc
 

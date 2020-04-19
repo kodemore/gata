@@ -26,7 +26,7 @@ raw_album = {
         "Ramble On",
         "Moby Dick",
         "Bring It On Home",
-    ]
+    ],
 }
 
 led_zeppelin_I = Album(**raw_album)

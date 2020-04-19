@@ -27,7 +27,7 @@ raw_album = {
         "Ramble On",
         "Moby Dick",
         "Bring It On Home",
-    ]
+    ],
 }
 
 led_zeppelin_I = deserialise(raw_album, Album)

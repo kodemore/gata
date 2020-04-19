@@ -43,7 +43,7 @@ def deserialise(value: dict, target_class: Any) -> Any:
 
 
 def dataclass(
-    _cls: T = None, init=True, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False
+    _cls: T = None, init=True, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False, validate=True
 ) -> Union[T, Validatable, Serialisable, Callable[[T], Union[T, Validatable, Serialisable]]]:
     def _make_dataclass(_cls: T) -> Union[T, Validatable, Serialisable]:
         _cls = base_dataclass(  # type: ignore
@@ -72,10 +72,11 @@ def dataclass(
             self = args[0]
             if old_init != object.__init__:
                 old_init(*args, **kwargs)
-                _cls.validate(self.serialise())
+                if validate:
+                    _cls.validate(self.serialise())
                 return None
-
-            schema.validate(kwargs)
+            if validate:
+                schema.validate(kwargs)
             for key, schema_field in schema:
                 if schema_field.read_only:
                     continue
@@ -94,7 +95,7 @@ def dataclass(
 
                 setattr(self, key, deserialise_type(value, schema_field.type))
 
-            if hasattr(self, '__post_init__'):
+            if hasattr(self, "__post_init__"):
                 self.__post_init__()
 
         setattr(_cls, "__init__", _init)

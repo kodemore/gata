@@ -20,5 +20,5 @@ except ValueError:
 
 pet = Pet(**{"tags": ["dog"]})
 
-assert pet.serialise() == {'tags': ['dog'], 'name': 'Boo', 'age': 0, 'sold_at': None}
-assert pet.serialise(age=False, sold_at=False) == {'tags': ['dog'], 'name': 'Boo'}
+assert pet.serialise() == {"tags": ["dog"], "name": "Boo", "age": 0, "sold_at": None}
+assert pet.serialise(age=False, sold_at=False) == {"tags": ["dog"], "name": "Boo"}
