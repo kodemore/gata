@@ -10,6 +10,7 @@ DOCS_DIRECTORY = PROJECT_DIR / "docs"
 CODE_BLOCK_REGEX = re.compile(r"```[^`]+```")
 FILE_REFERENCE_REGEX = re.compile(r"[^\n]*file://([^\n]*)")
 TOPIC_REGEX = re.compile(r"(\#+)([^\n]*)")
+LINK_REGEX = re.compile(r"\([^\)]+\)")
 
 MARKDOWN_ID_SEPARATOR = "-"
 
@@ -39,6 +40,10 @@ def find_topics(contents: str) -> Iterable[Tuple[int, str]]:
     # remove code blocks before finding topics
     for code_block in find_code_blocks(contents):
         contents = contents.replace(code_block, "")
+
+    # remove links
+    for link in LINK_REGEX.findall(contents):
+        contents = contents.replace(link, "")
 
     for item in TOPIC_REGEX.findall(contents):
         yield len(item[0]), item[1]

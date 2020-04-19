@@ -86,5 +86,6 @@ assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name'
   * [ Manual deserialisation](docs/5_deserialisation.md#manual-deserialisation)
   * [ Nested deserialisation](docs/5_deserialisation.md#nested-deserialisation)
 ### [ Serialisation](docs/6_serialisation.md)
+
   * [ Serialising gata's dataclasses](docs/6_serialisation.md#serialising-gatas-dataclasses)
 ### [ Detailed object schema](docs/7_detailed_schemas.md)
