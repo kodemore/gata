@@ -80,7 +80,7 @@ Sets default value if none is provided during instantiation.
 
 Sets default value factor which will be called during instantiation if none value is provided.
 
-### Available string formats
+#### Available string formats
  - `date-time`
  - `date`
  - `time`
@@ -96,3 +96,21 @@ Sets default value factor which will be called during instantiation if none valu
  - `semver`
  - `byte`
 
+### Custom serialisers/deserialisers
+
+If defining custom types is too much hassle for you, you can utilise schema functionality to define custom
+serialisers/deserialisers.
+
+Serialiser/deserialiser is just a `typing.Callable` value that can be either set as an argument in `gata.Field` instance 
+or a function defined in the schema.
+
+> Field serialisers in `Schema` class must be prefixed with `serialise_` prefix, deserialisers accordingly with `deserialise_` prefix.
+> Serialisation and desarialisation methods MUST be declared as @staticmethod
+
+```python
+
+# file://examples/custom_serialiser_deserialiser_example.py
+```
+
+In the above example default serialiser/deserialiser for `id` property has been replaced with methods `serialise_id` and
+`deserialise_id`. `name` field has its serialiser definition passed to `gata.Field` instance.
