@@ -96,5 +96,10 @@ assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name'
 * [ file://examples/nested_mapping_example.py](docs/6_serialisation.md#fileexamplesnested_mapping_examplepy)
 ### [ Detailed schema](docs/7_detailed_schemas.md)
 
+* [ validate email field against email format](docs/7_detailed_schemas.md#validate-email-field-against-email-format)
+* [ min name length is 2 characters](docs/7_detailed_schemas.md#min-name-length-is-2-characters)
+* [ min user's age is 1 maximum is 120](docs/7_detailed_schemas.md#min-users-age-is-1-maximum-is-120)
+* [ gata.errors.FieldError: Field error `age`: Passed value must be lower than set maximum `120`](docs/7_detailed_schemas.md#gataerrorsfielderror-field-error-age-passed-value-must-be-lower-than-set-maximum-120)
+* [ file://examples/schema_example.py](docs/7_detailed_schemas.md#fileexamplesschema_examplepy)
   * [ `gata.Field` properties](docs/7_detailed_schemas.md#gatafield-properties)
-    * [ Available string formats](docs/7_detailed_schemas.md#available-string-formats)
+    * [ Custom serialisers/deserialisers](docs/7_detailed_schemas.md#custom-serialisersdeserialisers)
