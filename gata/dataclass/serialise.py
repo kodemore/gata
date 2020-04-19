@@ -171,10 +171,6 @@ def serialise_dataclass(
             _add_key_to_result(result, key, getattr(value, key), field.type, mapping)
             continue
 
-        if not hasattr(value, key):
-            result[key] = None
-            continue
-
         result[key] = serialise(getattr(value, key), field.type)
 
     return result

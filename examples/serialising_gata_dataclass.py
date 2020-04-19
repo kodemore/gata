@@ -17,7 +17,7 @@ assert led_zeppelin_I.serialise() == {
     "name": "Led Zeppelin I",
     "artist": "Led Zeppelin",
     "release_year": 1969,
-    "song_list": None,
+    "song_list": [],
 }
 
 assert dict(led_zeppelin_I) == led_zeppelin_I.serialise()

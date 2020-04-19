@@ -38,3 +38,12 @@ assert dict(led_zeppelin_I) == led_zeppelin_I.serialise()
 
 # file://examples/serialising_gata_dataclass.py
 ```
+
+## Serialising python's dataclasses
+
+To serialise instance of python's dataclass use `gata.serialise(obj)` function:
+
+```python
+
+# file://examples/serialising_python_dataclass.py
+```

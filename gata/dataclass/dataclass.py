@@ -84,6 +84,7 @@ def dataclass(
                 if key not in kwargs:
                     default_value = schema_field.default
                     if default_value is UNDEFINED:
+                        setattr(self, key, None)
                         continue
                     setattr(self, key, default_value)
                     continue
