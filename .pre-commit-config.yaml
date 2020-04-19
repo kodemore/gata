@@ -1,4 +1,4 @@
-exclude: 'docs|.git|.toml'
+exclude: 'docs|.git|.toml|examples'
 fail_fast: true
 default_language_version:
   python: python3.7

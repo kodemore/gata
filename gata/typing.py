@@ -36,11 +36,11 @@ class ValidatableType(Protocol):
 @runtime
 class SerialisableType(Protocol):
     @classmethod
-    def serialise(cls, value: Any):
+    def serialise(cls, value: Any) -> Any:
         return value
 
     @classmethod
-    def deserialise(cls, value: Any):
+    def deserialise(cls, value: Any) -> Any:
         return value
 
 

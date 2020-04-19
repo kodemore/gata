@@ -1,31 +1,22 @@
-from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
-from gata import serialisable
+from gata import dataclass
 from tests.fixtures import Favourite, PetStatus
 
 
 def test_serialisable_decorator():
-    @serialisable()
-    @dataclass()
+    @dataclass
     class SerialisablePet:
         name: str
         status: PetStatus
         favourites: List[Favourite]
 
-    pet = SerialisablePet(name="Tom", status=PetStatus.AVAILABLE, favourites=[Favourite("bone")])
+    pet = SerialisablePet(name="Tom", status=PetStatus.AVAILABLE, favourites=[Favourite(name="bone")])
 
     assert hasattr(pet, "serialise")
-    assert pet.serialise() == {
-        "favourites": [{"name": "bone", "priority": 0}],
-        "name": "Tom",
-        "status": 0,
-    }
+    assert pet.serialise() == {"favourites": [{"name": "bone", "priority": 0}], "name": "Tom", "status": 0}
 
-    assert hasattr(SerialisablePet, "deserialise")
-    deserialised_tom = SerialisablePet.deserialise(
-        {"favourites": [{"name": "bone", "priority": 0}], "name": "Tom", "status": 0}
-    )
+    deserialised_tom = SerialisablePet(**{"favourites": [{"name": "bone", "priority": 0}], "name": "Tom", "status": 0})
 
     assert isinstance(deserialised_tom, SerialisablePet)
     assert isinstance(deserialised_tom.favourites[0], Favourite)
@@ -34,30 +25,23 @@ def test_serialisable_decorator():
 
 
 def test_decorator_without_calling_it() -> None:
-    @serialisable
-    @dataclass()
+    @dataclass
     class SerialisablePet:
         name: str
         status: PetStatus
         favourites: List[Favourite]
 
     pet = SerialisablePet(name="Tom", status=PetStatus.AVAILABLE, favourites=[Favourite("bone")])
-    assert pet.serialise() == {
-        "favourites": [{"name": "bone", "priority": 0}],
-        "name": "Tom",
-        "status": 0,
-    }
+    assert pet.serialise() == {"favourites": [{"name": "bone", "priority": 0}], "name": "Tom", "status": 0}
 
 
 def test_serialisable_with_mapping() -> None:
-    @serialisable
     @dataclass
     class Pet:
         name: str
         status: PetStatus
         favourites: List[Favourite]
 
-    @serialisable
     @dataclass
     class PetStore:
         name: str
@@ -82,14 +66,13 @@ def test_serialisable_with_mapping() -> None:
 
 
 def test_serialisable_with_custom_serialisers_deserialisers() -> None:
-    @serialisable
     @dataclass
     class Pet:
         name: str
-        status: PetStatus
+        status: Optional[PetStatus] = 0
         favourites: List[Favourite]
 
-        class Meta:
+        class Schema:
             @staticmethod
             def serialise_name(name: str) -> str:
                 return f"serialised: {name}"
@@ -98,16 +81,15 @@ def test_serialisable_with_custom_serialisers_deserialisers() -> None:
             def deserialise_favourites(favourites: List[str]) -> List[Favourite]:
                 return [Favourite(name=favourite) for favourite in favourites if favourite]
 
-    @serialisable
     @dataclass
     class PetStore:
         name: str
         pets: List[Pet]
 
-    pet_store = PetStore.deserialise(
-        {
+    pet_store = PetStore(
+        **{
             "name": "Happy Pets",
-            "pets": [{"name": "Boo", "favourites": ["bone", "candy"]}, {"name": "Koo", "favourites": ["seeds"]},],
+            "pets": [{"name": "Boo", "favourites": ["bone", "candy"]}, {"name": "Koo", "favourites": ["seeds"]}],
         }
     )
 
@@ -120,7 +102,7 @@ def test_serialisable_with_custom_serialisers_deserialisers() -> None:
 
 
 def test_serialise_non_data_class() -> None:
-    @serialisable
+    @dataclass
     class Pet:
         name: str
         status: PetStatus
@@ -133,8 +115,4 @@ def test_serialise_non_data_class() -> None:
 
     pet = Pet("Boo", PetStatus.AVAILABLE, ["bone", "candy"])
 
-    assert pet.serialise() == {
-        "name": "Boo",
-        "status": 0,
-        "favourites": ["bone", "candy"],
-    }
+    assert pet.serialise() == {"name": "Boo", "status": 0, "favourites": ["bone", "candy"]}

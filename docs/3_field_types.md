@@ -1,0 +1,179 @@
+# Field types
+
+Gata supports most of standard library types, but in some cases this might not be sufficient.
+That's why you can either implement your own custom type or use one of predefined types that are
+part of `gata.typing` module.
+
+## Supported standard library types
+
+### Primitive types
+
+#### `bool`
+
+Accepts `True`, `False` values as well as falsy and truthy expressions. 
+While serialisaion/deserialisation phase value is being cast to boolean.
+
+#### `int`, `float`, `str`
+
+Accepts values as they are, while serialisation/deserialisation int/float/str functions are used to convert values
+(this may cause dataloss).
+
+#### `bytes`
+
+Accepts `bytes` values or base64 encoded strings, while serialisation `bytes` values are returned as base64 encoded string,
+during deserialisation base64 encoded strings are turned into bytes.
+
+### Date-related types
+
+#### `datetime.date`
+
+Accepts string containing valid ISO-8601 representation or `datetime.date` instances, while serialisation converts
+`datetime.date` instance to string containing valid ISO-8601 date representation.
+
+#### `datetime.datetime`
+Same as `datetime.date` but accepts valid ISO-8601 datetime representation.
+
+
+#### `datetime.time`
+Same as `datetime.date` but accepts valid ISO-8601 time representation.
+
+
+#### `datetime.timedelta`
+Same as `datetime.date` but accepts valid ISO-8601 time representation.
+
+### Other standard library types
+
+#### `decimal.Decimal`
+Accepts string that can be converted to `decimal.Decimal` value, while serialisation converts value to string.
+
+#### `uuid.UUID`
+Accepts string that can be converted to `uuid.UUID` value, while serialisation converts value to string.
+
+#### `enum.Enum`
+Accepts value that can be converted to valid instance of subclass of `enum.Enum`, while serialisation converts value to either string or integer.
+
+#### `ipaddress.IPv4Address`
+Accepts string that is valid ipv4 address representation, while serialisation converts value to string.
+
+#### `ipaddress.IPv6Address`
+Accepts string that is valid ipv6 address representation, while serialisation converts value to string.
+
+### Typing library
+
+#### `typing.Any`
+Accepts any value, while serialisation the value is returned as-is.
+
+#### `typing.List` with defined subtype
+Accepts values that can be converted to list with specified type, while serialisation converts value to list of converted type.
+
+#### `typing.Tuple` with defined subtype
+Same as `typing.List`, but value is converted to tuple.
+
+#### `typing.Set` with defined subtype
+Same as `typing.List`, but value is converted to set.
+
+#### `typing.FrozenSet` with defined subtype
+Same as `typing.List`, but value is converted to frozen-set.
+
+#### `typing.TypedDict`
+Accept dict which values validates against defined schema.
+
+#### `typing.Optional`
+Accept value of all supported types with optional modifier.
+
+#### `typing.Union`
+Accept value that is one of specified type in the union type. While deserialisation gata will try to assert the type
+that field names matches most of defined key names in passed serialised value. 
+
+### Dataclasses
+All dataclasses are supported and they are validated against defined schema, while serialisation 
+they are converted to dict value containing converted types.
+
+## Gata types
+
+### `gata.typing.EmailAddress`
+Validates whether the value is a valid email address. 
+While deserialisation and serialisation will be treated as usual string.
+
+### `gata.typing.Duration`
+Validates whether the value is a valid ISO-8601 duration expression. 
+While deserialisation value will be cast to `datetime.duration`, 
+while serialisation value will be converted back to valid ISO-8601 duration expression.
+
+### `gata.typing.URI`
+Validates whether the value is a valid URI expression. 
+While deserialisation and serialisation will be treated as a usual string.
+
+### `gata.typing.UrlAddress`
+Validates whether the value is a valid URL address. 
+While deserialisation and serialisation will be treated as a usual string.
+
+### `gata.typing.Hostname`
+Validates whether the value is a valid hostname. 
+While deserialisation and serialisation will be treated as a usual string.
+
+### `gata.typing.Semver`
+Validates whether the value is a valid semantic version number. 
+While deserialisation and serialisation will be treated as a usual string.
+
+### `gata.typing.Uuid`
+Validates whether the value is a valid uuid number. 
+While deserialisation value will be cast to `uuid.UUID` instance, 
+during serialisation value will be converted back to string.
+
+### `gata.typing.Date`
+An alias to `datetime.date`
+
+### `gata.typing.DateTime`
+An alias to `datetime.datetime`
+
+### `gata.typing.Time`
+An alias to `datetime.time`
+
+
+## Defining custom types
+
+The following example defines custom type for validating and representing UK post codes
+
+```python
+import re
+from typing import Any
+
+from gata import dataclass
+from gata.errors import ValidationError
+from gata.typing import SerialisableType, ValidatableType
+
+UK_POST_CODE_REGEX = re.compile("^([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([AZa-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z])))) [0-9][A-Za-z]{2})$")
+
+
+class UKPostCode(str, SerialisableType, ValidatableType):  # Custom type must implement those two protocols
+    @classmethod  # its important to keep all these three methods as class'  methods
+    def validate(cls, value: Any) -> Any:
+        if UK_POST_CODE_REGEX.match(value):
+            return value
+        raise ValidationError(f"passed value {value} is not valid uk post code")
+
+    @classmethod
+    def serialise(cls, value: Any) -> Any:
+        return value
+
+    @classmethod
+    def deserialise(cls, value: Any) -> Any:
+        return value
+
+
+@dataclass
+class User:
+    name: str
+    post_code: UKPostCode
+    age: int
+
+valid_user = User(name="Bob", post_code="SW16 5QW", age=22)
+
+try:
+    invalid_user = User(name="Tom", post_code="123111", age=28)
+except ValidationError as error:
+    ...
+
+# file://examples/custom_type.py
+```

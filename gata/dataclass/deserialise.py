@@ -11,14 +11,10 @@ from uuid import UUID
 from bson import ObjectId
 from typing_extensions import Literal
 
-from gata.errors import DeserialisationError, MetaError
+from gata.errors import DeserialisationError
 from gata.typing import SerialisableType
-from gata.utils import (
-    is_typed_dict,
-    parse_iso_date_string,
-    parse_iso_datetime_string,
-    parse_iso_time_string,
-)
+from gata.utils import is_typed_dict, parse_iso_date_string, parse_iso_datetime_string, parse_iso_time_string
+from .schema import UNDEFINED, get_dataclass_schema
 
 NoneType = type(None)
 
@@ -149,29 +145,21 @@ COMPLEX_TYPE_DECODERS = {
 
 def deserialise_dataclass(value: Any, source_type: Any) -> dict:
     result = source_type.__new__(source_type)
-    properties_meta = getattr(source_type, "Meta") if hasattr(source_type, "Meta") else {}
-    for key, field in source_type.__dataclass_fields__.items():
-        read_only = False
-        if hasattr(properties_meta, key):
-            property_meta = getattr(properties_meta, key)
-            if "read_only" in property_meta and property_meta["read_only"]:
-                read_only = True
-
-        if read_only:
+    schema = get_dataclass_schema(source_type)
+    for key, field in schema:
+        if field.read_only:
             continue
 
-        custom_deserialiser_name = f"deserialise_{key}"
-        if hasattr(properties_meta, custom_deserialiser_name):
-            custom_deserialiser = getattr(properties_meta, custom_deserialiser_name)
-            if not callable(custom_deserialiser):
-                raise MetaError(
-                    f"could not use deserialiser {custom_deserialiser_name} in {source_type}, deserialiser must be static method"
-                )
-            setattr(result, key, custom_deserialiser(value[key] if key in value else None))
+        if field.deserialiser:
+            setattr(result, key, field.deserialiser(value[key] if key in value else None))
             continue
 
         if key not in value:
-            setattr(result, key, deserialise(None, field.type))
+            default_value = field.default
+            if default_value is UNDEFINED:
+                default_value = None
+
+            setattr(result, key, deserialise(default_value, field.type))
             continue
 
         setattr(result, key, deserialise(value[key], field.type))
@@ -214,6 +202,9 @@ def deserialise(value: Any, source_type: Any) -> Any:
 
     # Dataclass
     if is_dataclass(source_type):
+        # Deserialisation is not required
+        if isinstance(value, source_type):
+            return value
         return deserialise_dataclass(value, source_type)
 
     # Enums

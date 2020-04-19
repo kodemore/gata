@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass, field
 from typing_extensions import TypedDict
-from gata.dataclass.schema import Field
+from gata import Field
 
 
 class PetStatus(Enum):
@@ -38,9 +38,9 @@ class Pet:
     age: int = 0
 
     class Schema:
-        tags = Field(min=1)
-        name = Field(min=2, max=20)
-        age = Field(min=0, max=100)
+        tags = Field(minimum=1)
+        name = Field(minimum=2, maximum=20)
+        age = Field(minimum=0, maximum=100)
 
 
 @dataclass

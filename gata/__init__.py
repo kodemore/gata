@@ -1,17 +1,16 @@
+from .dataclass.dataclass import Serialisable, Validatable, dataclass, deserialise, field, serialise
 from .dataclass.schema import Field, get_dataclass_schema, validate
-from .serialisable import Serialisable, deserialise, serialise, serialisable
-from .transform import transform
-from .validatable import Validatable, Validator, validatable
 from .format import Format
-
+from .transform import transform
+from .validator import Validator
 
 __all__ = [
     "deserialise",
+    "dataclass",
+    "field",
     "get_dataclass_schema",
-    "serialisable",
     "serialise",
     "transform",
-    "validatable",
     "validate",
     "Field",
     "Format",

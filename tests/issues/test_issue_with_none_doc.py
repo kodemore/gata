@@ -1,8 +1,8 @@
-from gata import serialisable
+from gata import dataclass
 
 
 def test_issue_with_none_doc() -> None:
-    @serialisable
+    @dataclass
     class Event:
         id: str
         name: str

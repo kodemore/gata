@@ -1,12 +1,10 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import Optional
 
-from gata import typing, validatable, serialisable
+from gata import typing, dataclass
 
 
 def test_gata_types() -> None:
-    @validatable
-    @serialisable
     @dataclass
     class BoJack:
         name: str
@@ -35,8 +33,8 @@ def test_gata_types() -> None:
         assert error.caused_by.code == "format_error"
         assert error.context["field_name"] == "address"
 
-    bojack = BoJack.deserialise(
-        {
+    bojack = BoJack(
+        **{
             "name": "Jack",
             "address": "bo@jack.com",
             "webpage": "http://www.boo-jack.com",
