@@ -31,7 +31,7 @@ assert led_zeppelin_I.serialise() == {
     "name": "Led Zeppelin I",
     "artist": "Led Zeppelin",
     "release_year": 1969,
-    "song_list": None,
+    "song_list": [],
 }
 
 assert dict(led_zeppelin_I) == led_zeppelin_I.serialise()
@@ -44,6 +44,28 @@ assert dict(led_zeppelin_I) == led_zeppelin_I.serialise()
 To serialise instance of python's dataclass use `gata.serialise(obj)` function:
 
 ```python
+from dataclasses import dataclass
+from typing import List
+
+from gata import serialise
+
+
+@dataclass()
+class Album:
+    name: str
+    artist: str
+    release_year: int
+    song_list: List[str]
+
+
+led_zeppelin_I = Album(name="Led Zeppelin I", artist="Led Zeppelin", release_year=1969, song_list=None)
+
+assert serialise(led_zeppelin_I) == {
+    "name": "Led Zeppelin I",
+    "artist": "Led Zeppelin",
+    "release_year": 1969,
+    "song_list": [],
+}
 
 # file://examples/serialising_python_dataclass.py
 ```
