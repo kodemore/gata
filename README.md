@@ -18,71 +18,9 @@ Gata is a toolbox library for python's dataclasses which allows to serialise/des
  - serialisation/deserialisation mechanism
  - easy to use field mapping
 
-<<<<<<< HEAD
-=======
-import gata
-
-
-@dataclass
-class Pet:
-    name: str
-    age: int = field(default=0)
-    tags: List[str] = field(default_factory=list)
-    sold_at: Optional[datetime] = field(default=None)
-
-pet = Pet(name="Boo", age=10)
-
-gata.serialise(pet)  # {"name": "Boo", "age": 10, "tags": [], "sold_at": None}
-```
-
-#### Mapping fields in the result
-Serialise method can be fetched with additional `mapping` parameter which tells serialisation mechanism to rename fields
-accordingly to set mapping rules in the returned result. Consider following example:
->>>>>>> c8998431775e1839fc923497046458acf76faa42
 
 ## Example
 ```python
-<<<<<<< HEAD
-=======
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Optional
-
-import gata
-
-
-@dataclass
-class Pet:
-    name: str
-    age: int = field(default=0)
-    tags: List[str] = field(default_factory=list)
-    sold_at: Optional[datetime] = field(default=None)
-
-pet = Pet(name="Boo", age=10)
-
-gata.serialise(pet, mapping={
-    "name": "pet_name", # name field will be mapped to `pet_name`
-    "tags": False, # tags field will be excluded from serialisation
-    # rest of the fields will be returned with names taken from dataclass
-})
-```
-
-`mapping` argument must be a dict of `Dict[str, Union[str, bool, callable, dict]]` type. 
-
-##### Mapping behaviour
-When value is a `string`, field name will be simply mapped to corresponding key value.
-
-When value is a `bool(False)` field will not be returned in the serialised value.
-
-When value is a `callable`, value corresponding to mapped key will be passed to callable, which should return tuple.
-First tuple's item will be used as a key for returned value and second is the value that will get returned as a part of serialised object.
-
-Nested mapping is allowed, by passing `Dict[str, Union[str, bool, callable, dict]]` instance as a key value.
-
-##### Nested mapping
-```python
-from dataclasses import dataclass
->>>>>>> c8998431775e1839fc923497046458acf76faa42
 from typing import List
 from gata import dataclass
 
@@ -157,6 +95,5 @@ assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name'
     * [ Nested mapping](docs/6_serialisation.md#nested-mapping)
 * [ file://examples/nested_mapping_example.py](docs/6_serialisation.md#fileexamplesnested_mapping_examplepy)
 ### [ Detailed schema](docs/7_detailed_schemas.md)
-
   * [ `gata.Field` properties](docs/7_detailed_schemas.md#gatafield-properties)
     * [ Custom serialisers/deserialisers](docs/7_detailed_schemas.md#custom-serialisersdeserialisers)
