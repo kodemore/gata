@@ -2,28 +2,13 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from ipaddress import IPv4Address, IPv6Address
-from typing import (
-    Dict,
-    FrozenSet,
-    Iterable,
-    List,
-    Optional,
-    Pattern,
-    Sequence,
-    Set,
-    Tuple,
-)
+from typing import Dict, FrozenSet, Iterable, List, Optional, Pattern, Sequence, Set, Tuple
 
 import pytest
 from typing_extensions import Literal, TypedDict
 
-from gata.dataclass.schema import (
-    Schema,
-    get_dataclass_schema,
-    map_meta_to_validator,
-    map_type_to_validator,
-    validate,
-)
+from gata import get_dataclass_schema, validate
+from gata.dataclass.schema import Schema, map_type_to_validator
 from gata.errors import ValidationError
 from tests.fixtures import Pet, PetWithVirtualProperties
 
@@ -143,7 +128,7 @@ def test_map_bytes_to_validator() -> None:
 def test_map_concrete_list_to_validator() -> None:
     validate = map_type_to_validator(List[date])
 
-    assert [date(year=2020, month=1, day=1), date(year=2020, month=2, day=1),] == validate(
+    assert [date(year=2020, month=1, day=1), date(year=2020, month=2, day=1)] == validate(
         ["2020-01-01", date(year=2020, month=2, day=1)]
     )
 
@@ -154,7 +139,7 @@ def test_map_concrete_list_to_validator() -> None:
 def test_map_concrete_tuple_to_validator() -> None:
     validate = map_type_to_validator(Tuple[date, bool, int])
 
-    assert validate(("2020-01-01", "on", 1)) == (date(year=2020, month=1, day=1), True, 1,)
+    assert validate(("2020-01-01", "on", 1)) == (date(year=2020, month=1, day=1), True, 1)
 
     with pytest.raises(ValidationError):
         validate(None)
@@ -163,10 +148,7 @@ def test_map_concrete_tuple_to_validator() -> None:
 def test_map_concrete_set_to_validator() -> None:
     validate = map_type_to_validator(Set[date])
 
-    assert validate({"2020-01-01", "2020-01-02"}) == {
-        date(year=2020, month=1, day=1),
-        date(year=2020, month=1, day=2),
-    }
+    assert validate({"2020-01-01", "2020-01-02"}) == {date(year=2020, month=1, day=1), date(year=2020, month=1, day=2)}
 
     with pytest.raises(ValidationError):
         validate(None)
@@ -240,10 +222,7 @@ def test_map_typed_dict_to_validator() -> None:
 
     validate = map_type_to_validator(TestDict)
 
-    assert validate(TestDict(name="test", tags=["a", "b"])) == {
-        "name": "test",
-        "tags": ["a", "b"],
-    }
+    assert validate(TestDict(name="test", tags=["a", "b"])) == {"name": "test", "tags": ["a", "b"]}
 
     with pytest.raises(ValidationError):
         validate(TestDict(tags=["a", "b"]))
@@ -277,32 +256,9 @@ def test_map_literal_to_validator() -> None:
         validate(None)
 
 
-def test_map_meta_to_validator() -> None:
-    validate_email_str = map_meta_to_validator(str, {"format": "email", "min": 8})
-
-    assert validate_email_str("test@test.com") == "test@test.com"
-    assert validate_email_str(None) is None
-
-    with pytest.raises(ValidationError):
-        validate_email_str("eeeeeeeee")
-
-    with pytest.raises(ValidationError):
-        validate_email_str("a@a.com")
-
-    validate_min_max = map_meta_to_validator(int, {"min": 0, "max": 4})
-
-    assert validate_min_max(1) == 1
-    assert validate_min_max(0) == 0
-    assert validate_min_max(4) == 4
-    assert validate_min_max(None) is None
-
-    with pytest.raises(ValidationError):
-        validate_min_max(-1)
-
-
 def test_validate_dataclass() -> None:
     assert validate(
-        {"name": "Boo", "created_at": "2020-01-01T20:20:10", "tags": [], "favourites": [], "status": 0, "age": 10,},
+        {"name": "Boo", "created_at": "2020-01-01T20:20:10", "tags": ["1"], "favourites": [], "status": 0, "age": 10},
         Pet,
     )
 
@@ -331,14 +287,10 @@ def test_validate_read_only_properties_when_empty() -> None:
 
 
 def test_validate_read_only_properties_when_passed() -> None:
-    validate(
-        {"name": "Poro", "favourite_id": 12, "favourite": {"name": "a", "priority": 2}}, PetWithVirtualProperties,
-    )
+    validate({"name": "Poro", "favourite_id": 12, "favourite": {"name": "a", "priority": 2}}, PetWithVirtualProperties)
 
     with pytest.raises(ValidationError):
-        validate(
-            {"name": "Poro", "favourite_id": 12, "favourite": {"name": "a"}}, PetWithVirtualProperties,
-        )
+        validate({"name": "Poro", "favourite_id": 12, "favourite": {"name": "a"}}, PetWithVirtualProperties)
 
 
 def test_validate_fail_when_write_only_properties_are_empty() -> None:

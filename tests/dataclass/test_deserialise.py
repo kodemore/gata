@@ -1,13 +1,14 @@
-from datetime import date, datetime, time
-from typing import Any, FrozenSet, List, Set, Tuple, Optional, Union
 from dataclasses import dataclass
+from datetime import date, datetime, time
 from decimal import Decimal
-import pytest
+from typing import Any, FrozenSet, List, Optional, Set, Tuple, Union
 
-from gata.errors import DeserialisationError
-from gata.dataclass.deserialise import deserialise
-from tests.fixtures import Favourite, Pet, PetDict, PetStatus, PetWithVirtualProperties
+import pytest
 from bson import ObjectId
+
+from gata.dataclass.deserialise import deserialise
+from gata.errors import DeserialisationError
+from tests.fixtures import Favourite, Pet, PetDict, PetStatus, PetWithVirtualProperties
 
 
 def test_deserialise_enums() -> None:
@@ -107,7 +108,7 @@ def test_deserialise_frozenset() -> None:
 
 
 def test_deserialise_dataclass_instance() -> None:
-    pet = deserialise({"favourites": [{"name": "test", "priority": 2}], "name": "Pimpek", "status": 1,}, Pet,)
+    pet = deserialise({"favourites": [{"name": "test", "priority": 2}], "name": "Pimpek", "status": 1}, Pet)
     assert isinstance(pet, Pet)
     assert isinstance(pet.favourites[0], Favourite)
 
@@ -157,8 +158,8 @@ def test_deserialise_union_dataclasses() -> None:
     class Fish(Animal):
         fins: int
 
-    assert isinstance(deserialise({"age": 10, "group": "fishes", "fins": 2}, Union[Dog, Fish, Animal]), Fish,)
-    assert isinstance(deserialise({"age": 10, "group": "fishes", "legs": 2}, Union[Dog, Fish, Animal]), Dog,)
+    assert isinstance(deserialise({"age": 10, "group": "fishes", "fins": 2}, Union[Dog, Fish, Animal]), Fish)
+    assert isinstance(deserialise({"age": 10, "group": "fishes", "legs": 2}, Union[Dog, Fish, Animal]), Dog)
     assert isinstance(deserialise({"group": "fishes", "age": 10}, Union[Dog, Fish, Animal]), Animal)
 
 
@@ -177,12 +178,12 @@ def test_deserialise_with_user_defined_deserialiser() -> None:
         status: PetStatus
         favourites: list
 
-        class Meta:
+        class Schema:
             @staticmethod
             def deserialise_favourites(favourites: List[str]) -> List[Favourite]:
                 return [Favourite(name=favourite) for favourite in favourites]
 
-    pet = deserialise({"name": "Boo", "status": 0, "favourites": ["bone", "candy"]}, PetWithDeserialiser,)
+    pet = deserialise({"name": "Boo", "status": 0, "favourites": ["bone", "candy"]}, PetWithDeserialiser)
 
     assert len(pet.favourites) == 2
     for favourite in pet.favourites:

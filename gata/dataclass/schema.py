@@ -1,6 +1,6 @@
 import re
 from collections.abc import Iterable, Sequence
-from dataclasses import asdict, is_dataclass
+from dataclasses import MISSING, asdict, is_dataclass
 from datetime import date, datetime, time
 from decimal import Decimal
 from enum import Enum
@@ -13,12 +13,7 @@ from uuid import UUID
 from bson import ObjectId
 from typing_extensions import Literal
 
-from gata.errors import (
-    FieldError,
-    FormatValidationError,
-    TypeValidationError,
-    ValidationError,
-)
+from gata.errors import FieldError, FormatValidationError, TypeValidationError, ValidationError
 from gata.format import Format
 from gata.typing import ValidatableType
 from gata.utils import DocString, is_optional_type, is_typed_dict, noop
@@ -61,9 +56,9 @@ from gata.validators import (
 
 def _validate_against_pattern(value: Any, pattern: Pattern[str]) -> str:
     value = validate_string(value)
-    if pattern.match(value):
-        return value
-    raise FormatValidationError(expected_format=pattern)
+    if not pattern.match(value):
+        raise FormatValidationError(expected_format=pattern)
+    return value
 
 
 def _build_list_validator(*args) -> Callable[..., Any]:
@@ -123,8 +118,11 @@ def _build_typed_dict_validator(**kwargs) -> Callable[..., Any]:
     return partial(validate_typed_dict, validator_map=validators)
 
 
-def _build_pattern_validator(*args) -> Callable[..., Any]:
-    return validate_pattern
+def _build_pattern_validator(pattern: str) -> Callable[..., Any]:
+    validate_pattern(pattern)
+    compiled_pattern = re.compile(pattern)
+
+    return partial(_validate_against_pattern, pattern=compiled_pattern)
 
 
 def _build_literal_validator(*args) -> Callable[..., Any]:
@@ -167,7 +165,7 @@ _COMPLEX_TYPE_VALIDATORS = {
     Sequence: _build_iterable_validator,
     dict: _build_dict_validator,
     Union: _build_union_validator,
-    Pattern: _build_pattern_validator,
+    Pattern: validate_pattern,
     Literal: _build_literal_validator,
 }
 
@@ -181,7 +179,7 @@ def map_type_to_validator(type_: Any) -> Callable[[Any], Any]:
     origin_type = getattr(type_, "__origin__", None)
     if origin_type and origin_type in _COMPLEX_TYPE_VALIDATORS:
         subtype = type_.__args__
-        return _COMPLEX_TYPE_VALIDATORS[origin_type](*subtype)
+        return _COMPLEX_TYPE_VALIDATORS[origin_type](*subtype)  # type: ignore
 
     # Primitives
     if type_ in _TYPE_VALIDATORS:
@@ -198,8 +196,8 @@ def map_type_to_validator(type_: Any) -> Callable[[Any], Any]:
     return noop
 
 
-def _build_min_max_validator(type_: Any, meta: Dict[str, int]) -> Callable[[Any], Any]:
-    min_max_kwargs = {"minimum": meta.get("min"), "maximum": meta.get("max")}
+def _build_min_max_validator(type_: Any, minimum: int, maximum: int) -> Callable[[Any], Any]:
+    min_max_kwargs = {"minimum": minimum, "maximum": maximum}
     if type_ in (int, float, Decimal):
         return partial(validate_range, **min_max_kwargs)
     else:
@@ -231,35 +229,18 @@ def map_str_format_to_validator(format_name: Union[str, Format]) -> Callable[[An
     return _FORMAT_TO_VALIDATOR_MAP[format_name]
 
 
-def map_meta_to_validator(type_: Any, meta: Dict[str, Any]) -> Callable[[Any], Any]:
-    meta_validators = []
-    if "min" in meta or "max" in meta:
-        meta_validators.append(_build_min_max_validator(type_, meta))
+class _Undefined:
+    pass
 
-    if type_ is str and "format" in meta:
-        meta_validators.append(map_str_format_to_validator(meta["format"]))
 
-    if "multiple_of" in meta:
-        meta_validators.append(partial(validate_multiple_of, multiple_of=meta["multiple_of"]))
-
-    if "pattern" in meta:
-        pattern = re.compile(meta["pattern"], re.I)
-        meta_validators.append(partial(_validate_against_pattern, pattern=pattern))
-
-    def _validator(value: Any) -> Any:
-        # None values should not be validated against meta
-        if value is None:
-            return None
-        return partial(validate_all, validators=meta_validators)(value)
-
-    return _validator
+UNDEFINED = _Undefined()
 
 
 class Field:
-    def __init__(
+    def __init__(  # type: ignore
         self,
-        max: int = None,
-        min: int = None,
+        maximum: int = None,
+        minimum: int = None,
         multiple_of: Union[int, float, Decimal] = None,
         string_format: Union[str, Format] = None,
         pattern: str = None,
@@ -267,9 +248,11 @@ class Field:
         write_only: bool = None,
         serialiser: Callable = None,
         deserialiser: Callable = None,
+        default: Any = None,
+        default_factory: Callable = UNDEFINED,
     ):
-        self.min = min
-        self.max = max
+        self.minimum = minimum
+        self.maximum = maximum
         self.multiple_of = multiple_of
         self.string_format = string_format
         self.pattern = pattern
@@ -279,6 +262,17 @@ class Field:
         self._validator: Callable = None  # type: ignore
         self.serialiser = serialiser
         self.deserialiser = deserialiser
+        self._default = default
+        self._default_factory = default_factory
+
+    @property
+    def default(self) -> Any:
+        if self._default_factory is not UNDEFINED:
+            return self._default_factory()
+        if self._default is not UNDEFINED:
+            return self._default
+
+        return UNDEFINED
 
     @property
     def type(self) -> Type[Any]:
@@ -287,7 +281,16 @@ class Field:
     @property
     def validator(self) -> Callable[[Any], Any]:
         if not self._validator:
-            self._validator = map_type_to_validator(self.type)
+            validators = [map_type_to_validator(self.type)]
+            if self.minimum is not None or self.maximum is not None:
+                validators.append(_build_min_max_validator(self._type, self.minimum, self.maximum))
+            if self.pattern:
+                validators.append(_build_pattern_validator(self.pattern))
+            if self.multiple_of:
+                validators.append(partial(validate_multiple_of, multiple_of=self.multiple_of))
+
+            self._validator = partial(validate_all, validators=validators)
+
         return self._validator
 
     def validate(self, value) -> Any:
@@ -309,7 +312,7 @@ class Reference(Field):
 class Schema:
     def __init__(self, dataclass_type: Any):
         if not is_dataclass(dataclass_type):
-            raise ValueError("passed value is not valid dataclass type")
+            raise ValueError(f"passed value {dataclass_type} is not valid dataclass type")
         self.doc_string = DocString(dataclass_type)
         self.type = dataclass_type
         self.class_name = dataclass_type.__name__
@@ -324,7 +327,13 @@ class Schema:
     def __contains__(self, key: str) -> bool:
         return key in self._fields
 
-    def validate(self, value: Dict[str, Any]):
+    def __iter__(self) -> Iterable:
+        return iter(self._fields.items())
+
+    def validate(self, value: Dict[str, Any]) -> Any:
+        if isinstance(value, self.type):  # self validating fix
+            return value
+
         for key, field in self._fields.items():
             try:
                 field_value = value.get(key, None)
@@ -357,6 +366,10 @@ def get_dataclass_schema(dataclass_class: Any) -> Schema:
     for field_name, field in dataclass_class.__dataclass_fields__.items():
         schema[field_name] = getattr(schema_fields, field_name) if hasattr(schema_fields, field_name) else Field()
         schema[field_name]._type = field.type
+        if field.default is not MISSING:
+            schema[field_name]._default = field.default
+        if field.default_factory is not MISSING:
+            schema[field_name]._default_factory = field.default_factory
 
         # reference type
         if is_dataclass(field.type):
@@ -374,6 +387,11 @@ def get_dataclass_schema(dataclass_class: Any) -> Schema:
 
 
 def validate(value, dataclass_class: Any = None) -> Any:
+    if dataclass_class is None:
+        if not hasattr(value, "__class__"):
+            raise ValueError(f"could not validate value {value}, please provide dataclass_class parameter")
+        dataclass_class = value.__class__
+
     schema = get_dataclass_schema(dataclass_class)
     if not isinstance(value, dict):
         value = asdict(value)
@@ -389,5 +407,5 @@ __all__ = [
     "validate",
     "get_dataclass_schema",
     "map_type_to_validator",
-    "map_meta_to_validator",
+    "UNDEFINED",
 ]
