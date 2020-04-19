@@ -128,5 +128,3 @@ assert Validator.assert_duration("PT2H")
 
 # file://examples/assertion_example.py
 ```
-example.py
-```
