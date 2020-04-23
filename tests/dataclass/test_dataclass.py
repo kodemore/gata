@@ -5,6 +5,24 @@ import pytest
 from gata import dataclass
 
 
+def test_args_in_dataclass() -> None:
+    @dataclass
+    class Audio:
+        title: str
+        length: float
+        artist: str
+
+    def assert_instance(obj: Audio) -> None:
+        assert obj.title == "My Audio I"
+        assert obj.length == 10.12
+        assert obj.artist == "Me"
+
+    assert_instance(Audio("My Audio I", 10.12, "Me"))
+    assert_instance(Audio("My Audio I", 10.12, artist="Me"))
+    assert_instance(Audio("My Audio I", length=10.12, artist="Me"))
+    assert_instance(Audio(title="My Audio I", length=10.12, artist="Me"))
+
+
 def test_frozen_dataclass() -> None:
     @dataclass(frozen=True)
     class FrozenAudio:
@@ -45,3 +63,12 @@ def test_nested_repr_dataclass() -> None:
 
     test_instance = FrozenAudio(name="Audio 1", length=10.0, artist=Artist(name="Me"))
     assert repr(test_instance) == f"{FrozenAudio.__qualname__}(name='Audio 1', artist={Artist.__qualname__}(name='Me'))"
+
+
+def test_eq_dataclass() -> None:
+    @dataclass
+    class Artist:
+        name: str
+        age: int
+
+    assert Artist(name="Bob", age=15) == Artist(name="Bob", age=15)

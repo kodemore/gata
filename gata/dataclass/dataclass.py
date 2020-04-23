@@ -1,5 +1,5 @@
 from dataclasses import field, is_dataclass
-from typing import Any, Callable, Dict, Generator, TypeVar, Union
+from typing import Any, Callable, Dict, Generator, TypeVar, Union, Type
 
 from typing_extensions import Protocol, runtime_checkable
 
@@ -75,10 +75,30 @@ def _dataclass_repr(self) -> str:
     return f"{self.__class__.__qualname__}({fields_repr})"
 
 
+def _dataclass_eq(self, other: Type) -> bool:
+
+    if self.__class__ is not other.__class__:
+        return False
+
+    for name, field_schema in get_dataclass_schema(self):
+        if not field_schema.compare:
+            continue
+
+        if getattr(self, name) != getattr(other, name):
+            return False
+
+    return True
+
+
 def dataclass(
     _cls: T = None, init=True, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False, validate=True
 ) -> Union[T, Validatable, Serialisable, Callable[[T], Union[T, Validatable, Serialisable]]]:
     def _make_dataclass(_cls: T) -> Union[T, Validatable, Serialisable]:
+        if order or unsafe_hash:
+            raise NotImplemented(
+                "order and unsafe_hash attributes are not yet supported. If you need those features please use python's dataclasses instead"
+            )
+
         schema = get_dataclass_schema(_cls)
 
         def _serialise(*args, **mapping) -> Dict[str, Any]:
@@ -94,8 +114,11 @@ def dataclass(
         setattr(_cls, "serialise", _serialise)
         setattr(_cls, "__iter__", _as_dict)
 
-        if repr:
+        if repr and "__repr__" not in _cls.__dict__:
             setattr(_cls, "__repr__", _dataclass_repr)
+
+        if eq and "__eq__" not in _cls.__dict__:
+            setattr(_cls, "__eq__", _dataclass_eq)
 
         if frozen:
             setattr(_cls, "__setattr__", _frozen_setattr)
@@ -114,14 +137,25 @@ def dataclass(
                 __init__(*args, **kwargs)
                 return None
 
+            init_kwargs = {}
+            if len(args) > 1:
+                index = 1
+                for property_name, _ in schema:
+                    init_kwargs[property_name] = args[index]
+                    index += 1
+                    if index >= len(args):
+                        break
+
+            init_kwargs = {**init_kwargs, **kwargs}
+
             if validate:
-                schema.validate(kwargs)
+                schema.validate(init_kwargs)
             frozen_dict = {}
             for property_name, property_descriptor in schema:  # type: ignore
                 if property_descriptor.read_only:
                     continue
 
-                value = _deserialise_field_from_hash(property_name, property_descriptor, kwargs)
+                value = _deserialise_field_from_hash(property_name, property_descriptor, init_kwargs)
                 if frozen:
                     frozen_dict[property_name] = value
                     continue
