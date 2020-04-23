@@ -5,7 +5,7 @@ def test_issue_with_none_doc() -> None:
     @dataclass
     class Event:
         id: str
-        name: str
+        name: str = "Bob"
 
     class ChildEvent(Event):
         def __init__(self, event_id: str, name: str):

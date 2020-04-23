@@ -1,5 +1,4 @@
 from base64 import b64encode
-from dataclasses import is_dataclass
 from datetime import date, datetime, time
 from decimal import Decimal
 from enum import Enum
@@ -10,11 +9,12 @@ from uuid import UUID
 
 from bson import ObjectId
 from typing_extensions import Literal
+from dataclasses import is_dataclass
 
 from gata.errors import SerialisationError
 from gata.typing import SerialisableType
 from gata.utils import is_typed_dict
-from .schema import get_dataclass_schema
+from .schema import get_dataclass_schema, is_gataclass
 
 NoneType = type(None)
 
@@ -137,10 +137,10 @@ def _add_key_to_result(
 def serialise_dataclass(
     value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, dict, Callable]] = None
 ) -> Union[Any, Dict[str, Any]]:
+
     result = {}  # type: Dict[str, Any]
     class_schema = get_dataclass_schema(value.__class__)
-    for key, field in source_type.__dataclass_fields__.items():
-        schema_field = class_schema[key]
+    for key, schema_field in class_schema:
         if schema_field.write_only:
             continue
 
@@ -154,10 +154,10 @@ def serialise_dataclass(
             continue
 
         if mapping:
-            _add_key_to_result(result, key, getattr(value, key), field.type, mapping)
+            _add_key_to_result(result, key, getattr(value, key), schema_field.type, mapping)
             continue
 
-        result[key] = serialise(getattr(value, key), field.type)
+        result[key] = serialise(getattr(value, key), schema_field.type)
 
     if mapping and "$item" in mapping:
         return result.get(mapping["$item"], None)  # type: ignore
@@ -195,13 +195,13 @@ def serialise(value: Any, source_type: Any, mapping: Dict[str, Union[bool, str, 
     if value is None:
         return None
 
-    # Dataclass
-    if is_dataclass(source_type):
-        return serialise_dataclass(value, source_type, mapping)
-
     # Typed Dict
     if isclass(source_type) and is_typed_dict(source_type):
         return serialise_typed_dict(value, source_type, mapping)
+
+    # Dataclass
+    if is_dataclass(source_type) or is_gataclass(source_type):
+        return serialise_dataclass(value, source_type, mapping)
 
     # Gata types
     if isclass(source_type) and issubclass(source_type, SerialisableType):
