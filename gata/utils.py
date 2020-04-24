@@ -8,14 +8,14 @@ from typing_extensions import Protocol, runtime
 
 T = TypeVar("T")
 
+
 ISO_8601_DATETIME_REGEX = re.compile(
     r"^(\d{4})-?([0-1]\d)-?([0-3]\d)[t\s]?([0-2]\d:?[0-5]\d:?[0-5]\d|23:59:60|235960)(\.\d+)?(z|[+-]\d{2}:\d{2})?$",
     re.I,
 )
 ISO_8601_DATE_REGEX = re.compile(r"^(\d{4})-?([0-1]\d)-?([0-3]\d)$", re.I)
 ISO_8601_TIME_REGEX = re.compile(
-    r"^(?P<time>[0-2]\d:?[0-5]\d:?[0-5]\d|23:59:60|235960)(?P<microseconds>\.\d+)?(?P<tzpart>z|[+-]\d{2}:\d{2})?$",
-    re.I,
+    r"^(?P<time>[0-2]\d:?[0-5]\d:?[0-5]\d|23:59:60|235960)(?P<microseconds>\.\d+)?(?P<tzpart>z|[+-]\d{2}:\d{2})?$", re.I
 )
 
 ISO_8601_TIME_DURATION_REGEX = re.compile(
@@ -25,7 +25,7 @@ ISO_8601_TIME_DURATION_REGEX = re.compile(
 
 
 @runtime
-class Comparable(Protocol):
+class Comparable(Protocol):  # pragma: no cover
     def __lt__(self, other: Any) -> bool:
         ...
 
@@ -49,7 +49,7 @@ def is_typed_dict(value: Any) -> bool:
 def parse_iso_datetime_string(value: str) -> datetime:
 
     if not ISO_8601_DATETIME_REGEX.match(value):
-        raise ValueError("Passed value is not valid ISO-8601 datetime.")
+        raise ValueError(f"passed value {value!r} is not valid ISO-8601 datetime.")
 
     date_parts = ISO_8601_DATETIME_REGEX.findall(value)[0]
     time_part = date_parts[3]
@@ -278,15 +278,6 @@ def is_optional_type(type_: Any) -> bool:
     return NoneType in type_.__args__  # type: ignore
 
 
-def module_exists(module: str) -> bool:
-    try:
-        __import__(module)
-    except ImportError:
-        return False
-    else:
-        return True
-
-
 def convert_to_dataclass(cls: Type[T]) -> Type[T]:
     return dataclass(cls, init=False, repr=False, eq=False)  # type: ignore
 
@@ -304,5 +295,4 @@ __all__ = [
     "noop",
     "NoneType",
     "is_optional_type",
-    "module_exists",
 ]

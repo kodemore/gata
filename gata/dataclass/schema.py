@@ -1,13 +1,14 @@
 import re
+from collections import OrderedDict
 from collections.abc import Iterable, Sequence
-from dataclasses import MISSING, asdict, is_dataclass
+from dataclasses import asdict, Field as DataclassField
 from datetime import date, datetime, time
 from decimal import Decimal
 from enum import Enum
 from functools import partial
 from inspect import isclass
 from ipaddress import IPv4Address, IPv6Address
-from typing import Any, Callable, Dict, Pattern, Type, Union
+from typing import Any, Callable, Dict, Iterator, Pattern, Type, Union
 from uuid import UUID
 
 from bson import ObjectId
@@ -52,6 +53,17 @@ from gata.validators import (
     validate_url,
     validate_uuid,
 )
+
+_GATA_SCHEMA = "__gata_schema__"
+
+
+def is_dataclass_like(cls) -> bool:
+    return isclass(cls) and hasattr(cls, "__annotations__")
+
+
+def is_gataclass(obj) -> bool:
+    cls = obj if isinstance(obj, type) else type(obj)
+    return hasattr(cls, _GATA_SCHEMA)
 
 
 def _validate_against_pattern(value: Any, pattern: Pattern[str]) -> str:
@@ -250,6 +262,8 @@ class Field:
         deserialiser: Callable = None,
         default: Any = None,
         default_factory: Callable = UNDEFINED,  # type: ignore
+        compare: bool = True,
+        repr: bool = True,
     ):
         self.minimum = minimum
         self.maximum = maximum
@@ -264,11 +278,13 @@ class Field:
         self.deserialiser = deserialiser
         self._default = default
         self._default_factory = default_factory
+        self.repr = repr
+        self.compare = compare
 
     @property
     def default(self) -> Any:
         if self._default_factory is not UNDEFINED:
-            return self._default_factory()
+            return (self._default_factory)()
         if self._default is not UNDEFINED:
             return self._default
 
@@ -311,12 +327,12 @@ class Reference(Field):
 
 class Schema:
     def __init__(self, dataclass_type: Any):
-        if not is_dataclass(dataclass_type):
+        if not is_dataclass_like(dataclass_type):
             raise ValueError(f"passed value {dataclass_type} is not valid dataclass type")
         self.doc_string = DocString(dataclass_type)
         self.type = dataclass_type
         self.class_name = dataclass_type.__name__
-        self._fields: Dict[str, Field] = {}
+        self._fields: OrderedDict = OrderedDict()
 
     def __setitem__(self, key: str, value: Field):
         self._fields[key] = value
@@ -327,8 +343,8 @@ class Schema:
     def __contains__(self, key: str) -> bool:
         return key in self._fields
 
-    def __iter__(self) -> Iterable:
-        return iter(self._fields.items())
+    def __iter__(self) -> Iterator[Field]:
+        return iter(self._fields.items())  # type: ignore
 
     def validate(self, value: Dict[str, Any]) -> Any:
         if isinstance(value, self.type):  # self validating fix
@@ -349,31 +365,34 @@ class Schema:
         return value
 
 
-_SCHEMAS: Dict[Any, Schema] = {}
-
-
-def get_dataclass_schema(dataclass_class: Any) -> Schema:
-    if dataclass_class in _SCHEMAS:
-        return _SCHEMAS[dataclass_class]
-
-    schema = Schema(dataclass_class)
-    _SCHEMAS[dataclass_class] = schema
+def _parse_class_fields(schema: Schema, dataclass: Type) -> None:
+    if not hasattr(dataclass, "__annotations__"):
+        return None
 
     schema_fields = object()
-    if hasattr(dataclass_class, "Schema"):
-        schema_fields = dataclass_class.Schema
+    if hasattr(dataclass, "Schema"):
+        schema_fields = dataclass.Schema
 
-    for field_name, field in dataclass_class.__dataclass_fields__.items():
+    for field_name, field_type in dataclass.__annotations__.items():
         schema[field_name] = getattr(schema_fields, field_name) if hasattr(schema_fields, field_name) else Field()
-        schema[field_name]._type = field.type
-        if field.default is not MISSING:
-            schema[field_name]._default = field.default
-        if field.default_factory is not MISSING:
-            schema[field_name]._default_factory = field.default_factory
+
+        if hasattr(dataclass, field_name):
+            field_value = getattr(dataclass, field_name)
+            if isinstance(field_value, DataclassField):
+                schema[field_name].compare = field_value.compare
+                schema[field_name].repr = field_value.repr
+                schema[field_name]._default = field_value.default
+                schema[field_name]._default_factory = field_value.default_factory  # type: ignore
+            elif isinstance(field_value, Field):
+                schema[field_name] = field_value
+            else:
+                schema[field_name]._default = field_value
+
+        schema[field_name]._type = field_type
 
         # reference type
-        if is_dataclass(field.type):
-            schema[field_name] = Reference(field.type, schema[field_name].read_only, schema[field_name].write_only)
+        if is_dataclass_like(field_type):
+            schema[field_name] = Reference(field_type, schema[field_name].read_only, schema[field_name].write_only)
 
         custom_serialiser = f"serialise_{field_name}"
         if hasattr(schema_fields, custom_serialiser):
@@ -382,6 +401,17 @@ def get_dataclass_schema(dataclass_class: Any) -> Schema:
         custom_deserialiser = f"deserialise_{field_name}"
         if hasattr(schema_fields, custom_deserialiser):
             schema[field_name].deserialiser = getattr(schema_fields, custom_deserialiser)
+
+
+def get_dataclass_schema(dataclass_class: Type) -> Schema:
+    if hasattr(dataclass_class, _GATA_SCHEMA):
+        return getattr(dataclass_class, _GATA_SCHEMA)
+
+    schema = Schema(dataclass_class)
+    setattr(dataclass_class, _GATA_SCHEMA, schema)
+
+    for _cls in dataclass_class.__mro__:
+        _parse_class_fields(schema, _cls)
 
     return schema
 
@@ -406,6 +436,7 @@ __all__ = [
     "Schema",
     "validate",
     "get_dataclass_schema",
+    "is_gataclass",
     "map_type_to_validator",
     "UNDEFINED",
 ]

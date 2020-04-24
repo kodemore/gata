@@ -14,7 +14,7 @@ from typing_extensions import Literal
 from gata.errors import DeserialisationError
 from gata.typing import SerialisableType
 from gata.utils import is_typed_dict, parse_iso_date_string, parse_iso_datetime_string, parse_iso_time_string
-from .schema import UNDEFINED, get_dataclass_schema
+from .schema import UNDEFINED, get_dataclass_schema, is_gataclass
 
 NoneType = type(None)
 
@@ -201,7 +201,7 @@ def deserialise(value: Any, source_type: Any) -> Any:
         return source_type.deserialise(value)
 
     # Dataclass
-    if is_dataclass(source_type):
+    if is_dataclass(source_type) or is_gataclass(source_type):
         # Deserialisation is not required
         if isinstance(value, source_type):
             return value

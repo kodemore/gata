@@ -7,6 +7,7 @@ from typing import Dict, FrozenSet, Iterable, List, Optional, Pattern, Sequence,
 import pytest
 from typing_extensions import Literal, TypedDict
 
+from gata import dataclass as gataclass
 from gata import get_dataclass_schema, validate
 from gata.dataclass.schema import Schema, map_type_to_validator
 from gata.errors import ValidationError
@@ -296,3 +297,27 @@ def test_validate_read_only_properties_when_passed() -> None:
 def test_validate_fail_when_write_only_properties_are_empty() -> None:
     with pytest.raises(ValidationError):
         validate({"name": "Poro"}, PetWithVirtualProperties)
+
+
+def test_schema_for_class_with_parents() -> None:
+    @dataclass
+    class Artist:
+        name: str
+
+    @dataclass
+    class Media:
+        name: str
+        size: float
+
+    @dataclass
+    class Audio(Media):
+        length: float
+        artist: Artist
+
+    @gataclass
+    class RockSong(Audio):
+        rating: int
+
+    schema = get_dataclass_schema(RockSong)
+
+    ...
