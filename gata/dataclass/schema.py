@@ -61,8 +61,9 @@ def is_dataclass_like(cls) -> bool:
     return isclass(cls) and hasattr(cls, "__annotations__")
 
 
-def is_gataclass(cls) -> bool:
-    return isclass(cls) and hasattr(cls, _GATA_SCHEMA)
+def is_gataclass(obj) -> bool:
+    cls = obj if isinstance(obj, type) else type(obj)
+    return hasattr(cls, _GATA_SCHEMA)
 
 
 def _validate_against_pattern(value: Any, pattern: Pattern[str]) -> str:

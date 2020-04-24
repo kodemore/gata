@@ -1,8 +1,10 @@
 from dataclasses import field
+from datetime import date
+from typing import Optional
 
 import pytest
 
-from gata import dataclass
+from gata import Field, dataclass, validate, deserialise, serialise
 
 
 def test_args_in_dataclass() -> None:
@@ -34,6 +36,9 @@ def test_frozen_dataclass() -> None:
 
     with pytest.raises(TypeError):
         audio.name = "New name"
+
+    with pytest.raises(TypeError):
+        audio.non_existing_field = "New value"
 
     assert audio.name == "My Audio 1"
 
@@ -70,5 +75,78 @@ def test_eq_dataclass() -> None:
     class Artist:
         name: str
         age: int
+        albums: Optional[int] = Field(compare=False, default=0)
 
-    assert Artist(name="Bob", age=15) == Artist(name="Bob", age=15)
+    @dataclass
+    class OtherArtist:
+        name: str
+        age: int
+
+    assert Artist(name="Bob", age=15, albums=2) == Artist(name="Bob", age=15, albums=1)
+    assert Artist(name="Bob", age=15) != Artist(name="Bob", age=16)
+    assert OtherArtist(name="Bob", age=15) != Artist(name="Bob", age=15)
+
+
+def test_notimplemented() -> None:
+    with pytest.raises(NotImplementedError):
+
+        @dataclass(unsafe_hash=True)
+        class TestNotImplemented:
+            pass
+
+
+def test_fail_frozen_on_dataclass_without_init() -> None:
+    with pytest.raises(ValueError):
+
+        @dataclass(init=False, frozen=True)
+        class TestNotImplemented:
+            pass
+
+
+def test_deserialise_and_serialise_dataclass() -> None:
+    @dataclass
+    class Artist:
+        name: str
+
+    @dataclass
+    class Song:
+        title: str = Field(minimum=2, maximum=120)
+        artist: Artist
+        length: int
+        release_date: date
+
+    raw_song = {
+        "title": "Take Five",
+        "artist": {"name": "The Dave Brubeck Quartet"},
+        "length": 324,
+        "release_date": "1959-06-01",
+    }
+
+    take_five = deserialise(raw_song, Song)
+
+    assert isinstance(take_five, Song)
+    assert isinstance(take_five.artist, Artist)
+
+    assert serialise(take_five) == raw_song
+    assert dict(take_five) == serialise(take_five)
+
+
+def test_fail_validate_dataclass() -> None:
+    with pytest.raises(ValueError):
+        assert validate(1)
+
+
+def test_fail_serialise_non_dataclass() -> None:
+    class Artist:
+        pass
+
+    with pytest.raises(ValueError):
+        serialise(Artist())
+
+
+def test_fail_deserialise_non_dataclass() -> None:
+    class Artist:
+        pass
+
+    with pytest.raises(ValueError):
+        deserialise(1, Artist)

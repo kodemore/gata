@@ -1,24 +1,24 @@
 from dataclasses import field, is_dataclass
-from typing import Any, Callable, Dict, Generator, TypeVar, Union, Type
+from typing import Any, Callable, Dict, Generator, Type, TypeVar, Union
 
 from typing_extensions import Protocol, runtime_checkable
 
 from .deserialise import deserialise as deserialise_type, deserialise_dataclass
-from .schema import UNDEFINED, get_dataclass_schema, Field
+from .schema import Field, UNDEFINED, get_dataclass_schema, is_gataclass
 from .serialise import serialise_dataclass
 
 T = TypeVar("T")
 
 
 @runtime_checkable
-class Validatable(Protocol):
+class Validatable(Protocol):  # pragma: no cover
     @classmethod
     def validate(cls, data: Dict[str, Any]) -> None:
         ...
 
 
 @runtime_checkable
-class Serialisable(Protocol):
+class Serialisable(Protocol):  # pragma: no cover
     @classmethod
     def deserialise(cls, data: Dict[str, Any]) -> T:
         ...
@@ -29,15 +29,15 @@ class Serialisable(Protocol):
 
 def serialise(value: Any, mapping: Dict[str, Union[str, bool, dict, Callable]] = None) -> Union[Any, Dict[str, Any]]:
     dataclass_class = type(value)
-    if not is_dataclass(dataclass_class):
-        raise ValueError("Passed `value` must be instance of dataclass.")
+    if not is_dataclass(dataclass_class) and not is_gataclass(dataclass_class):
+        raise ValueError(f"passed `value` {value!r} must be instance of dataclass.")
 
     return serialise_dataclass(value, dataclass_class, mapping)
 
 
 def deserialise(value: dict, target_class: Any) -> Any:
-    if not is_dataclass(target_class):
-        raise ValueError("Passed `target_class` must be valid dataclass.")
+    if not is_dataclass(target_class) and not is_gataclass(target_class):
+        raise ValueError(f"passed `target_class` {target_class} must be valid dataclass")
 
     return deserialise_dataclass(value, target_class)
 
@@ -95,7 +95,7 @@ def dataclass(
 ) -> Union[T, Validatable, Serialisable, Callable[[T], Union[T, Validatable, Serialisable]]]:
     def _make_dataclass(_cls: T) -> Union[T, Validatable, Serialisable]:
         if order or unsafe_hash:
-            raise NotImplemented(
+            raise NotImplementedError(
                 "order and unsafe_hash attributes are not yet supported. If you need those features please use python's dataclasses instead"
             )
 
@@ -125,6 +125,8 @@ def dataclass(
             setattr(_cls, "__getattr__", _frozen_getattr)
 
         if not init:
+            if frozen:
+                raise ValueError(f"cannot define dataclass {_cls} as frozen when init=False")
             return _cls
 
         __init__ = object.__init__
