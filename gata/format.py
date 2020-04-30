@@ -2,6 +2,8 @@ from enum import Enum
 
 # Format has to stay as separate module to deal with cyclomatic dependencies.
 
+__all__ = ["Format"]
+
 
 class Format(Enum):
     DATETIME = "date-time"
@@ -19,7 +21,4 @@ class Format(Enum):
     BYTE = "byte"
     BASE64ULR = "base64url"
     DURATION = "duration"
-    BSON_OBJECT_ID = "bson-object-id"
-
-
-__all__ = ["Format"]
+    OBJECT_ID = "object-id"

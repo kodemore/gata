@@ -3,7 +3,7 @@ from typing import Any, Optional, Union
 
 import pytest
 
-from gata.utils import (
+from gata.iso_datetime import (
     parse_iso_duration_string,
     parse_iso_time_string,
     timedelta_to_iso_string,

@@ -24,6 +24,7 @@ from typing import (
 from uuid import UUID
 
 from bson import ObjectId
+from typing_extensions import Protocol, runtime_checkable
 
 from gata.format import Format
 from .errors import (
@@ -38,15 +39,69 @@ from .errors import (
     UniqueValidationError,
     ValidationError,
 )
-from .utils import (
-    Comparable,
+from .iso_datetime import (
     parse_iso_date_string,
     parse_iso_datetime_string,
     parse_iso_duration_string,
     parse_iso_time_string,
 )
 
+__all__ = [
+    "validate_all",
+    "validate_any",
+    "validate_iterable",
+    "validate_base64",
+    "validate_boolean",
+    "validate_bytes",
+    "validate_datetime",
+    "validate_date",
+    "validate_dict",
+    "validate_duration",
+    "validate_typed_dict",
+    "validate_decimal",
+    "validate_email",
+    "validate_enum",
+    "validate_float",
+    "validate_frozenset",
+    "validate_hostname",
+    "validate_integer",
+    "validate_ipv4",
+    "validate_ipv6",
+    "validate_iterable_items",
+    "validate_length",
+    "validate_list",
+    "validate_literal",
+    "validate_multiple_of",
+    "validate_nullable",
+    "validate_object_id",
+    "validate_pattern",
+    "validate_range",
+    "validate_semver",
+    "validate_set",
+    "validate_string",
+    "validate_time",
+    "validate_tuple",
+    "validate_uri",
+    "validate_url",
+    "validate_uuid",
+]
+
 T = TypeVar("T")
+
+
+@runtime_checkable
+class Comparable(Protocol):  # pragma: no cover
+    def __lt__(self, other: Any) -> bool:
+        ...
+
+    def __gt__(self, other: Any) -> bool:
+        ...
+
+    def __le__(self, other: Any) -> bool:
+        return not self > other
+
+    def __ge__(self, other: Any) -> bool:
+        return not self < other
 
 
 def validate_all(value: Any, validators: Iterable[Callable]) -> Any:
@@ -345,7 +400,7 @@ def validate_length(value: Any, minimum: Optional[int] = None, maximum: Optional
 def validate_multiple_of(value: Union[float, int], multiple_of: Union[float, int]) -> Union[float, int]:
     if not value % multiple_of == 0:
         raise ArithmeticValidationError(
-            f"Passed value must be multiplication of {multiple_of}", code="multiple_of_error"
+            f"passed value must be multiplication of {multiple_of}", code="multiple_of_error"
         )
 
     return value
@@ -358,7 +413,9 @@ def validate_nullable(value: Any, validator: Callable) -> Any:
     return validator(value)
 
 
-def validate_range(value: Any, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None) -> Any:
+def validate_range(
+    value: Comparable, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None
+) -> Any:
 
     if minimum is not None and value < minimum:
         raise MinimumBoundError(expected_minimum=minimum)
@@ -424,45 +481,4 @@ def validate_uuid(value: Any) -> UUID:
 def validate_literal(value: Any, literal_type: Type) -> Any:
     if value in literal_type.__args__:
         return value
-    raise ValidationError(f"Passed value must be within listed literals.", code="literal_error")
-
-
-__all__ = [
-    "validate_all",
-    "validate_any",
-    "validate_iterable",
-    "validate_base64",
-    "validate_boolean",
-    "validate_bytes",
-    "validate_datetime",
-    "validate_date",
-    "validate_dict",
-    "validate_duration",
-    "validate_typed_dict",
-    "validate_decimal",
-    "validate_email",
-    "validate_enum",
-    "validate_float",
-    "validate_frozenset",
-    "validate_hostname",
-    "validate_integer",
-    "validate_ipv4",
-    "validate_ipv6",
-    "validate_iterable_items",
-    "validate_length",
-    "validate_list",
-    "validate_literal",
-    "validate_multiple_of",
-    "validate_nullable",
-    "validate_object_id",
-    "validate_pattern",
-    "validate_range",
-    "validate_semver",
-    "validate_set",
-    "validate_string",
-    "validate_time",
-    "validate_tuple",
-    "validate_uri",
-    "validate_url",
-    "validate_uuid",
-]
+    raise ValidationError(f"passed value must be within listed literals", code="literal_error")

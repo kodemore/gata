@@ -1,10 +1,15 @@
 import re
-from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
-from inspect import cleandoc
-from typing import Any, List, Match, Type, TypeVar, Union
+from typing import TypeVar
 
-from typing_extensions import Protocol, runtime
+
+__all__ = [
+    "parse_iso_datetime_string",
+    "parse_iso_date_string",
+    "parse_iso_duration_string",
+    "parse_iso_time_string",
+    "timedelta_to_iso_string",
+]
 
 T = TypeVar("T")
 
@@ -22,28 +27,6 @@ ISO_8601_TIME_DURATION_REGEX = re.compile(
     r"^(?P<sign>-?)P(?=\d|T\d)(?:(?P<weeks>\d+)W)?(?:(?P<days>\d+)D)?(?:T(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+(?:\.\d+)?)S)?)?$",
     re.I,
 )
-
-
-@runtime
-class Comparable(Protocol):  # pragma: no cover
-    def __lt__(self, other: Any) -> bool:
-        ...
-
-    def __gt__(self, other: Any) -> bool:
-        ...
-
-    def __le__(self, other: Any) -> bool:
-        return not self > other
-
-    def __ge__(self, other: Any) -> bool:
-        return not self < other
-
-
-def is_typed_dict(value: Any) -> bool:
-    if issubclass(value, dict) and hasattr(value, "__annotations__"):
-        return True
-
-    return False
 
 
 def parse_iso_datetime_string(value: str) -> datetime:
@@ -183,116 +166,3 @@ def timedelta_to_iso_string(value: timedelta) -> str:
             iso_8601_time += f"{seconds}S"
 
     return f"{iso_8601}{iso_8601_date}" + (f"T{iso_8601_time}" if iso_8601_time else "")
-
-
-class DocComponent:
-    def __init__(self, component_type: str, attributes: List[str], description: str = ""):
-        self.type = component_type
-        self.attributes = attributes
-        self.description = description
-
-
-DOC_COMPONENT_REGEX = re.compile(r"^:([^:]+):(.*?)$", re.I | re.M)
-
-
-class DocString:
-    """
-    Simple ReST doc string parser.
-    """
-
-    def __init__(self, target: Any):
-        """
-        Reads doc string of classes and functions and parses it into components.
-        """
-        self.raw_doc = cleandoc(target.__doc__ or "")
-        self._components: List[DocComponent] = []
-        self._short_description = ""
-        self._long_description = ""
-        self._parse()
-
-    @property
-    def components(self) -> List[DocComponent]:
-        return self._components
-
-    def find_component_by_type(self, *component_type: str) -> List[DocComponent]:
-        result = []
-        for component in self._components:
-            if component.type in component_type:
-                result.append(component)
-                continue
-
-        return result
-
-    @property
-    def short_description(self) -> str:
-        return self._short_description
-
-    @property
-    def long_description(self) -> str:
-        return self._long_description
-
-    def _parse(self) -> None:
-        parts = self.raw_doc.split("\n")
-        description: List[str] = []
-        components: List[DocComponent] = []
-
-        for part in parts:  # type: str
-            clean_part: str = part.strip()
-
-            matches = DOC_COMPONENT_REGEX.match(clean_part)
-            if matches:
-                component = self._parse_component(matches)
-                components.append(component)
-                continue
-
-            description.append(part)
-
-        if description:
-            self._long_description = "\n".join(description[1:]).strip("\n")
-            self._short_description = description[0]
-        self._components = components
-
-    def _parse_component(self, matches: Match[str]) -> DocComponent:
-        component_parts = matches[1].split(" ")
-        if len(component_parts) > 1:
-            return DocComponent(component_parts[0], component_parts[1:], matches[2].strip())
-        else:
-            return DocComponent(component_parts[0], [], matches[2].strip())
-
-
-def noop(value: Any) -> Any:
-    return value
-
-
-NoneType = type(None)
-
-
-def is_optional_type(type_: Any) -> bool:
-    origin_type = getattr(type_, "__origin__", None)
-
-    if not origin_type:
-        return False
-    if origin_type != Union:
-        return False
-
-    return NoneType in type_.__args__  # type: ignore
-
-
-def convert_to_dataclass(cls: Type[T]) -> Type[T]:
-    return dataclass(cls, init=False, repr=False, eq=False)  # type: ignore
-
-
-__all__ = [
-    "convert_to_dataclass",
-    "Comparable",
-    "is_typed_dict",
-    "parse_iso_datetime_string",
-    "parse_iso_date_string",
-    "parse_iso_duration_string",
-    "parse_iso_time_string",
-    "DocString",
-    "timedelta_to_iso_string",
-    "noop",
-    "NoneType",
-    "is_optional_type",
-]
