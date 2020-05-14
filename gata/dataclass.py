@@ -1,8 +1,9 @@
 from typing_extensions import Protocol, runtime_checkable
 from typing import Dict, Any, ItemsView, Union, Callable, Optional
-from gata.schema import Schema, build_schema, UNDEFINED, Field, Reference
+from gata.schema import Schema, UNDEFINED, Field, Reference
 from decimal import Decimal
 from gata.format import Format
+from gata.build_schema import build_schema
 
 
 @runtime_checkable
@@ -247,6 +248,7 @@ def field(
     pattern: str = None,
     read_only: bool = None,
     write_only: bool = None,
+    items: Optional[Dict[str, Any]] = None,
 ) -> Field:
     if hash or metadata or init is False:
         raise NotImplementedError(
@@ -265,4 +267,5 @@ def field(
         pattern=pattern,
         read_only=read_only,
         write_only=write_only,
+        items=items if items else {},
     )

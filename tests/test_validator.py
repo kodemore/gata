@@ -1,4 +1,4 @@
-from gata import Validator
+from gata.validator import Validator
 
 
 def test_assert() -> None:

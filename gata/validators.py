@@ -467,14 +467,14 @@ def validate_url(value: Any) -> str:
 def validate_object_id(value: Any) -> ObjectId:
     try:
         return ObjectId(value)
-    except ValueError:
-        raise FormatValidationError(expected_format=Format.BSON_OBJECT_ID)
+    except Exception:
+        raise FormatValidationError(expected_format=Format.OBJECT_ID)
 
 
 def validate_uuid(value: Any) -> UUID:
     try:
         return UUID(value)
-    except ValueError:
+    except Exception:
         raise FormatValidationError(expected_format=Format.UUID)
 
 
