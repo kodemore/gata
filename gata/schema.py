@@ -1,10 +1,11 @@
 from collections import OrderedDict
 from collections.abc import Iterable
 from decimal import Decimal
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union, Iterable as IterableType
 
 from gata.format import Format
 from gata.types import AbstractType as GataType
+from inspect import isclass
 
 
 class _Undefined:
@@ -80,6 +81,8 @@ class Field:
         return self._type.serialise(value, mapping)
 
     def deserialise(self, value) -> Any:
+        if isclass(self._original_type) and isinstance(value, self._original_type):
+            return value
         if self._deserialiser:
             return self._deserialiser(value)
 
@@ -105,5 +108,5 @@ class Schema(Iterable):
     def __contains__(self, key: str) -> bool:
         return key in self._fields
 
-    def __iter__(self):
+    def __iter__(self) -> IterableType[Field]:
         return iter(self._fields.items())  # type: ignore

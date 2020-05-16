@@ -368,6 +368,10 @@ class List(AbstractType):
     def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
         result = []
         for item in value:
+            if not mapping:
+                result.append(self.items[0].serialise(item))
+                continue
+
             serialised_item = self.items[0].serialise(item, mapping=mapping)
             if "$item" in mapping:
                 serialised_item = serialised_item[mapping["$item"]]
@@ -377,7 +381,7 @@ class List(AbstractType):
     def deserialise(self, value: Any) -> Any:
         result = []
         for item in value:
-            result.append(self.items[0].deserialise(item))
+            result.append(self.items[0].deserialise(value=item))
         return result
 
 

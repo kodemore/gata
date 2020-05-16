@@ -95,3 +95,40 @@ def test_serialise_with_mapping() -> None:
     test_album: Dataclass = Album(title="Test Album", songs=[song_a])
 
     assert test_album.serialise(title="album_title", songs={"$item": "title"}) == {'album_title': 'Test Album', 'songs': ['Song A']}
+
+
+def test_deserialise_into_dataclass() -> None:
+    @dataclass()
+    class Song:
+        title: str
+        artist: str
+        duration: timedelta
+
+    @dataclass()
+    class Album:
+        title: str
+        songs: List[Song]
+
+    raw_data = {
+        "title": "Test Album",
+        "songs": [
+            {
+                "title": "Song A",
+                "artist": "Test artist",
+                "duration": "PT3M20S",
+            },
+            {
+                "title": "Song B",
+                "artist": "Test artist",
+                "duration": "PT4M",
+            },
+        ]
+    }
+
+    album = Album(**raw_data)
+
+    assert isinstance(album, Album)
+    for song in album.songs:
+        assert isinstance(song, Song)
+        assert isinstance(song.duration, timedelta)
+        assert song.artist == "Test artist"

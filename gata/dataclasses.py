@@ -22,7 +22,7 @@ from inspect import isclass
 import bson
 
 from gata.format import Format
-from gata.utils import is_dataclass_like
+from gata.utils import is_dataclass_like, is_gata_dataclass
 from gata.schema import Field, Reference, Schema, UNDEFINED
 from gata.types import (
     Boolean,
@@ -59,13 +59,22 @@ class Dataclass(ABC):  # pragma: no cover
     def validate(cls, data: Dict[str, Any]) -> None:
         ...
 
+    @classmethod
+    def deserialise(cls, value: Dict[str, Any]) -> "Dataclass":
+        ...
+
     def __iter__(self) -> ItemsView[str, Any]:
+        ...
+
+    def __post_init__(self) -> None:
         ...
 
 
 def _dataclass_method_serialise(self: "Dataclass", **mapping) -> Dict[str, Any]:
     serialised = {}
     for key, schema in self.__gata_schema__:
+        if schema.write_only:
+            continue
         value = getattr(self, key)
         if key not in mapping:
             serialised[key] = schema.serialise(value)
@@ -125,12 +134,41 @@ def _deserialise_field_from_hash(property_name: str, property_descriptor: Field,
             return None
 
         return default_value
-
     value = object_hash[property_name]
-    if property_descriptor._deserialiser:
-        return property_descriptor._deserialiser(value, property_descriptor.type)
+    value = property_descriptor.deserialise(value)
+    return value
 
-    return value  # deserialise_type(value, property_descriptor.type)
+
+def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
+    if isinstance(value, Dataclass):
+        return value
+
+    cls = args[0]
+
+    if not isclass(cls):
+        self = cls
+        cls = self.__class__
+    else:
+        self = cls.__new__(cls)
+
+    if cls.__validate__:
+        cls.validate(value)
+
+    frozen_dict = {}
+    for property_name, property_descriptor in cls.__gata_schema__:  # type: ignore
+        if property_descriptor.read_only:
+            continue
+
+        property_value = _deserialise_field_from_hash(property_name, property_descriptor, value)
+        if cls.__frozen__:
+            frozen_dict[property_name] = property_value
+            continue
+        setattr(self, property_name, property_value)
+
+    if cls.__frozen__:
+        self.__dict__["__frozen_dict__"] = frozen_dict
+
+    return self
 
 
 # lets create frozen method init and normal, and also frozen wrapped init
@@ -147,24 +185,9 @@ def _dataclass_method_init(*args, **kwargs) -> None:
 
     init_kwargs = {**init_kwargs, **kwargs}
 
-    if self.__validate__:
-        self.validate(init_kwargs)
-    frozen_dict = {}
-    for property_name, property_descriptor in self.__gata_schema__:  # type: ignore
-        if property_descriptor.read_only:
-            continue
+    self.deserialise.__func__(self, value=init_kwargs)
 
-        value = _deserialise_field_from_hash(property_name, property_descriptor, init_kwargs)
-        if self.__frozen__:
-            frozen_dict[property_name] = value
-            continue
-        setattr(self, property_name, value)
-
-    if self.__frozen__:
-        self.__dict__["__frozen_dict__"] = frozen_dict
-
-    if "__post_init__" in self.__dict__:
-        self.__post_init__()
+    self.__post_init__()
 
 
 def _process_class(
@@ -199,6 +222,7 @@ def _process_class(
     )
 
     setattr(new_cls, "validate", classmethod(_dataclass_method_validate))
+    setattr(new_cls, "deserialise", classmethod(_dataclass_method_deserialise))
     setattr(new_cls, "serialise", _dataclass_method_serialise)
     setattr(new_cls, "__iter__", _dataclass_method_iter)
 
@@ -250,38 +274,6 @@ def serialise_mapped_field(
         return None
 
     raise ValueError(f"unsupported mapping option for key {key}, mapping supports bool, str or dict values")
-
-
-def serialise_dataclass(
-    obj: Any, mapping: Optional[Dict[str, Union[str, bool, Dict[str, Any]]]] = None
-) -> Dict[str, Any]:
-    if hasattr(obj, "__gata_schema__"):
-        schema = obj.__gata_schema__
-    else:
-        schema = build_schema(obj.__class__)
-
-    result = {}
-
-    for key, field in schema:
-        if field.write_only:
-            continue
-        value = getattr(obj, key) if hasattr(obj, key) else UNDEFINED
-
-        if mapping and key in mapping:
-            serialise_mapped_field(result, key, value, field, mapping)
-            continue
-
-        if value is UNDEFINED:
-            result[key] = None
-            continue
-
-        if isinstance(field, Reference):
-            result[key] = serialise_dataclass(value)
-            continue
-
-        result[key] = field.serialise(value)
-
-    return result
 
 
 def dataclass(
