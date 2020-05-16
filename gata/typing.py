@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 import decimal
 import ipaddress
 import re
-from typing import Any, Dict, Optional, Pattern, TypeVar, Union
+from typing import Any, Dict, Optional, Pattern, TypeVar, Union, List as PythonList
 import uuid
 
 import bson
@@ -388,7 +388,7 @@ class ObjectId(Type):
 class List(Type):
     minimum: int
     maximum: int
-    items: Optional[Type]
+    items: Optional[PythonList[Type]]
 
     def validate(self, value: Any) -> Any:
         value = validate_list(value, self.items[0].validate if self.items else None)

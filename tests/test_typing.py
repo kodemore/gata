@@ -8,8 +8,7 @@ from uuid import UUID
 from bson import ObjectId
 import pytest
 
-from gata.build_schema import build_schema
-from gata.dataclass import field
+from gata.dataclasses import field, build_schema
 from gata import typing
 
 

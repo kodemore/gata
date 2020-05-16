@@ -1,15 +1,27 @@
-from typing_extensions import Protocol, runtime_checkable
-from typing import Dict, Any, ItemsView, Union, Callable, Optional
-from gata.schema import Schema, UNDEFINED, Field, Reference
-from decimal import Decimal
+from abc import ABC
+import datetime
+import decimal
+import ipaddress
+import re
+from typing import Any, AnyStr, ByteString, Callable, Dict, ItemsView, List as GenericList, Optional, Union, Type as GenericType
+import uuid
+from dataclasses import Field as DataclassesField
+from inspect import isclass
+
+import bson
+
 from gata.format import Format
-from gata.build_schema import build_schema
+from gata.inspect import is_dataclass_like
+from gata.schema import Field, Reference, Schema, UNDEFINED
+from gata.typing import *
 
 
-@runtime_checkable
-class Dataclass(Protocol):  # pragma: no cover
+class Dataclass(ABC):  # pragma: no cover
     __gata_schema__: Schema
     __frozen_dict__: Dict[str, Any]
+    __frozen__: bool
+    __validate__: bool
+    __class_name__: str
 
     def serialise(self, **mapping) -> Dict[str, Any]:
         ...
@@ -23,11 +35,20 @@ class Dataclass(Protocol):  # pragma: no cover
 
 
 def _dataclass_method_serialise(self: "Dataclass", **mapping) -> Dict[str, Any]:
-    self.__gata_schema__
+    serialised = {}
+    for key, schema in self.__gata_schema__:
+        value = getattr(self, key)
+        if key not in mapping:
+            serialised[key] = schema.serialise(value)
+            continue
+
+        serialise_mapped_field(serialised, key, value, schema, mapping)
+
+    return serialised
 
 
 def _dataclass_method_validate(_cls: "Dataclass", value: Dict[str, Any]) -> None:
-    _cls.__gata_schema__.validate(value)
+    pass
 
 
 def _dataclass_method_iter(self: "Dataclass") -> ItemsView[str, Any]:
@@ -40,7 +61,7 @@ def _dataclass_method_repr(self: "Dataclass") -> str:
         [f"{name}={getattr(self, name)!r}" for name, field_schema in self.__gata_schema__ if field_schema.repr]
     )
 
-    return f"{self.__class__.__qualname__}({fields_repr})"
+    return f"{self.__class_name__}({fields_repr})"
 
 
 def _dataclass_method_eq(self: "Dataclass", other: "Dataclass") -> bool:
@@ -84,7 +105,7 @@ def _deserialise_field_from_hash(property_name: str, property_descriptor: Field,
 
 
 # lets create frozen method init and normal, and also frozen wrapped init
-def _dataclass_method_init(__frozen__: bool, __validate__: bool, *args, **kwargs) -> None:
+def _dataclass_method_init(*args, **kwargs) -> None:
     self: "Dataclass" = args[0]
     init_kwargs = {}
     if len(args) > 1:
@@ -97,7 +118,7 @@ def _dataclass_method_init(__frozen__: bool, __validate__: bool, *args, **kwargs
 
     init_kwargs = {**init_kwargs, **kwargs}
 
-    if __validate__:
+    if self.__validate__:
         self.validate(init_kwargs)
     frozen_dict = {}
     for property_name, property_descriptor in self.__gata_schema__:  # type: ignore
@@ -105,12 +126,12 @@ def _dataclass_method_init(__frozen__: bool, __validate__: bool, *args, **kwargs
             continue
 
         value = _deserialise_field_from_hash(property_name, property_descriptor, init_kwargs)
-        if __frozen__:
+        if self.__frozen__:
             frozen_dict[property_name] = value
             continue
         setattr(self, property_name, value)
 
-    if __frozen__:
+    if self.__frozen__:
         self.__dict__["__frozen_dict__"] = frozen_dict
 
     if "__post_init__" in self.__dict__:
@@ -126,41 +147,54 @@ def _process_class(
     unsafe_hash=False,
     frozen=False,
     validate=True,
-) -> "Dataclass":
+) -> GenericType["Dataclass"]:
     if order or unsafe_hash:
         raise NotImplementedError(
             "order and unsafe_hash attributes are not yet supported. If you need those features please use python's dataclasses instead"
         )
 
-    if not hasattr(_cls, "__gata_schema__"):
-        build_schema(_cls)
+    if hasattr(_cls, "__gata_schema__"):
+        schema = _cls.__gata_schema__
+    else:
+        schema = build_schema(_cls)
 
-    setattr(_cls, "validate", _dataclass_method_validate)
-    setattr(_cls, "serialise", _dataclass_method_serialise)
-    setattr(_cls, "__iter__", _dataclass_method_iter)
+    new_cls: GenericType["Dataclass"] = type(
+        _cls.__name__ + "Dataclass",
+        (_cls, Dataclass),
+        {
+            "__validate__": validate,
+            "__frozen__": frozen,
+            "__gata_schema__": schema,
+            "__class_name__": _cls.__qualname__,
+        }
+    )
+
+    setattr(new_cls, "validate", classmethod(_dataclass_method_validate))
+    setattr(new_cls, "serialise", _dataclass_method_serialise)
+    setattr(new_cls, "__iter__", _dataclass_method_iter)
 
     if repr and "__repr__" not in _cls.__dict__:
-        setattr(_cls, "__repr__", _dataclass_method_repr)
+        setattr(new_cls, "__repr__", _dataclass_method_repr)
 
     if eq and "__eq__" not in _cls.__dict__:
-        setattr(_cls, "__eq__", _dataclass_method_eq)
+        setattr(new_cls, "__eq__", _dataclass_method_eq)
 
     if frozen:
-        setattr(_cls, "__setattr__", _dataclass_method_frozen_setattr)
-        setattr(_cls, "__getattr__", _dataclass_method_frozen_getattr)
+        setattr(new_cls, "__setattr__", _dataclass_method_frozen_setattr)
+        setattr(new_cls, "__getattr__", _dataclass_method_frozen_getattr)
 
     if not init:
         if frozen:
             raise ValueError(f"cannot define dataclass {_cls} as frozen when init=False")
-        return _cls
+        return new_cls
 
     __init__ = object.__init__
     if "__init__" in _cls.__dict__:
-        __init__ = getattr(_cls, "__init__")
+        __init__ = getattr(new_cls, "__init__")
 
-    setattr(_cls, "__init__", _dataclass_method_init)
+    setattr(new_cls, "__init__", _dataclass_method_init)
 
-    return _cls
+    return new_cls
 
 
 def serialise_mapped_field(
@@ -223,8 +257,8 @@ def dataclass(
     unsafe_hash=False,
     frozen=False,
     validate=True,
-) -> Union[Callable[[Any], "Dataclass"], "Dataclass"]:
-    def _dataclass(cls: Any) -> Dataclass:
+) -> Union[Callable[[Any], GenericType["Dataclass"]], GenericType["Dataclass"]]:
+    def _dataclass(cls: Any) -> GenericType[Dataclass]:
         return _process_class(cls, init, repr, eq, order, unsafe_hash, frozen, validate)
 
     if _cls is None:
@@ -269,3 +303,99 @@ def field(
         write_only=write_only,
         items=items if items else {},
     )
+
+
+SUPPORTED_TYPES = {
+    bool: Boolean,
+    int: Integer,
+    float: Float,
+    str: String,
+    bytes: Bytes,
+    bytearray: Bytes,
+    list: List,
+    GenericList: List,
+    decimal.Decimal: Decimal,
+    datetime.date: Date,
+    datetime.datetime: DateTime,
+    datetime.time: Time,
+    datetime.timedelta: Duration,
+    re.Pattern: RegexPattern,
+    ipaddress.IPv4Address: Ipv4Address,
+    ipaddress.IPv6Address: Ipv6Address,
+    uuid.UUID: UUID,
+    bson.ObjectId: ObjectId,
+    Any: AnyType,
+    ByteString: Bytes,
+    AnyStr: String,
+}
+
+
+def _ignore(value: Any) -> Any:
+    return value
+
+
+def map_python_type_to_schema_type(python_type: Any, type_properties: Dict[str, Any]) -> Any:
+    if isclass(python_type) and issubclass(python_type, Dataclass):
+        return python_type
+
+    if python_type in SUPPORTED_TYPES:
+        return SUPPORTED_TYPES[python_type](**type_properties)
+
+    origin_type = getattr(python_type, "__origin__", None)
+    if origin_type is None:
+        if python_type in SUPPORTED_TYPES:
+            return SUPPORTED_TYPES[python_type](**type_properties)
+        return None
+    if origin_type not in SUPPORTED_TYPES:
+        return AnyType()
+
+    subtypes = []
+    for python_subtype in python_type.__args__:
+        subtypes.append(
+            map_python_type_to_schema_type(
+                python_subtype,
+                type_properties["items"] if "items" in type_properties else {}
+            )
+        )
+
+    init_args = {**type_properties, **{"items": subtypes}}
+
+    return SUPPORTED_TYPES[origin_type](**init_args)
+
+
+def build_schema(_cls: Any) -> Schema:
+    if not is_dataclass_like(_cls):
+        raise ValueError(f"passed value {_cls} is not valid dataclass type")
+
+    schema = Schema(_cls)
+    for field_name, field_type in _cls.__annotations__.items():
+        field_descriptor = Field()
+
+        if hasattr(_cls, field_name):
+            field_value = getattr(_cls, field_name)
+            if isinstance(field_value, DataclassesField):
+                field_descriptor.compare = field_value.compare
+                field_descriptor.repr = field_value.repr
+                field_descriptor._default = field_value.default
+                field_descriptor._default_factory = field_value.default_factory  # type: ignore
+            elif isinstance(field_value, Field):
+                field_descriptor = field_value
+            else:
+                field_descriptor._default = field_value
+
+        field_descriptor._original_type = field_type
+
+        field_properties = {
+            "minimum": field_descriptor.minimum,
+            "maximum": field_descriptor.maximum,
+            "multiple_of": field_descriptor.multiple_of,
+            "format": field_descriptor.format,
+            "items": field_descriptor.items,
+            "pattern": field_descriptor.pattern,
+        }
+
+        field_descriptor._type = map_python_type_to_schema_type(field_type, field_properties)
+
+        schema[field_name] = field_descriptor
+
+    return schema

@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from collections.abc import Iterable
 from decimal import Decimal
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 from gata.format import Format
 from gata.typing import Type as GataType
@@ -107,9 +107,3 @@ class Schema(Iterable):
 
     def __iter__(self):
         return iter(self._fields.items())  # type: ignore
-
-    def validate(self, value: Dict[str, Any]) -> Any:
-        if isinstance(value, self.type):  # self validation
-            return value
-
-        return value

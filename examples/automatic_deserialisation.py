@@ -1,9 +1,9 @@
 from typing import List
 
-from gata import dataclass
+from gata import dataclasses
 
 
-@dataclass
+@dataclasses
 class Album:
     name: str
     artist: str
