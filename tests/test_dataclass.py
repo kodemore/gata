@@ -76,3 +76,22 @@ def test_serialise_nested_dataclasses() -> None:
                                           {'artist': 'Test Artist', 'duration': 'PT3M', 'title': 'Song B'},
                                           {'artist': 'Test Artist', 'duration': 'PT3M30S', 'title': 'Song C'}],
                                 'title': 'Test Album'}
+
+
+def test_serialise_with_mapping() -> None:
+    @dataclass()
+    class Song:
+        title: str
+        artist: str
+        duration: timedelta
+
+    @dataclass()
+    class Album:
+        title: str
+        songs: List[Song]
+
+    song_a = Song(title="Song A", artist="Test Artist", duration=timedelta(minutes=2))
+
+    test_album: Dataclass = Album(title="Test Album", songs=[song_a])
+
+    assert test_album.serialise(title="album_title", songs={"$item": "title"}) == {'album_title': 'Test Album', 'songs': ['Song A']}

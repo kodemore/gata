@@ -1,7 +1,7 @@
 from typing import List
 
 from gata import dataclass
-from gata.typing import Duration
+from gata.types import Duration
 
 
 @dataclass

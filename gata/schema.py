@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any, Callable, Dict, Optional, Union
 
 from gata.format import Format
-from gata.typing import Type as GataType
+from gata.types import AbstractType as GataType
 
 
 class _Undefined:

@@ -9,7 +9,7 @@ from bson import ObjectId
 import pytest
 
 from gata.dataclasses import field, build_schema
-from gata import typing
+from gata import types
 
 
 def test_schema_int_type() -> None:
@@ -249,7 +249,7 @@ def test_schema_typed_list_type_with_items() -> None:
 
 
 def test_boolean_type() -> None:
-    test = typing.Boolean()
+    test = types.Boolean()
 
     assert test.serialise(True)
     assert not test.serialise(False)
@@ -258,7 +258,7 @@ def test_boolean_type() -> None:
 
 
 def test_integer_type() -> None:
-    test = typing.Integer()
+    test = types.Integer()
 
     assert test.serialise(12) == 12
     assert test.deserialise(12) == 12
@@ -267,7 +267,7 @@ def test_integer_type() -> None:
     with pytest.raises(ValueError):
         test.validate("12")
 
-    min_max_test = typing.Integer(minimum=4, maximum=12)
+    min_max_test = types.Integer(minimum=4, maximum=12)
     assert min_max_test.validate(5) == 5
 
     with pytest.raises(ValueError):
@@ -278,7 +278,7 @@ def test_integer_type() -> None:
 
 
 def test_float_type() -> None:
-    test = typing.Float()
+    test = types.Float()
 
     assert test.serialise(12.0) == 12.0
     assert test.deserialise(12.0) == 12.0
@@ -287,7 +287,7 @@ def test_float_type() -> None:
     with pytest.raises(ValueError):
         test.validate(1)
 
-    min_max_test = typing.Float(minimum=4.0, maximum=12.0)
+    min_max_test = types.Float(minimum=4.0, maximum=12.0)
     assert min_max_test.validate(5.0) == 5.0
 
     with pytest.raises(ValueError):
@@ -298,7 +298,7 @@ def test_float_type() -> None:
 
 
 def test_string_type() -> None:
-    test = typing.String()
+    test = types.String()
 
     assert test.serialise("test word") == "test word"
     assert test.deserialise("test word") == "test word"
@@ -307,7 +307,7 @@ def test_string_type() -> None:
     with pytest.raises(ValueError):
         test.validate(1)
 
-    min_max_test = typing.String(minimum=4, maximum=12)
+    min_max_test = types.String(minimum=4, maximum=12)
     assert min_max_test.validate("test") == "test"
 
     with pytest.raises(ValueError):
@@ -316,13 +316,13 @@ def test_string_type() -> None:
     with pytest.raises(ValueError):
         min_max_test.validate("too long to be valid for this test")
 
-    format_test = typing.String(format="email")
+    format_test = types.String(format="email")
 
     assert format_test.validate("some@email.com") == "some@email.com"
     with pytest.raises(ValueError):
         format_test.validate("not an email")
 
-    pattern_test = typing.String(pattern="[a-z]+")
+    pattern_test = types.String(pattern="[a-z]+")
     assert pattern_test.validate("abc") == "abc"
 
     with pytest.raises(ValueError):

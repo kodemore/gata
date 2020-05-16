@@ -3,7 +3,18 @@ import datetime
 import decimal
 import ipaddress
 import re
-from typing import Any, AnyStr, ByteString, Callable, Dict, ItemsView, List as GenericList, Optional, Union, Type as GenericType
+from typing import (
+    Any,
+    AnyStr,
+    ByteString,
+    Callable,
+    Dict,
+    ItemsView,
+    List as GenericList,
+    Optional,
+    Union,
+    Type as GenericType,
+)
 import uuid
 from dataclasses import Field as DataclassesField
 from inspect import isclass
@@ -11,9 +22,27 @@ from inspect import isclass
 import bson
 
 from gata.format import Format
-from gata.inspect import is_dataclass_like
+from gata.utils import is_dataclass_like
 from gata.schema import Field, Reference, Schema, UNDEFINED
-from gata.typing import *
+from gata.types import (
+    Boolean,
+    Bytes,
+    Integer,
+    Float,
+    String,
+    Decimal,
+    Duration,
+    UUID,
+    Date,
+    DateTime,
+    Time,
+    RegexPattern,
+    Ipv4Address,
+    Ipv6Address,
+    ObjectId,
+    List,
+    AnyType,
+)
 
 
 class Dataclass(ABC):  # pragma: no cover
@@ -166,7 +195,7 @@ def _process_class(
             "__frozen__": frozen,
             "__gata_schema__": schema,
             "__class_name__": _cls.__qualname__,
-        }
+        },
     )
 
     setattr(new_cls, "validate", classmethod(_dataclass_method_validate))
@@ -201,7 +230,7 @@ def serialise_mapped_field(
     result: Dict[str, Any], key: str, value: Any, schema_field: Field, mapping: Dict[str, Union[bool, str, dict]]
 ) -> None:
     item_key = mapping[key]
-    serialised_value = schema_field.serialise(value)
+    serialised_value = schema_field.serialise(value, item_key)
 
     if isinstance(item_key, str):
         result[item_key] = serialised_value
@@ -213,7 +242,14 @@ def serialise_mapped_field(
         result[key] = serialised_value
         return None
 
-    raise ValueError(f"unsupported mapping option for key {key}, mapping supports boo, str, dict, callable values only")
+    if isinstance(item_key, dict):
+        if "$self" in item_key:
+            result[item_key["$self"]] = serialised_value
+            return None
+        result[key] = serialised_value
+        return None
+
+    raise ValueError(f"unsupported mapping option for key {key}, mapping supports bool, str or dict values")
 
 
 def serialise_dataclass(
@@ -353,8 +389,7 @@ def map_python_type_to_schema_type(python_type: Any, type_properties: Dict[str, 
     for python_subtype in python_type.__args__:
         subtypes.append(
             map_python_type_to_schema_type(
-                python_subtype,
-                type_properties["items"] if "items" in type_properties else {}
+                python_subtype, type_properties["items"] if "items" in type_properties else {}
             )
         )
 

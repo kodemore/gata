@@ -79,19 +79,14 @@ _FORMAT_TO_VALIDATOR_MAP = {
 T = TypeVar("T")
 
 __all__ = [
-    "Type",
+    "AbstractType",
     "Boolean",
     "Bytes",
     "Integer",
     "Float",
     "String",
     "Decimal",
-    "EmailAddress",
     "Duration",
-    "URI",
-    "UrlAddress",
-    "Hostname",
-    "Semver",
     "UUID",
     "Date",
     "DateTime",
@@ -105,7 +100,7 @@ __all__ = [
 ]
 
 
-class Type(ABC):
+class AbstractType(ABC):
     def __init__(self, **kwargs):
         if not hasattr(self, "__annotations__"):
             return
@@ -126,7 +121,7 @@ class Type(ABC):
         return value
 
 
-class Boolean(Type):
+class Boolean(AbstractType):
     def validate(self, value: Any) -> Any:
         return validate_boolean(value)
 
@@ -138,7 +133,7 @@ class Boolean(Type):
         return False
 
 
-class Bytes(Type):
+class Bytes(AbstractType):
     minimum: int
     maximum: int
 
@@ -160,7 +155,7 @@ class Bytes(Type):
             return base64.b64decode(value)
 
 
-class Integer(Type):
+class Integer(AbstractType):
     minimum: int
     maximum: int
     multiple_of: int
@@ -175,7 +170,7 @@ class Integer(Type):
         return value
 
 
-class Float(Type):
+class Float(AbstractType):
     minimum: float
     maximum: float
     multiple_of: float
@@ -190,7 +185,7 @@ class Float(Type):
         return value
 
 
-class String(Type):
+class String(AbstractType):
     minimum: int
     maximum: int
     pattern: Union[Pattern[str], str]
@@ -214,7 +209,7 @@ class String(Type):
         return value
 
 
-class Decimal(Type):
+class Decimal(AbstractType):
     minimum: decimal.Decimal
     maximum: decimal.Decimal
 
@@ -230,13 +225,7 @@ class Decimal(Type):
         return decimal.Decimal(value)
 
 
-class EmailAddress(Type):
-
-    def validate(self, value: Any) -> Any:
-        return validate_email(value)
-
-
-class Duration(Type):
+class Duration(AbstractType):
     minimum: timedelta
     maximum: timedelta
 
@@ -259,27 +248,7 @@ class Duration(Type):
         return parse_iso_duration_string(value)
 
 
-class URI(Type):
-    def validate(self, value: Any) -> Any:
-        return validate_uri(value)
-
-
-class UrlAddress(Type):
-    def validate(self, value: Any) -> Any:
-        return validate_url(value)
-
-
-class Hostname(Type):
-    def validate(self, value: Any) -> Any:
-        return validate_hostname(value)
-
-
-class Semver(Type):
-    def validate(self, value: Any) -> Any:
-        return validate_semver(value)
-
-
-class UUID(Type):
+class UUID(AbstractType):
     def validate(self, value: Any) -> Any:
         return validate_uuid(value)
 
@@ -290,7 +259,7 @@ class UUID(Type):
         return uuid.UUID(value)
 
 
-class Date(Type):
+class Date(AbstractType):
     minimum: date
     maximum: date
 
@@ -307,7 +276,7 @@ class Date(Type):
         return parse_iso_date_string(value)
 
 
-class DateTime(Type):
+class DateTime(AbstractType):
     minimum: datetime
     maximum: datetime
 
@@ -324,7 +293,7 @@ class DateTime(Type):
         return parse_iso_datetime_string(value)
 
 
-class Time(Type):
+class Time(AbstractType):
     minimum: time
     maximum: time
 
@@ -341,7 +310,7 @@ class Time(Type):
         return parse_iso_time_string(value)
 
 
-class RegexPattern(Type):
+class RegexPattern(AbstractType):
     def validate(self, value: Any) -> Any:
         return validate_pattern(value)
 
@@ -352,7 +321,7 @@ class RegexPattern(Type):
         return re.compile(value)
 
 
-class Ipv4Address(Type):
+class Ipv4Address(AbstractType):
     def validate(self, value: Any) -> Any:
         return validate_ipv4(value)
 
@@ -363,7 +332,7 @@ class Ipv4Address(Type):
         return ipaddress.IPv4Address(value)
 
 
-class Ipv6Address(Type):
+class Ipv6Address(AbstractType):
     def validate(self, value: Any) -> Any:
         return validate_ipv6(value)
 
@@ -374,7 +343,7 @@ class Ipv6Address(Type):
         return ipaddress.IPv6Address(value)
 
 
-class ObjectId(Type):
+class ObjectId(AbstractType):
     def validate(self, value: Any) -> Any:
         return validate_object_id(value)
 
@@ -385,10 +354,10 @@ class ObjectId(Type):
         return bson.ObjectId(value)
 
 
-class List(Type):
+class List(AbstractType):
     minimum: int
     maximum: int
-    items: Optional[PythonList[Type]]
+    items: Optional[PythonList[AbstractType]]
 
     def validate(self, value: Any) -> Any:
         value = validate_list(value, self.items[0].validate if self.items else None)
@@ -399,7 +368,10 @@ class List(Type):
     def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
         result = []
         for item in value:
-            result.append(self.items[0].serialise(item))
+            serialised_item = self.items[0].serialise(item, mapping=mapping)
+            if "$item" in mapping:
+                serialised_item = serialised_item[mapping["$item"]]
+            result.append(serialised_item)
         return result
 
     def deserialise(self, value: Any) -> Any:
@@ -409,5 +381,5 @@ class List(Type):
         return result
 
 
-class AnyType(Type):
+class AnyType(AbstractType):
     pass
