@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 import decimal
 import ipaddress
 import re
-from typing import Any, Dict, Optional, Pattern, TypeVar, Union, List as PythonList
+from typing import Any, Dict, Optional, Pattern, TypeVar, Union, List, Iterable, Set
 import uuid
 
 import bson
@@ -43,6 +43,7 @@ from gata.validators import (
     validate_url,
     validate_uuid,
     validate_length,
+    validate_set,
 )
 
 _FORMAT_TO_VALIDATOR_MAP = {
@@ -95,7 +96,7 @@ __all__ = [
     "Ipv4Address",
     "Ipv6Address",
     "ObjectId",
-    "List",
+    "ConstrainedList",
     "AnyType",
 ]
 
@@ -354,10 +355,24 @@ class ObjectId(AbstractType):
         return bson.ObjectId(value)
 
 
-class List(AbstractType):
+def _serialise_iterable(value: Any, items: Optional[List[AbstractType]] = None, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+    result = []
+    for item in value:
+        if not mapping:
+            result.append(items[0].serialise(item))
+            continue
+
+        serialised_item = items[0].serialise(item, mapping=mapping)
+        if "$item" in mapping:
+            serialised_item = serialised_item[mapping["$item"]]
+        result.append(serialised_item)
+    return result
+
+
+class ConstrainedList(AbstractType):
     minimum: int
     maximum: int
-    items: Optional[PythonList[AbstractType]]
+    items: Optional[List[AbstractType]]
 
     def validate(self, value: Any) -> Any:
         value = validate_list(value, self.items[0].validate if self.items else None)
@@ -366,23 +381,34 @@ class List(AbstractType):
         return value
 
     def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
-        result = []
-        for item in value:
-            if not mapping:
-                result.append(self.items[0].serialise(item))
-                continue
-
-            serialised_item = self.items[0].serialise(item, mapping=mapping)
-            if "$item" in mapping:
-                serialised_item = serialised_item[mapping["$item"]]
-            result.append(serialised_item)
-        return result
+        return _serialise_iterable(value, self.items, mapping)
 
     def deserialise(self, value: Any) -> Any:
         result = []
         for item in value:
             result.append(self.items[0].deserialise(value=item))
         return result
+
+
+class ConstrainedSet(AbstractType):
+    minimum: int
+    maximum: int
+    items: Optional[List[AbstractType]]
+
+    def validate(self, value: Any) -> Any:
+        value = validate_set(value, self.items[0].validate if self.items else None)
+
+        validate_length(value, self.minimum, self.maximum)
+        return value
+
+    def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+        return _serialise_iterable(value, self.items, mapping)
+
+    def deserialise(self, value: Any) -> Any:
+        result = []
+        for item in value:
+            result.append(self.items[0].deserialise(value=item))
+        return set(result)
 
 
 class AnyType(AbstractType):

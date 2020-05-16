@@ -132,8 +132,12 @@ def validate_iterable(value: Any, item_validator: Callable = None, unique: bool 
     if not isinstance(value, Collection) or isinstance(value, str) or isinstance(value, dict):
         raise IterableValidationError()
 
-    if isinstance(value, Sized) and unique and not len(set(value)) == len(value):
-        raise UniqueValidationError()
+    if isinstance(value, Sized) and unique:
+        unique_items = set()
+        for item in value:
+            if item in unique_items:
+                raise UniqueValidationError()
+            unique_items.add(item)
 
     if item_validator:
         return validate_iterable_items(value, item_validator)  # type: ignore
@@ -168,36 +172,46 @@ def validate_list(value: Any, item_validator: Callable = None) -> List[Any]:
 
 
 def validate_set(value: Any, item_validator: Callable = None) -> Set[Any]:
+    value = validate_iterable(value, item_validator, unique=True)
     if not isinstance(value, set):
-        raise TypeValidationError(expected_type=set)
-
-    if item_validator:
-        return validate_iterable_items(value, item_validator)  # type: ignore
+        value = set(value)
 
     return value
 
 
-def validate_tuple(value: Any, item_validators: List[Callable]) -> Tuple[Any, ...]:
+def validate_tuple(value: Any, item_validators: List[Callable] = None) -> Tuple[Any, ...]:
     if not isinstance(value, tuple):
         raise TypeValidationError(expected_type=tuple)
 
     if item_validators:
         result = []
         index = 0
+        if item_validators[-1] is ...:
+            if len(item_validators) == 1:
+                raise TypeError("provided item_validators argument is invalid")
+            last_known_callable = item_validators[0]
+            for index, item in enumerate(value):
+                if index >= len(item_validators) or item_validators[index] is ...:
+                    result.append(last_known_callable(item))
+                    continue
+
+                result.append(item_validators[index](item))
+                last_known_callable = item_validators[index]
+            return tuple(result)
+
         for validator in item_validators:
             result.append(validator(value[index]))
             index += 1
+
         return tuple(result)
 
     return value
 
 
 def validate_frozenset(value: Any, item_validator: Callable = None) -> FrozenSet[Any]:
+    value = validate_iterable(value, item_validator, unique=True)
     if not isinstance(value, frozenset):
-        raise TypeValidationError(expected_type=frozenset)
-
-    if item_validator:
-        return validate_iterable_items(value, item_validator)  # type: ignore
+        value = frozenset(value)
 
     return value
 

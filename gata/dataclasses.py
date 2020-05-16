@@ -22,7 +22,7 @@ from inspect import isclass
 import bson
 
 from gata.format import Format
-from gata.utils import is_dataclass_like, is_gata_dataclass
+from gata.utils import is_dataclass_like, is_gataclass
 from gata.schema import Field, Reference, Schema, UNDEFINED
 from gata.types import (
     Boolean,
@@ -40,7 +40,7 @@ from gata.types import (
     Ipv4Address,
     Ipv6Address,
     ObjectId,
-    List,
+    ConstrainedList,
     AnyType,
 )
 
@@ -340,8 +340,8 @@ SUPPORTED_TYPES = {
     str: String,
     bytes: Bytes,
     bytearray: Bytes,
-    list: List,
-    GenericList: List,
+    list: ConstrainedList,
+    GenericList: ConstrainedList,
     decimal.Decimal: Decimal,
     datetime.date: Date,
     datetime.datetime: DateTime,

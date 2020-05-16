@@ -2,11 +2,12 @@ from inspect import isclass
 from typing import Any, Union
 
 
-def is_dataclass_like(cls: Any) -> bool:
+def is_dataclass_like(obj: Any) -> bool:
+    cls = obj if isinstance(obj, type) else type(obj)
     return isclass(cls) and hasattr(cls, "__annotations__")
 
 
-def is_gata_dataclass(obj: Any) -> bool:
+def is_gataclass(obj: Any) -> bool:
     cls = obj if isinstance(obj, type) else type(obj)
     return hasattr(cls, "__gata_schema__")
 

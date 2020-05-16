@@ -327,3 +327,7 @@ def test_string_type() -> None:
 
     with pytest.raises(ValueError):
         pattern_test.validate("ab1")
+
+
+def test_set_type() -> None:
+    test = types.ConstrainedSet()
