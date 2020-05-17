@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, Optional, Union, Iterable as IterableTyp
 
 from gata.format import Format
 from gata.types import AbstractType as GataType
+from gata.utils import is_optional_type
 from inspect import isclass
 
 
@@ -53,7 +54,15 @@ class Field:
         self._validator: Callable = validator
 
         self._original_type: Any = None
+        self._is_optional: Optional[bool] = None
         self._type: GataType = None
+
+    @property
+    def is_optional(self) -> bool:
+        if self._is_optional is None:
+            self._is_optional = is_optional_type(self._original_type)
+
+        return self._is_optional
 
     @property
     def default(self) -> Any:
@@ -99,7 +108,7 @@ class Schema(Iterable):
         self.class_name = dataclass_type.__name__
         self._fields: OrderedDict = OrderedDict()
 
-    def __setitem__(self, key: str, value: Field):
+    def __setitem__(self, key: str, value: Field) -> None:
         self._fields[key] = value
 
     def __getitem__(self, key: str) -> Field:

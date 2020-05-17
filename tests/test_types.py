@@ -2,7 +2,7 @@ import base64
 from datetime import date, datetime, time, timedelta
 from ipaddress import IPv4Address, IPv6Address
 import re
-from typing import List, Pattern
+from typing import List, Pattern, Tuple
 from uuid import UUID
 
 from bson import ObjectId
@@ -18,6 +18,7 @@ def test_schema_int_type() -> None:
 
     schema = build_schema(TestClass)
 
+    assert "property" in schema
     assert schema["property"].type is int
     assert schema["property"].validate(12)
 
@@ -330,4 +331,17 @@ def test_string_type() -> None:
 
 
 def test_set_type() -> None:
-    test = types.ConstrainedSet()
+    test_type = types.ConstrainedSet()
+
+    assert test_type.validate({1, 2, 3})
+    assert test_type.serialise({1, 2, 3}) == [1, 2, 3]
+    assert test_type.deserialise([1, 2, 3]) == {1, 2, 3}
+
+
+def test_tuple_type() -> None:
+    class TestTuple:
+        values: Tuple[int, ...]
+
+    schema = build_schema(TestTuple)
+    a = 1
+

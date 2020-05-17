@@ -10,10 +10,10 @@ from typing import (
     Callable,
     Dict,
     ItemsView,
-    List as GenericList,
+    List,
     Optional,
     Union,
-    Type as GenericType,
+    Type,
 )
 import uuid
 from dataclasses import Field as DataclassesField
@@ -41,6 +41,8 @@ from gata.types import (
     Ipv6Address,
     ObjectId,
     ConstrainedList,
+    ConstrainedTuple,
+    ConstrainedSet,
     AnyType,
 )
 
@@ -85,8 +87,17 @@ def _dataclass_method_serialise(self: "Dataclass", **mapping) -> Dict[str, Any]:
     return serialised
 
 
-def _dataclass_method_validate(_cls: "Dataclass", value: Dict[str, Any]) -> None:
-    pass
+def _dataclass_method_validate(cls: "Dataclass", value: Dict[str, Any]) -> None:
+    if isclass(cls) and isinstance(value, cls):  # nested validation occured
+        return
+
+    for field_name, field_schema in cls.__gata_schema__:
+        field_value = value[field_name] if field_name in value else None
+
+        if field_value is None and field_schema.is_optional:
+            continue
+
+        field_schema.validate(field_value)
 
 
 def _dataclass_method_iter(self: "Dataclass") -> ItemsView[str, Any]:
@@ -199,7 +210,7 @@ def _process_class(
     unsafe_hash=False,
     frozen=False,
     validate=True,
-) -> GenericType["Dataclass"]:
+) -> Type["Dataclass"]:
     if order or unsafe_hash:
         raise NotImplementedError(
             "order and unsafe_hash attributes are not yet supported. If you need those features please use python's dataclasses instead"
@@ -210,7 +221,7 @@ def _process_class(
     else:
         schema = build_schema(_cls)
 
-    new_cls: GenericType["Dataclass"] = type(
+    new_cls: Type["Dataclass"] = type(
         _cls.__name__ + "Dataclass",
         (_cls, Dataclass),
         {
@@ -285,8 +296,8 @@ def dataclass(
     unsafe_hash=False,
     frozen=False,
     validate=True,
-) -> Union[Callable[[Any], GenericType["Dataclass"]], GenericType["Dataclass"]]:
-    def _dataclass(cls: Any) -> GenericType[Dataclass]:
+) -> Union[Callable[[Any], Type["Dataclass"]], Type["Dataclass"]]:
+    def _dataclass(cls: Any) -> Type[Dataclass]:
         return _process_class(cls, init, repr, eq, order, unsafe_hash, frozen, validate)
 
     if _cls is None:
@@ -341,7 +352,9 @@ SUPPORTED_TYPES = {
     bytes: Bytes,
     bytearray: Bytes,
     list: ConstrainedList,
-    GenericList: ConstrainedList,
+    set: ConstrainedSet,
+    tuple: ConstrainedTuple,
+    List: ConstrainedList,
     decimal.Decimal: Decimal,
     datetime.date: Date,
     datetime.datetime: DateTime,
@@ -375,6 +388,7 @@ def map_python_type_to_schema_type(python_type: Any, type_properties: Dict[str, 
             return SUPPORTED_TYPES[python_type](**type_properties)
         return None
     if origin_type not in SUPPORTED_TYPES:
+
         return AnyType()
 
     subtypes = []

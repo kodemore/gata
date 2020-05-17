@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import List
+from typing import List, Optional
 
 import pytest
 
@@ -132,3 +132,24 @@ def test_deserialise_into_dataclass() -> None:
         assert isinstance(song, Song)
         assert isinstance(song.duration, timedelta)
         assert song.artist == "Test artist"
+
+
+def test_validate_dataclass() -> None:
+
+    @dataclass()
+    class Song(Dataclass):
+        album: str
+        artist: Optional[str]
+        duration: timedelta
+
+    assert Song.validate({
+        "album": "Test Album",
+        "duration": "PT3M"
+    }) is None
+
+    with pytest.raises(ValueError):
+        assert Song.validate({
+            "album": "Test Album",
+            "artist": "Test Artist",
+            "duration": "3 minutes",
+        }) is None
