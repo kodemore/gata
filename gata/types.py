@@ -359,7 +359,9 @@ class ObjectId(AbstractType):
         return bson.ObjectId(value)
 
 
-def _serialise_iterable(value: Any, item_type: Optional[AbstractType] = None, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+def _serialise_iterable(
+    value: Any, item_type: Optional[AbstractType] = None, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None
+) -> Any:
     result = []
     for item in value:
         if not mapping:
