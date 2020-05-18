@@ -44,6 +44,7 @@ from gata.types import (
     ConstrainedTuple,
     ConstrainedSet,
     AnyType,
+    GataDataclass,
 )
 
 
@@ -88,9 +89,6 @@ def _dataclass_method_serialise(self: "Dataclass", **mapping) -> Dict[str, Any]:
 
 
 def _dataclass_method_validate(cls: "Dataclass", value: Dict[str, Any]) -> None:
-    if isclass(cls) and isinstance(value, cls):  # nested validation occured
-        return
-
     for field_name, field_schema in cls.__gata_schema__:
         field_value = value[field_name] if field_name in value else None
 
@@ -140,11 +138,8 @@ def _dataclass_method_frozen_getattr(self: "Dataclass", name: str) -> Any:
 
 def _deserialise_field_from_hash(property_name: str, property_descriptor: Field, object_hash: Dict[str, Any]) -> Any:
     if property_name not in object_hash:
-        default_value = property_descriptor.default
-        if default_value is UNDEFINED:
-            return None
+        return property_descriptor.default
 
-        return default_value
     value = object_hash[property_name]
     value = property_descriptor.deserialise(value)
     return value
@@ -162,19 +157,37 @@ def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
     else:
         self = cls.__new__(cls)
 
-    if cls.__validate__:
-        cls.validate(value)
-
     frozen_dict = {}
-    for property_name, property_descriptor in cls.__gata_schema__:  # type: ignore
-        if property_descriptor.read_only:
-            continue
+    if cls.__validate__:
+        for property_name, field_schema in cls.__gata_schema__:
+            property_value = value[property_name] if property_name in value else None
 
-        property_value = _deserialise_field_from_hash(property_name, property_descriptor, value)
-        if cls.__frozen__:
-            frozen_dict[property_name] = property_value
-            continue
-        setattr(self, property_name, property_value)
+            if field_schema.is_optional:
+                if property_value is not None:
+                    property_value = field_schema.validate(property_value)
+                else:
+                    property_value = field_schema.default
+                    if property_value is UNDEFINED:
+                        property_value = None
+            else:
+                property_value = field_schema.validate(property_value)
+
+            if cls.__frozen__:
+                frozen_dict[property_name] = property_value
+                continue
+            setattr(self, property_name, property_value)
+    else:
+        for property_name, property_descriptor in cls.__gata_schema__:  # type: ignore
+            if property_descriptor.read_only:
+                property_value = property_descriptor.default
+                if property_value is UNDEFINED:
+                    property_value = None
+            else:
+                property_value = _deserialise_field_from_hash(property_name, property_descriptor, value)
+            if cls.__frozen__:
+                frozen_dict[property_name] = property_value
+                continue
+            setattr(self, property_name, property_value)
 
     if cls.__frozen__:
         self.__dict__["__frozen_dict__"] = frozen_dict
@@ -371,13 +384,9 @@ SUPPORTED_TYPES = {
 }
 
 
-def _ignore(value: Any) -> Any:
-    return value
-
-
 def map_python_type_to_schema_type(python_type: Any, type_properties: Dict[str, Any]) -> Any:
     if isclass(python_type) and issubclass(python_type, Dataclass):
-        return python_type
+        return GataDataclass(dataclass=python_type)
 
     if python_type in SUPPORTED_TYPES:
         return SUPPORTED_TYPES[python_type](**type_properties)

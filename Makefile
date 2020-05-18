@@ -31,5 +31,4 @@ build:
 	poetry build
 
 publish:
-	$(build)
-	poetry publish
+	poetry publish --build

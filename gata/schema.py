@@ -55,12 +55,12 @@ class Field:
 
         self._original_type: Any = None
         self._is_optional: Optional[bool] = None
-        self._type: GataType = None
+        self._type: Optional[GataType] = None
 
     @property
     def is_optional(self) -> bool:
         if self._is_optional is None:
-            self._is_optional = is_optional_type(self._original_type)
+            self._is_optional = is_optional_type(self._original_type) or self.default is not UNDEFINED
 
         return self._is_optional
 

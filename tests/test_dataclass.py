@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import pytest
 
-from gata.dataclasses import Dataclass, dataclass
+from gata.dataclasses import Dataclass, dataclass, field
 
 
 def test_define_dataclass() -> None:
@@ -153,3 +153,129 @@ def test_validate_dataclass() -> None:
             "artist": "Test Artist",
             "duration": "3 minutes",
         }) is None
+
+
+def test_deserialise_without_validation_into_dataclass() -> None:
+    @dataclass(validate=False)
+    class Song:
+        title: str
+        artist: str
+        duration: timedelta
+
+    @dataclass(validate=False)
+    class Album:
+        title: str
+        songs: List[Song]
+
+    raw_data = {
+        "title": "Test Album",
+        "songs": [
+            {
+                "title": "Song A",
+                "artist": "Test artist",
+                "duration": "PT3M20S",
+            },
+            {
+                "title": "Song B",
+                "artist": "Test artist",
+                "duration": "PT4M",
+            },
+        ]
+    }
+
+    album = Album(**raw_data)
+
+    assert isinstance(album, Album)
+    for song in album.songs:
+        assert isinstance(song, Song)
+        assert isinstance(song.duration, timedelta)
+        assert song.artist == "Test artist"
+
+
+def test_deserialise_read_only_properties() -> None:
+    @dataclass(validate=False)
+    class Song:
+        title: str
+        artist: str = field(read_only=True)
+        duration: timedelta
+
+    @dataclass(validate=False)
+    class Album:
+        title: str
+        songs: List[Song]
+
+    raw_data = {
+        "title": "Test Album",
+        "songs": [
+            {
+                "title": "Song A",
+                "artist": "Test artist",
+                "duration": "PT3M20S",
+            },
+            {
+                "title": "Song B",
+                "artist": "Test artist",
+                "duration": "PT4M",
+            },
+        ]
+    }
+
+    album = Album(**raw_data)
+
+    assert isinstance(album, Album)
+    for song in album.songs:
+        assert isinstance(song, Song)
+        assert isinstance(song.duration, timedelta)
+        assert song.artist is None
+
+
+def test_deserialise_with_defaults() -> None:
+    @dataclass
+    class Song:
+        title: str = "Default Title"
+        artist: str = "Default Artist"
+        duration: timedelta
+
+    raw_data = {
+        "duration": "PT3M"
+    }
+
+    song = Song(**raw_data)
+
+    assert isinstance(song, Song)
+    assert isinstance(song.duration, timedelta)
+    assert song.title == "Default Title"
+    assert song.artist == "Default Artist"
+
+
+def test_dataclass_eq() -> None:
+    @dataclass
+    class Song:
+        title: str = "Default Title"
+        artist: str = "Default Artist"
+        duration: timedelta
+
+    raw_data = {
+        "duration": "PT3M"
+    }
+
+    song_1 = Song(**raw_data)
+    song_2 = Song(**raw_data)
+    song_3 = Song(**{"title": "Sample Title", "duration": "PT3M"})
+
+    assert song_1 == song_2
+    assert song_1 != song_3
+
+
+def test_initialise_dataclass_with_pos_arguments() -> None:
+    @dataclass
+    class Song:
+        title: str = "Default Title"
+        artist: str = "Default Artist"
+        duration: timedelta
+
+    song = Song("Title", "Artist", "PT3M")
+
+    assert song.title == "Title"
+    assert song.artist == "Artist"
+    assert song.duration == timedelta(minutes=3)

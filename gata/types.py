@@ -459,5 +459,24 @@ class ConstrainedTuple(AbstractType):
         return value
 
 
+class GataDataclass(AbstractType):
+    dataclass: Any
+
+    def validate(self, value: Any) -> Any:
+        if isinstance(value, self.dataclass):
+            return value
+        return self.dataclass(**value)
+
+    def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+        if mapping:
+            return value.serialise(**mapping)
+        return value.serialise()
+
+    def deserialise(self, value: Any) -> Any:
+        if isinstance(value, self.dataclass):
+            return value
+        return self.dataclass(**value)
+
+
 class AnyType(AbstractType):
     pass
