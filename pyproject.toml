@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gata"
-version = "3.0.0a7"
+version = "3.0.0a8"
 description = "Gata is data validation and transformation library for python"
 authors = ["dkraczkowski <dawid.kraczkowski@gmail.com>"]
 license = "MIT"
