@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any, Callable, Dict, Optional, Union, Iterable as IterableType
 
 from gata.format import Format
-from gata.types import AbstractType as GataType
+from gata.types import MappedType
 from gata.utils import is_optional_type
 from inspect import isclass
 
@@ -55,7 +55,7 @@ class Field:
 
         self._original_type: Any = None
         self._is_optional: Optional[bool] = None
-        self._type: Optional[GataType] = None
+        self._type: Optional[MappedType] = None
 
     @property
     def is_optional(self) -> bool:
@@ -96,10 +96,6 @@ class Field:
             return self._deserialiser(value)
 
         return self._type.deserialise(value)
-
-
-class Reference(Field):
-    pass
 
 
 class Schema(Iterable):

@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 import base64
 from datetime import date, datetime, time, timedelta
 import decimal
@@ -82,7 +82,7 @@ _FORMAT_TO_VALIDATOR_MAP = {
 T = TypeVar("T")
 
 __all__ = [
-    "AbstractType",
+    "MappedType",
     "Boolean",
     "Bytes",
     "Integer",
@@ -102,10 +102,21 @@ __all__ = [
     "ConstrainedSet",
     "ConstrainedTuple",
     "AnyType",
+    "Type",
 ]
 
 
-class AbstractType(ABC):
+class Type(ABC):
+    @abstractmethod
+    def validate(self) -> Any:
+        ...
+
+    @abstractmethod
+    def serialise(self):
+        ...
+
+
+class MappedType(ABC):
     def __init__(self, **kwargs):
         if not hasattr(self, "__annotations__"):
             return
@@ -126,7 +137,7 @@ class AbstractType(ABC):
         return value
 
 
-class Boolean(AbstractType):
+class Boolean(MappedType):
     def validate(self, value: Any) -> Any:
         return validate_boolean(value)
 
@@ -138,7 +149,7 @@ class Boolean(AbstractType):
         return False
 
 
-class Bytes(AbstractType):
+class Bytes(MappedType):
     minimum: int
     maximum: int
 
@@ -160,7 +171,7 @@ class Bytes(AbstractType):
             return base64.b64decode(value)
 
 
-class Integer(AbstractType):
+class Integer(MappedType):
     minimum: int
     maximum: int
     multiple_of: int
@@ -175,7 +186,7 @@ class Integer(AbstractType):
         return value
 
 
-class Float(AbstractType):
+class Float(MappedType):
     minimum: float
     maximum: float
     multiple_of: float
@@ -190,7 +201,7 @@ class Float(AbstractType):
         return value
 
 
-class String(AbstractType):
+class String(MappedType):
     minimum: int
     maximum: int
     pattern: Union[Pattern[str], str]
@@ -214,7 +225,7 @@ class String(AbstractType):
         return value
 
 
-class Decimal(AbstractType):
+class Decimal(MappedType):
     minimum: decimal.Decimal
     maximum: decimal.Decimal
 
@@ -230,7 +241,7 @@ class Decimal(AbstractType):
         return decimal.Decimal(value)
 
 
-class Duration(AbstractType):
+class Duration(MappedType):
     minimum: timedelta
     maximum: timedelta
 
@@ -253,7 +264,7 @@ class Duration(AbstractType):
         return parse_iso_duration_string(value)
 
 
-class UUID(AbstractType):
+class UUID(MappedType):
     def validate(self, value: Any) -> Any:
         return validate_uuid(value)
 
@@ -264,7 +275,7 @@ class UUID(AbstractType):
         return uuid.UUID(value)
 
 
-class Date(AbstractType):
+class Date(MappedType):
     minimum: date
     maximum: date
 
@@ -281,7 +292,7 @@ class Date(AbstractType):
         return parse_iso_date_string(value)
 
 
-class DateTime(AbstractType):
+class DateTime(MappedType):
     minimum: datetime
     maximum: datetime
 
@@ -298,7 +309,7 @@ class DateTime(AbstractType):
         return parse_iso_datetime_string(value)
 
 
-class Time(AbstractType):
+class Time(MappedType):
     minimum: time
     maximum: time
 
@@ -315,7 +326,7 @@ class Time(AbstractType):
         return parse_iso_time_string(value)
 
 
-class RegexPattern(AbstractType):
+class RegexPattern(MappedType):
     def validate(self, value: Any) -> Any:
         return validate_pattern(value)
 
@@ -326,7 +337,7 @@ class RegexPattern(AbstractType):
         return re.compile(value)
 
 
-class Ipv4Address(AbstractType):
+class Ipv4Address(MappedType):
     def validate(self, value: Any) -> Any:
         return validate_ipv4(value)
 
@@ -337,7 +348,7 @@ class Ipv4Address(AbstractType):
         return ipaddress.IPv4Address(value)
 
 
-class Ipv6Address(AbstractType):
+class Ipv6Address(MappedType):
     def validate(self, value: Any) -> Any:
         return validate_ipv6(value)
 
@@ -348,7 +359,7 @@ class Ipv6Address(AbstractType):
         return ipaddress.IPv6Address(value)
 
 
-class ObjectId(AbstractType):
+class ObjectId(MappedType):
     def validate(self, value: Any) -> Any:
         return validate_object_id(value)
 
@@ -360,7 +371,7 @@ class ObjectId(AbstractType):
 
 
 def _serialise_iterable(
-    value: Any, item_type: Optional[AbstractType] = None, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None
+    value: Any, item_type: Optional[MappedType] = None, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None
 ) -> Any:
     result = []
     for item in value:
@@ -375,10 +386,10 @@ def _serialise_iterable(
     return result
 
 
-class ConstrainedList(AbstractType):
+class ConstrainedList(MappedType):
     minimum: int
     maximum: int
-    items: Optional[List[AbstractType]]
+    items: Optional[List[MappedType]]
 
     def validate(self, value: Any) -> Any:
         value = validate_list(value, self.items[0].validate if self.items else None)
@@ -396,10 +407,10 @@ class ConstrainedList(AbstractType):
         return result
 
 
-class ConstrainedSet(AbstractType):
+class ConstrainedSet(MappedType):
     minimum: int
     maximum: int
-    items: Optional[List[AbstractType]]
+    items: Optional[List[MappedType]]
 
     def validate(self, value: Any) -> Any:
         value = validate_set(value, self.items[0].validate if self.items else None)
@@ -418,10 +429,10 @@ class ConstrainedSet(AbstractType):
         return set(result)
 
 
-class ConstrainedFrozenSet(AbstractType):
+class ConstrainedFrozenSet(MappedType):
     minimum: int
     maximum: int
-    items: Optional[List[AbstractType]]
+    items: Optional[List[MappedType]]
 
     def validate(self, value: Any) -> Any:
         value = validate_frozenset(value, self.items[0].validate if self.items else None)
@@ -440,10 +451,10 @@ class ConstrainedFrozenSet(AbstractType):
         return frozenset(result)
 
 
-class ConstrainedTuple(AbstractType):
+class ConstrainedTuple(MappedType):
     minimum: int
     maximum: int
-    items: Optional[List[AbstractType]]
+    items: Optional[List[MappedType]]
     validators: List[Callable]
 
     def validate(self, value: Any) -> Any:
@@ -459,7 +470,7 @@ class ConstrainedTuple(AbstractType):
         return value
 
 
-class GataDataclass(AbstractType):
+class GataDataclass(MappedType):
     dataclass: Any
 
     def validate(self, value: Any) -> Any:
@@ -478,5 +489,21 @@ class GataDataclass(AbstractType):
         return self.dataclass(**value)
 
 
-class AnyType(AbstractType):
+class CustomTypeMapped(MappedType):
+    custom_type: Any
+
+    def validate(self, value: Any) -> Any:
+        value = self.custom_type(value)
+        value.validate()
+
+        return value
+
+    def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+        return value.serialise()
+
+    def deserialise(self, value: Any) -> Any:
+        return self.custom_type(value)
+
+
+class AnyType(MappedType):
     pass

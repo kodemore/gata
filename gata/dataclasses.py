@@ -1,51 +1,21 @@
 from abc import ABC
+from dataclasses import Field as DataclassesField
 import datetime
 import decimal
+from inspect import isclass
 import ipaddress
 import re
-from typing import (
-    Any,
-    AnyStr,
-    ByteString,
-    Callable,
-    Dict,
-    ItemsView,
-    List,
-    Optional,
-    Union,
-    Type,
-)
+from typing import (Any, AnyStr, ByteString, Callable, Dict, ItemsView, List, Optional, Type, Union)
 import uuid
-from dataclasses import Field as DataclassesField
-from inspect import isclass
 
 import bson
 
 from gata.format import Format
-from gata.utils import is_dataclass_like, is_gataclass
-from gata.schema import Field, Reference, Schema, UNDEFINED
-from gata.types import (
-    Boolean,
-    Bytes,
-    Integer,
-    Float,
-    String,
-    Decimal,
-    Duration,
-    UUID,
-    Date,
-    DateTime,
-    Time,
-    RegexPattern,
-    Ipv4Address,
-    Ipv6Address,
-    ObjectId,
-    ConstrainedList,
-    ConstrainedTuple,
-    ConstrainedSet,
-    AnyType,
-    GataDataclass,
-)
+from gata.schema import Field, Schema, UNDEFINED
+from gata.types import (AnyType, Boolean, Bytes, ConstrainedList, ConstrainedSet, ConstrainedTuple, Date, DateTime,
+                        Decimal, Duration, Float, GataDataclass, Integer, Ipv4Address, Ipv6Address, ObjectId,
+                        RegexPattern, String, Time, UUID, Type as CustomType, CustomTypeMapped)
+from gata.utils import is_dataclass_like
 
 
 class Dataclass(ABC):  # pragma: no cover
@@ -146,9 +116,6 @@ def _deserialise_field_from_hash(property_name: str, property_descriptor: Field,
 
 
 def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
-    if isinstance(value, Dataclass):
-        return value
-
     cls = args[0]
 
     if not isclass(cls):
@@ -384,26 +351,29 @@ SUPPORTED_TYPES = {
 }
 
 
-def map_python_type_to_schema_type(python_type: Any, type_properties: Dict[str, Any]) -> Any:
-    if isclass(python_type) and issubclass(python_type, Dataclass):
-        return GataDataclass(dataclass=python_type)
+def map_property_type_to_schema_type(property_type: Any, type_properties: Dict[str, Any]) -> Any:
+    if isclass(property_type) and issubclass(property_type, Dataclass):
+        return GataDataclass(dataclass=property_type)
 
-    if python_type in SUPPORTED_TYPES:
-        return SUPPORTED_TYPES[python_type](**type_properties)
+    if property_type in SUPPORTED_TYPES:
+        return SUPPORTED_TYPES[property_type](**type_properties)
 
-    origin_type = getattr(python_type, "__origin__", None)
+    origin_type = getattr(property_type, "__origin__", None)
     if origin_type is None:
-        if python_type in SUPPORTED_TYPES:
-            return SUPPORTED_TYPES[python_type](**type_properties)
+        if property_type in SUPPORTED_TYPES:
+            return SUPPORTED_TYPES[property_type](**type_properties)
+        if isclass(property_type) and issubclass(property_type, CustomType):
+            return CustomTypeMapped(custom_type=property_type)
+
         return None
     if origin_type not in SUPPORTED_TYPES:
 
         return AnyType()
 
     subtypes = []
-    for python_subtype in python_type.__args__:
+    for python_subtype in property_type.__args__:
         subtypes.append(
-            map_python_type_to_schema_type(
+            map_property_type_to_schema_type(
                 python_subtype, type_properties["items"] if "items" in type_properties else {}
             )
         )
@@ -444,7 +414,7 @@ def build_schema(_cls: Any) -> Schema:
             "pattern": field_descriptor.pattern,
         }
 
-        field_descriptor._type = map_python_type_to_schema_type(field_type, field_properties)
+        field_descriptor._type = map_property_type_to_schema_type(field_type, field_properties)
 
         schema[field_name] = field_descriptor
 

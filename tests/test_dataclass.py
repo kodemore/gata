@@ -1,9 +1,11 @@
 from datetime import timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Union, Any
 
 import pytest
 
-from gata.dataclasses import Dataclass, dataclass, field
+from gata import dataclass, field
+from gata.dataclasses import Dataclass
+from gata import Type
 
 
 def test_define_dataclass() -> None:
@@ -279,3 +281,48 @@ def test_initialise_dataclass_with_pos_arguments() -> None:
     assert song.title == "Title"
     assert song.artist == "Artist"
     assert song.duration == timedelta(minutes=3)
+
+
+def test_deserialise_method() -> None:
+    @dataclass
+    class Song:
+        title: str = "Default Title"
+        artist: str = "Default Artist"
+        duration: timedelta
+
+    song = Song.deserialise(value={"duration": "PT3M"})
+
+    assert song.title == "Default Title"
+    assert song.artist == "Default Artist"
+    assert song.duration == timedelta(minutes=3)
+
+
+def test_user_type() -> None:
+
+    class FavouriteColor(Type):
+        valid_color = "black"
+
+        def __init__(self, value: Any):
+            self.color = str(value)
+
+        def validate(self) -> Any:
+            if self.color != FavouriteColor.valid_color:
+                raise ValueError(f"{self.color} is not a valid favourite color")
+
+        def serialise(self, **mapping: Optional[Dict[str, Union[Dict, str, bool]]]):
+            return self.color
+
+    @dataclass
+    class Person:
+        age: int
+        favourite_color: FavouriteColor
+        name: str
+
+    person = Person(10, "black", "Bob")
+
+    assert isinstance(person, Person)
+    assert Person.validate({"age": 10, "favourite_color": "black", "name": "John"}) is None
+    with pytest.raises(ValueError):
+        Person.validate({"age": 10, "favourite_color": "white", "name": "John"})
+
+    assert dict(person) == {"age": 10, "favourite_color": "black", "name": "Bob"}
