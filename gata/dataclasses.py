@@ -5,16 +5,37 @@ import decimal
 from inspect import isclass
 import ipaddress
 import re
-from typing import (Any, AnyStr, ByteString, Callable, Dict, ItemsView, List, Optional, Type, Union)
+from typing import Any, AnyStr, ByteString, Callable, Dict, ItemsView, List, Optional, Type, Union
 import uuid
 
 import bson
 
 from gata.format import Format
 from gata.schema import Field, Schema, UNDEFINED
-from gata.types import (AnyType, Boolean, Bytes, ConstrainedList, ConstrainedSet, ConstrainedTuple, Date, DateTime,
-                        Decimal, Duration, Float, GataDataclass, Integer, Ipv4Address, Ipv6Address, ObjectId,
-                        RegexPattern, String, Time, UUID, Type as CustomType, CustomTypeMapped)
+from gata.types import (
+    AnyType,
+    Boolean,
+    Bytes,
+    ConstrainedList,
+    ConstrainedSet,
+    ConstrainedTuple,
+    Date,
+    DateTime,
+    Decimal,
+    Duration,
+    Float,
+    GataDataclass,
+    Integer,
+    Ipv4Address,
+    Ipv6Address,
+    ObjectId,
+    RegexPattern,
+    String,
+    Time,
+    UUID,
+    Type as CustomType,
+    CustomTypeMapped,
+)
 from gata.utils import is_dataclass_like
 
 
