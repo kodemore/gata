@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 import decimal
 import ipaddress
 import re
-from typing import Any, Dict, Optional, Pattern, TypeVar, Union, List, Iterable, Set, Callable
+from typing import Any, Dict, Optional, Pattern, TypeVar, Union, List, Iterable, Set, Callable, Match
 import uuid
 
 import bson
@@ -193,7 +193,7 @@ class FloatMapping(Mapping):
 class StringMapping(Mapping):
     minimum: int
     maximum: int
-    pattern: Union[Pattern[str], str]
+    pattern: Pattern[str]
     format: StringFormat
 
     def __init__(self, **kwargs):
@@ -361,8 +361,8 @@ class ObjectIdMapping(Mapping):
 
 def _serialise_iterable(
     value: Any, item_type: Optional[Mapping] = None, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None
-) -> Any:
-    result = []
+) -> List[Any]:
+    result: List[Any] = []
     if not value:
         return result
     for item in value:
@@ -380,7 +380,7 @@ def _serialise_iterable(
 class ListMapping(Mapping):
     minimum: int
     maximum: int
-    items: Optional[List[Mapping]]
+    items: List[Mapping]
 
     def validate(self, value: Any) -> Any:
         value = validate_list(value, self.items[0].validate if self.items else None)
@@ -445,12 +445,12 @@ class FrozenSetMapping(Mapping):
 class TupleMapping(Mapping):
     minimum: int
     maximum: int
-    items: Optional[List[Mapping]]
+    items: List[Mapping]
     validators: List[Callable]
 
     def validate(self, value: Any) -> Any:
         if not self.validators:
-            self.validators = [item_type.validator for item_type in self.items]
+            self.validators = [item_type.validate for item_type in self.items]
 
         return validate_tuple(value, self.validators)
 

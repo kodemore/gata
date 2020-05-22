@@ -1,16 +1,29 @@
 from abc import ABC
 from dataclasses import Field as DataclassesField
 import datetime
-import decimal
+from decimal import Decimal
 from inspect import isclass
 import ipaddress
-import re
-from typing import Any, AnyStr, ByteString, Callable, Dict, ItemsView, List, Optional, Type, Union
+from typing import (
+    Any,
+    AnyStr,
+    ByteString,
+    Callable,
+    Dict,
+    ItemsView,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    Pattern,
+)
 import uuid
 
 import bson
 
-from .stringformat import StringFormat
+from .errors import FieldError, ValidationError
 from .mapping import (
     AnyTypeMapping,
     BooleanMapping,
@@ -35,9 +48,9 @@ from .mapping import (
     UUIDMapping,
 )
 from .schema import Field, Schema, UNDEFINED
-from .utils import is_dataclass_like
+from .stringformat import StringFormat
 from .types import Type as CustomType
-from .errors import FieldError, ValidationError
+from .utils import is_dataclass_like
 
 
 class Dataclass(ABC):  # pragma: no cover
@@ -100,7 +113,7 @@ def _dataclass_method_validate(cls: "Dataclass", value: Dict[str, Any]) -> None:
             raise FieldError(field_name, error) from error
 
 
-def _dataclass_method_iter(self: "Dataclass") -> ItemsView[str, Any]:
+def _dataclass_method_iter(self: "Dataclass") -> Iterator[Tuple[str, Any]]:
     for key, value in self.serialise().items():
         yield key, value
 
@@ -211,20 +224,13 @@ def _dataclass_method_init(*args, **kwargs) -> None:
 
     init_kwargs = {**init_kwargs, **kwargs}
 
-    self.deserialise.__func__(self, value=init_kwargs)
+    self.deserialise.__func__(self, value=init_kwargs)  # type: ignore
 
     self.__post_init__()
 
 
 def _process_class(
-    _cls: Optional[Any] = None,
-    init=True,
-    repr=True,
-    eq=True,
-    order=False,
-    unsafe_hash=False,
-    frozen=False,
-    validate=True,
+    _cls: Any, init=True, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False, validate=True,
 ) -> Type["Dataclass"]:
     if order or unsafe_hash:
         raise NotImplementedError(
@@ -232,7 +238,7 @@ def _process_class(
         )
 
     if hasattr(_cls, "__gata_schema__"):
-        schema = _cls.__gata_schema__
+        schema = _cls.__gata_schema__  # type: ignore
     else:
         schema = build_schema(_cls)
 
@@ -280,7 +286,7 @@ def serialise_mapped_field(
     result: Dict[str, Any], key: str, value: Any, schema_field: Field, mapping: Dict[str, Union[bool, str, dict]]
 ) -> None:
     item_key = mapping[key]
-    serialised_value = schema_field.serialise(value, item_key)
+    serialised_value = schema_field.serialise(value, item_key)  # type: ignore
 
     if isinstance(item_key, str):
         result[item_key] = serialised_value
@@ -329,13 +335,13 @@ def field(
     hash: None = None,
     compare: bool = True,
     metadata: None = None,
-    maximum: Union[int, float, DecimalMapping] = None,
-    minimum: Union[int, float, DecimalMapping] = None,
-    multiple_of: Union[int, float, DecimalMapping] = None,
+    maximum: Union[int, float, Decimal] = None,
+    minimum: Union[int, float, Decimal] = None,
+    multiple_of: Union[int, float, Decimal] = None,
     string_format: Union[str, StringFormat] = None,
     pattern: str = None,
-    read_only: bool = None,
-    write_only: bool = None,
+    read_only: bool = False,
+    write_only: bool = False,
     items: Optional[Dict[str, Any]] = None,
 ) -> Field:
     if hash or metadata or init is False:
@@ -370,12 +376,12 @@ SUPPORTED_TYPES = {
     set: SetMapping,
     tuple: TupleMapping,
     List: ListMapping,
-    decimal.Decimal: DecimalMapping,
+    Decimal: DecimalMapping,
     datetime.date: DateMapping,
     datetime.datetime: DateTimeMapping,
     datetime.time: TimeMapping,
     datetime.timedelta: TimedeltaMapping,
-    re.Pattern: RegexPatternMapping,
+    getattr(Pattern, "__origin__"): RegexPatternMapping,
     ipaddress.IPv4Address: Ipv4AddressMapping,
     ipaddress.IPv6Address: Ipv6AddressMapping,
     uuid.UUID: UUIDMapping,
@@ -402,7 +408,6 @@ def map_property_type_to_schema_type(property_type: Any, type_properties: Dict[s
 
         return None
     if origin_type not in SUPPORTED_TYPES:
-
         return AnyTypeMapping()
 
     subtypes = []

@@ -1,12 +1,12 @@
 from collections import OrderedDict
 from collections.abc import Iterable
 from decimal import Decimal
-from typing import Any, Callable, Dict, Optional, Union, Iterable as IterableType
-
-from gata.stringformat import StringFormat
-from gata.mapping import Mapping
-from gata.utils import is_optional_type
 from inspect import isclass
+from typing import Any, Callable, Dict, Optional, Union, Iterator, Tuple
+
+from .mapping import Mapping, AnyTypeMapping
+from .stringformat import StringFormat
+from .utils import is_optional_type
 
 
 class _Undefined:
@@ -26,7 +26,7 @@ class Field:
         pattern: str = None,
         read_only: bool = False,
         write_only: bool = False,
-        serialiser: Optional[Callable[[Any], Any]] = None,
+        serialiser: Optional[Callable[[Any, Optional[Dict[str, Any]]], Any]] = None,
         deserialiser: Optional[Callable[[Any], Any]] = None,
         validator: Optional[Callable[[Any], None]] = None,
         default: Any = UNDEFINED,
@@ -51,11 +51,11 @@ class Field:
 
         self._deserialiser = deserialiser
         self._serialiser = serialiser
-        self._validator: Callable = validator
+        self._validator = validator
 
         self._original_type: Any = None
         self._is_optional: Optional[bool] = None
-        self._type: Optional[Mapping] = None
+        self._type: Mapping = AnyTypeMapping()
 
     @property
     def is_optional(self) -> bool:
@@ -113,5 +113,6 @@ class Schema(Iterable):
     def __contains__(self, key: str) -> bool:
         return key in self._fields
 
-    def __iter__(self) -> IterableType[Field]:
-        return iter(self._fields.items())  # type: ignore
+    def __iter__(self) -> Iterator[Tuple[str, Field]]:
+        for key, value in self._fields.items():
+            yield key, value
