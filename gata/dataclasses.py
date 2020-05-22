@@ -10,33 +10,34 @@ import uuid
 
 import bson
 
-from gata.format import Format
-from gata.schema import Field, Schema, UNDEFINED
-from gata.types import (
-    AnyType,
-    Boolean,
-    Bytes,
-    ConstrainedList,
-    ConstrainedSet,
-    ConstrainedTuple,
-    Date,
-    DateTime,
-    Decimal,
-    Duration,
-    Float,
-    GataDataclass,
-    Integer,
-    Ipv4Address,
-    Ipv6Address,
-    ObjectId,
-    RegexPattern,
-    String,
-    Time,
-    UUID,
-    Type as CustomType,
-    CustomTypeMapped,
+from .stringformat import StringFormat
+from .mapping import (
+    AnyTypeMapping,
+    BooleanMapping,
+    BytesMapping,
+    CustomTypeMapping,
+    DateMapping,
+    DateTimeMapping,
+    DecimalMapping,
+    FloatMapping,
+    GataclassMapping,
+    IntegerMapping,
+    Ipv4AddressMapping,
+    Ipv6AddressMapping,
+    ListMapping,
+    ObjectIdMapping,
+    RegexPatternMapping,
+    SetMapping,
+    StringMapping,
+    TimeMapping,
+    TimedeltaMapping,
+    TupleMapping,
+    UUIDMapping,
 )
-from gata.utils import is_dataclass_like
+from .schema import Field, Schema, UNDEFINED
+from .utils import is_dataclass_like
+from .types import Type as CustomType
+from .errors import FieldError, ValidationError
 
 
 class Dataclass(ABC):  # pragma: no cover
@@ -64,6 +65,13 @@ class Dataclass(ABC):  # pragma: no cover
         ...
 
 
+def asdict(obj: Any) -> Dict[str, Any]:
+    if not hasattr(obj.__class__, "__gata_schema__"):
+        setattr(obj.__class__, "__gata_schema__", build_schema(obj.__class__))
+
+    return _dataclass_method_serialise(obj)
+
+
 def _dataclass_method_serialise(self: "Dataclass", **mapping) -> Dict[str, Any]:
     serialised = {}
     for key, schema in self.__gata_schema__:
@@ -86,7 +94,10 @@ def _dataclass_method_validate(cls: "Dataclass", value: Dict[str, Any]) -> None:
         if field_value is None and field_schema.is_optional:
             continue
 
-        field_schema.validate(field_value)
+        try:
+            field_schema.validate(field_value)
+        except ValidationError as error:
+            raise FieldError(field_name, error) from error
 
 
 def _dataclass_method_iter(self: "Dataclass") -> ItemsView[str, Any]:
@@ -129,7 +140,7 @@ def _dataclass_method_frozen_getattr(self: "Dataclass", name: str) -> Any:
 
 def _deserialise_field_from_hash(property_name: str, property_descriptor: Field, object_hash: Dict[str, Any]) -> Any:
     if property_name not in object_hash:
-        return property_descriptor.default
+        return property_descriptor.default if property_descriptor.default is not UNDEFINED else None
 
     value = object_hash[property_name]
     value = property_descriptor.deserialise(value)
@@ -152,7 +163,10 @@ def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
 
             if field_schema.is_optional:
                 if property_value is not None:
-                    property_value = field_schema.validate(property_value)
+                    try:
+                        property_value = field_schema.validate(property_value)
+                    except ValidationError as error:
+                        raise FieldError(property_name, error) from error
                 else:
                     property_value = field_schema.default
                     if property_value is UNDEFINED:
@@ -315,10 +329,10 @@ def field(
     hash: None = None,
     compare: bool = True,
     metadata: None = None,
-    maximum: Union[int, float, Decimal] = None,
-    minimum: Union[int, float, Decimal] = None,
-    multiple_of: Union[int, float, Decimal] = None,
-    string_format: Union[str, Format] = None,
+    maximum: Union[int, float, DecimalMapping] = None,
+    minimum: Union[int, float, DecimalMapping] = None,
+    multiple_of: Union[int, float, DecimalMapping] = None,
+    string_format: Union[str, StringFormat] = None,
     pattern: str = None,
     read_only: bool = None,
     write_only: bool = None,
@@ -346,35 +360,35 @@ def field(
 
 
 SUPPORTED_TYPES = {
-    bool: Boolean,
-    int: Integer,
-    float: Float,
-    str: String,
-    bytes: Bytes,
-    bytearray: Bytes,
-    list: ConstrainedList,
-    set: ConstrainedSet,
-    tuple: ConstrainedTuple,
-    List: ConstrainedList,
-    decimal.Decimal: Decimal,
-    datetime.date: Date,
-    datetime.datetime: DateTime,
-    datetime.time: Time,
-    datetime.timedelta: Duration,
-    re.Pattern: RegexPattern,
-    ipaddress.IPv4Address: Ipv4Address,
-    ipaddress.IPv6Address: Ipv6Address,
-    uuid.UUID: UUID,
-    bson.ObjectId: ObjectId,
-    Any: AnyType,
-    ByteString: Bytes,
-    AnyStr: String,
+    bool: BooleanMapping,
+    int: IntegerMapping,
+    float: FloatMapping,
+    str: StringMapping,
+    bytes: BytesMapping,
+    bytearray: BytesMapping,
+    list: ListMapping,
+    set: SetMapping,
+    tuple: TupleMapping,
+    List: ListMapping,
+    decimal.Decimal: DecimalMapping,
+    datetime.date: DateMapping,
+    datetime.datetime: DateTimeMapping,
+    datetime.time: TimeMapping,
+    datetime.timedelta: TimedeltaMapping,
+    re.Pattern: RegexPatternMapping,
+    ipaddress.IPv4Address: Ipv4AddressMapping,
+    ipaddress.IPv6Address: Ipv6AddressMapping,
+    uuid.UUID: UUIDMapping,
+    bson.ObjectId: ObjectIdMapping,
+    Any: AnyTypeMapping,
+    ByteString: BytesMapping,
+    AnyStr: StringMapping,
 }
 
 
 def map_property_type_to_schema_type(property_type: Any, type_properties: Dict[str, Any]) -> Any:
     if isclass(property_type) and issubclass(property_type, Dataclass):
-        return GataDataclass(dataclass=property_type)
+        return GataclassMapping(dataclass=property_type)
 
     if property_type in SUPPORTED_TYPES:
         return SUPPORTED_TYPES[property_type](**type_properties)
@@ -384,12 +398,12 @@ def map_property_type_to_schema_type(property_type: Any, type_properties: Dict[s
         if property_type in SUPPORTED_TYPES:
             return SUPPORTED_TYPES[property_type](**type_properties)
         if isclass(property_type) and issubclass(property_type, CustomType):
-            return CustomTypeMapped(custom_type=property_type)
+            return CustomTypeMapping(custom_type=property_type)
 
         return None
     if origin_type not in SUPPORTED_TYPES:
 
-        return AnyType()
+        return AnyTypeMapping()
 
     subtypes = []
     for python_subtype in property_type.__args__:

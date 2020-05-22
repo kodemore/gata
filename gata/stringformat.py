@@ -2,10 +2,10 @@ from enum import Enum
 
 # Format has to stay as separate module to deal with cyclomatic dependencies.
 
-__all__ = ["Format"]
+__all__ = ["StringFormat"]
 
 
-class Format(Enum):
+class StringFormat(Enum):
     DATETIME = "date-time"
     DATE = "date"
     TIME = "time"

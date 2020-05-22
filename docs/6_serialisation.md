@@ -117,7 +117,7 @@ serialisation output. `dict` is being used when dealing with nested serialisatio
 from typing import List
 
 from gata import dataclass
-from gata.types import Duration
+from gata.mapping import TimedeltaMapping
 
 
 @dataclass
@@ -128,7 +128,7 @@ class Artist:
 @dataclass
 class Song:
     title: str
-    length: Duration
+    length: TimedeltaMapping
 
 
 @dataclass

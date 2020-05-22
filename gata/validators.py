@@ -26,7 +26,7 @@ from uuid import UUID
 from bson import ObjectId
 from typing_extensions import Protocol, runtime_checkable
 
-from gata.format import Format
+from gata.stringformat import StringFormat
 from .errors import (
     ArithmeticValidationError,
     FormatValidationError,
@@ -332,9 +332,9 @@ def validate_email(value: str) -> str:
     a message and receive confirmation from the recipient.
     """
     if not EMAIL_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.EMAIL)
+        raise FormatValidationError(expected_format=StringFormat.EMAIL)
     if ".." in value:
-        raise FormatValidationError(expected_format=Format.EMAIL)
+        raise FormatValidationError(expected_format=StringFormat.EMAIL)
 
     return value
 
@@ -351,7 +351,7 @@ HOSTNAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9]
 
 def validate_hostname(value: str) -> str:
     if not HOSTNAME_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.HOSTNAME)
+        raise FormatValidationError(expected_format=StringFormat.HOSTNAME)
 
     return value
 
@@ -389,14 +389,14 @@ def validate_ipv4(value: Any) -> IPv4Address:
     try:
         return IPv4Address(value)
     except AddressValueError:
-        raise FormatValidationError(expected_format=Format.IPV4)
+        raise FormatValidationError(expected_format=StringFormat.IPV4)
 
 
 def validate_ipv6(value: Any) -> IPv6Address:
     try:
         return IPv6Address(value)
     except AddressValueError:
-        raise FormatValidationError(expected_format=Format.IPV6)
+        raise FormatValidationError(expected_format=StringFormat.IPV6)
 
 
 def validate_length(value: Any, minimum: Optional[int] = None, maximum: Optional[int] = None) -> Any:
@@ -448,7 +448,7 @@ SEMVER_REGEX = re.compile(
 def validate_semver(value: Any) -> str:
     value = validate_string(value)
     if not SEMVER_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.SEMVER)
+        raise FormatValidationError(expected_format=StringFormat.SEMVER)
 
     return value
 
@@ -459,7 +459,7 @@ URI_REGEX = re.compile(r"^(?:[a-z][a-z0-9+-.]*:)(?:\\/?\\/)?[^\s]*$", re.I)
 def validate_uri(value: Any) -> str:
     value = validate_string(value)
     if not URI_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.URI)
+        raise FormatValidationError(expected_format=StringFormat.URI)
 
     return value
 
@@ -473,7 +473,7 @@ URL_REGEX = re.compile(
 def validate_url(value: Any) -> str:
     value = validate_string(value)
     if not URL_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.URL)
+        raise FormatValidationError(expected_format=StringFormat.URL)
 
     return value
 
@@ -482,14 +482,14 @@ def validate_object_id(value: Any) -> ObjectId:
     try:
         return ObjectId(value)
     except Exception:
-        raise FormatValidationError(expected_format=Format.OBJECT_ID)
+        raise FormatValidationError(expected_format=StringFormat.OBJECT_ID)
 
 
 def validate_uuid(value: Any) -> UUID:
     try:
         return UUID(value)
     except Exception:
-        raise FormatValidationError(expected_format=Format.UUID)
+        raise FormatValidationError(expected_format=StringFormat.UUID)
 
 
 def validate_literal(value: Any, literal_type: Type) -> Any:

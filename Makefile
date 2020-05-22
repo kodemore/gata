@@ -30,5 +30,8 @@ build:
 	poetry run pytest
 	poetry build
 
+docs:
+	poetry run docs/build_docs.py
+
 publish:
 	poetry publish --build

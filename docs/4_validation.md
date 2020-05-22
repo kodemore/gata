@@ -68,36 +68,6 @@ print(album.songs_count)  # will print 2
 # file://examples/post_init_example.py
 ```
 
-## Manual validation
-
-In case there is no control over source code and replacing `dataclasses.dataclass` decorator is not an option, 
-`gata.validate` function can be used to check if instantiated dataclass is valid:
-
-```python
-from dataclasses import dataclass, field
-from typing import List, Optional
-
-from gata import validate
-from gata.errors import FieldError
-
-
-@dataclass
-class Album:
-    name: str
-    artist: str
-    release_year: int
-    tags: Optional[List[str]] = field(default_factory=list)
-
-
-try:
-    album = Album(name="Perfect Strangers", artist="Deep Purple", release_year="1984")
-    validate(album)
-except FieldError as error:
-    print(f"there was an error with validating field: {error.context['field_name']}")
-
-# file://examples/validating_python_dataclass.py
-```
-
 ## Extra validators
 
 Gata also serves a static validator class for simple assertions, the following is a list of available assertions:

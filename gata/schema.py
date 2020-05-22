@@ -3,8 +3,8 @@ from collections.abc import Iterable
 from decimal import Decimal
 from typing import Any, Callable, Dict, Optional, Union, Iterable as IterableType
 
-from gata.format import Format
-from gata.types import MappedType
+from gata.stringformat import StringFormat
+from gata.mapping import Mapping
 from gata.utils import is_optional_type
 from inspect import isclass
 
@@ -22,7 +22,7 @@ class Field:
         maximum: Union[int, float, Decimal] = None,
         minimum: Union[int, float, Decimal] = None,
         multiple_of: Union[int, float, Decimal] = None,
-        string_format: Union[str, Format] = None,
+        string_format: Union[str, StringFormat] = None,
         pattern: str = None,
         read_only: bool = False,
         write_only: bool = False,
@@ -55,7 +55,7 @@ class Field:
 
         self._original_type: Any = None
         self._is_optional: Optional[bool] = None
-        self._type: Optional[MappedType] = None
+        self._type: Optional[Mapping] = None
 
     @property
     def is_optional(self) -> bool:
