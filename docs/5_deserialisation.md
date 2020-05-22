@@ -55,8 +55,6 @@ To deserialise dict into dataclass simply use `gata.deserialise(dict, classname)
 from dataclasses import dataclass
 from typing import List
 
-from gata import deserialise
-
 
 @dataclass
 class Album:
@@ -84,7 +82,7 @@ raw_album = {
     ],
 }
 
-led_zeppelin_I = deserialise(raw_album, Album)
+led_zeppelin_I = Album(**raw_album)
 
 assert isinstance(led_zeppelin_I, Album)
 assert len(led_zeppelin_I.song_list) == 9
