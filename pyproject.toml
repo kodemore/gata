@@ -1,19 +1,15 @@
 [tool.poetry]
 name = "gata"
-version = "2.8.0"
-description = "Gata is data validation and transformation library for python."
-authors = [
-    "Dawid Kraczkowski <dawid.kraczkowski@gmail.com>"
-]
+version = "3.0.0"
+description = "Gata is data validation and transformation library for python"
+authors = ["dkraczkowski <dawid.kraczkowski@gmail.com>"]
 license = "MIT"
-readme = "README.md"
-
-homepage = "https://github.com/kodemore/gata"
-repository = "https://github.com/kodemore/gata"
-documentation = "https://github.com/kodemore/gata"
-
-keywords = ["dataclass", "validation", "serialisation", "deserialisation", "schema", "formatter", "loads", "dumps"]
-
+packages = [
+    {include = "gata"},
+    # {include = "tests", format = "sdist"},
+]
+include = ["gata/py.typed"]
+keywords = ["dataclass", "validation", "serialisation", "deserialisation", "schema", "json"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -26,20 +22,18 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-# Requirements
 [tool.poetry.dependencies]
-python = "^3.7"
 bson = "^0.5.9"
+python = "^3.6"
 typing_extensions = "^3.7.4"
 
 [tool.poetry.dev-dependencies]
 black = { version = "^19.3b0", python = "^3.6" }
 coverage = "^4.5.4"
-mypy = "^0.730.0"
-pre-commit = "^2.2.0"
-pytest = "^4.1.0"
-pytest-cov = "^2.5"
-pytest-mock = "^1.9"
+isort = "^4.3.21"
+mypy = "^0.770"
+pytest = "^5.4.1"
 
-[tool.black]
-safe = true
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

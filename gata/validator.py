@@ -37,6 +37,8 @@ from .validators import (
     validate_uuid,
 )
 
+__all__ = ["Validator"]
+
 
 def _make_assert(validator: Callable) -> Callable:
     def _validate(*args, **kwargs) -> bool:
@@ -84,6 +86,3 @@ class Validator:
     assert_uri = _make_assert(validate_uri)
     assert_url = _make_assert(validate_url)
     assert_uuid = _make_assert(validate_uuid)
-
-
-__all__ = ["Validator"]

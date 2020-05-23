@@ -32,7 +32,6 @@ dict_album = {
 }
 
 try:
-    gata.validate(dict_album, Album)
     album = Album(**dict_album)
 except ValueError as e:
     ...  # handle error here

@@ -1,9 +1,11 @@
-from typing import List
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass, field
+from typing import List
+
 from typing_extensions import TypedDict
-from gata import Field
+
+from gata.schema import Field
 
 
 class PetStatus(Enum):

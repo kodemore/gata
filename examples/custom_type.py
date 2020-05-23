@@ -1,29 +1,25 @@
 import re
 from typing import Any
 
-from gata import dataclass
+from gata import dataclass, Type
 from gata.errors import ValidationError
-from gata.typing import SerialisableType, ValidatableType
 
 UK_POST_CODE_REGEX = re.compile(
     "^([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([AZa-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z])))) [0-9][A-Za-z]{2})$"
 )
 
 
-class UKPostCode(str, SerialisableType, ValidatableType):
-    @classmethod
-    def validate(cls, value: Any) -> Any:
-        if UK_POST_CODE_REGEX.match(value):
-            return value
-        raise ValidationError(f"passed value {value} is not valid uk post code")
+class UKPostCode(Type):
+    def __init__(self, value: Any):
+        self.value = str(value)
 
-    @classmethod
-    def serialise(cls, value: Any) -> Any:
-        return value
+    def validate(self) -> Any:
+        if UK_POST_CODE_REGEX.match(self.value):
+            return self.value
+        raise ValidationError(f"passed value {self.value} is not valid uk post code")
 
-    @classmethod
-    def deserialise(cls, value: Any) -> Any:
-        return value
+    def serialise(self) -> Any:
+        return self.value
 
 
 @dataclass

@@ -24,8 +24,9 @@ from typing import (
 from uuid import UUID
 
 from bson import ObjectId
+from typing_extensions import Protocol, runtime_checkable
 
-from gata.format import Format
+from gata.stringformat import StringFormat
 from .errors import (
     ArithmeticValidationError,
     FormatValidationError,
@@ -38,15 +39,69 @@ from .errors import (
     UniqueValidationError,
     ValidationError,
 )
-from .utils import (
-    Comparable,
+from .iso_datetime import (
     parse_iso_date_string,
     parse_iso_datetime_string,
     parse_iso_duration_string,
     parse_iso_time_string,
 )
 
+__all__ = [
+    "validate_all",
+    "validate_any",
+    "validate_iterable",
+    "validate_base64",
+    "validate_boolean",
+    "validate_bytes",
+    "validate_datetime",
+    "validate_date",
+    "validate_dict",
+    "validate_duration",
+    "validate_typed_dict",
+    "validate_decimal",
+    "validate_email",
+    "validate_enum",
+    "validate_float",
+    "validate_frozenset",
+    "validate_hostname",
+    "validate_integer",
+    "validate_ipv4",
+    "validate_ipv6",
+    "validate_iterable_items",
+    "validate_length",
+    "validate_list",
+    "validate_literal",
+    "validate_multiple_of",
+    "validate_nullable",
+    "validate_object_id",
+    "validate_pattern",
+    "validate_range",
+    "validate_semver",
+    "validate_set",
+    "validate_string",
+    "validate_time",
+    "validate_tuple",
+    "validate_uri",
+    "validate_url",
+    "validate_uuid",
+]
+
 T = TypeVar("T")
+
+
+@runtime_checkable
+class Comparable(Protocol):  # pragma: no cover
+    def __lt__(self, other: Any) -> bool:
+        ...
+
+    def __gt__(self, other: Any) -> bool:
+        ...
+
+    def __le__(self, other: Any) -> bool:
+        return not self > other
+
+    def __ge__(self, other: Any) -> bool:
+        return not self < other
 
 
 def validate_all(value: Any, validators: Iterable[Callable]) -> Any:
@@ -77,8 +132,12 @@ def validate_iterable(value: Any, item_validator: Callable = None, unique: bool 
     if not isinstance(value, Collection) or isinstance(value, str) or isinstance(value, dict):
         raise IterableValidationError()
 
-    if isinstance(value, Sized) and unique and not len(set(value)) == len(value):
-        raise UniqueValidationError()
+    if isinstance(value, Sized) and unique:
+        unique_items = set()
+        for item in value:
+            if item in unique_items:
+                raise UniqueValidationError()
+            unique_items.add(item)
 
     if item_validator:
         return validate_iterable_items(value, item_validator)  # type: ignore
@@ -113,36 +172,46 @@ def validate_list(value: Any, item_validator: Callable = None) -> List[Any]:
 
 
 def validate_set(value: Any, item_validator: Callable = None) -> Set[Any]:
+    value = validate_iterable(value, item_validator, unique=True)
     if not isinstance(value, set):
-        raise TypeValidationError(expected_type=set)
-
-    if item_validator:
-        return validate_iterable_items(value, item_validator)  # type: ignore
+        value = set(value)
 
     return value
 
 
-def validate_tuple(value: Any, item_validators: List[Callable]) -> Tuple[Any, ...]:
+def validate_tuple(value: Any, item_validators: List[Callable] = None) -> Tuple[Any, ...]:
     if not isinstance(value, tuple):
         raise TypeValidationError(expected_type=tuple)
 
     if item_validators:
         result = []
         index = 0
+        if item_validators[-1] is ...:
+            if len(item_validators) == 1:
+                raise TypeError("provided item_validators argument is invalid")
+            last_known_callable = item_validators[0]
+            for index, item in enumerate(value):
+                if index >= len(item_validators) or item_validators[index] is ...:
+                    result.append(last_known_callable(item))
+                    continue
+
+                result.append(item_validators[index](item))
+                last_known_callable = item_validators[index]
+            return tuple(result)
+
         for validator in item_validators:
             result.append(validator(value[index]))
             index += 1
+
         return tuple(result)
 
     return value
 
 
 def validate_frozenset(value: Any, item_validator: Callable = None) -> FrozenSet[Any]:
+    value = validate_iterable(value, item_validator, unique=True)
     if not isinstance(value, frozenset):
-        raise TypeValidationError(expected_type=frozenset)
-
-    if item_validator:
-        return validate_iterable_items(value, item_validator)  # type: ignore
+        value = frozenset(value)
 
     return value
 
@@ -263,9 +332,9 @@ def validate_email(value: str) -> str:
     a message and receive confirmation from the recipient.
     """
     if not EMAIL_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.EMAIL)
+        raise FormatValidationError(expected_format=StringFormat.EMAIL)
     if ".." in value:
-        raise FormatValidationError(expected_format=Format.EMAIL)
+        raise FormatValidationError(expected_format=StringFormat.EMAIL)
 
     return value
 
@@ -282,7 +351,7 @@ HOSTNAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9]
 
 def validate_hostname(value: str) -> str:
     if not HOSTNAME_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.HOSTNAME)
+        raise FormatValidationError(expected_format=StringFormat.HOSTNAME)
 
     return value
 
@@ -320,14 +389,14 @@ def validate_ipv4(value: Any) -> IPv4Address:
     try:
         return IPv4Address(value)
     except AddressValueError:
-        raise FormatValidationError(expected_format=Format.IPV4)
+        raise FormatValidationError(expected_format=StringFormat.IPV4)
 
 
 def validate_ipv6(value: Any) -> IPv6Address:
     try:
         return IPv6Address(value)
     except AddressValueError:
-        raise FormatValidationError(expected_format=Format.IPV6)
+        raise FormatValidationError(expected_format=StringFormat.IPV6)
 
 
 def validate_length(value: Any, minimum: Optional[int] = None, maximum: Optional[int] = None) -> Any:
@@ -345,7 +414,7 @@ def validate_length(value: Any, minimum: Optional[int] = None, maximum: Optional
 def validate_multiple_of(value: Union[float, int], multiple_of: Union[float, int]) -> Union[float, int]:
     if not value % multiple_of == 0:
         raise ArithmeticValidationError(
-            f"Passed value must be multiplication of {multiple_of}", code="multiple_of_error"
+            f"passed value must be multiplication of {multiple_of}", code="multiple_of_error"
         )
 
     return value
@@ -358,7 +427,9 @@ def validate_nullable(value: Any, validator: Callable) -> Any:
     return validator(value)
 
 
-def validate_range(value: Any, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None) -> Any:
+def validate_range(
+    value: Comparable, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None
+) -> Any:
 
     if minimum is not None and value < minimum:
         raise MinimumBoundError(expected_minimum=minimum)
@@ -377,7 +448,7 @@ SEMVER_REGEX = re.compile(
 def validate_semver(value: Any) -> str:
     value = validate_string(value)
     if not SEMVER_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.SEMVER)
+        raise FormatValidationError(expected_format=StringFormat.SEMVER)
 
     return value
 
@@ -388,7 +459,7 @@ URI_REGEX = re.compile(r"^(?:[a-z][a-z0-9+-.]*:)(?:\\/?\\/)?[^\s]*$", re.I)
 def validate_uri(value: Any) -> str:
     value = validate_string(value)
     if not URI_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.URI)
+        raise FormatValidationError(expected_format=StringFormat.URI)
 
     return value
 
@@ -402,7 +473,7 @@ URL_REGEX = re.compile(
 def validate_url(value: Any) -> str:
     value = validate_string(value)
     if not URL_REGEX.match(value):
-        raise FormatValidationError(expected_format=Format.URL)
+        raise FormatValidationError(expected_format=StringFormat.URL)
 
     return value
 
@@ -410,59 +481,18 @@ def validate_url(value: Any) -> str:
 def validate_object_id(value: Any) -> ObjectId:
     try:
         return ObjectId(value)
-    except ValueError:
-        raise FormatValidationError(expected_format=Format.BSON_OBJECT_ID)
+    except Exception:
+        raise FormatValidationError(expected_format=StringFormat.OBJECT_ID)
 
 
 def validate_uuid(value: Any) -> UUID:
     try:
         return UUID(value)
-    except ValueError:
-        raise FormatValidationError(expected_format=Format.UUID)
+    except Exception:
+        raise FormatValidationError(expected_format=StringFormat.UUID)
 
 
 def validate_literal(value: Any, literal_type: Type) -> Any:
     if value in literal_type.__args__:
         return value
-    raise ValidationError(f"Passed value must be within listed literals.", code="literal_error")
-
-
-__all__ = [
-    "validate_all",
-    "validate_any",
-    "validate_iterable",
-    "validate_base64",
-    "validate_boolean",
-    "validate_bytes",
-    "validate_datetime",
-    "validate_date",
-    "validate_dict",
-    "validate_duration",
-    "validate_typed_dict",
-    "validate_decimal",
-    "validate_email",
-    "validate_enum",
-    "validate_float",
-    "validate_frozenset",
-    "validate_hostname",
-    "validate_integer",
-    "validate_ipv4",
-    "validate_ipv6",
-    "validate_iterable_items",
-    "validate_length",
-    "validate_list",
-    "validate_literal",
-    "validate_multiple_of",
-    "validate_nullable",
-    "validate_object_id",
-    "validate_pattern",
-    "validate_range",
-    "validate_semver",
-    "validate_set",
-    "validate_string",
-    "validate_time",
-    "validate_tuple",
-    "validate_uri",
-    "validate_url",
-    "validate_uuid",
-]
+    raise ValidationError(f"passed value must be within listed literals", code="literal_error")
