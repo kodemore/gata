@@ -52,8 +52,6 @@ assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name'
 
 ### [ Defining dataclass](docs/2_defining_dataclass.md)
 
-  * [ Defining dataclass with python's native dataclass](docs/2_defining_dataclass.md#defining-dataclass-with-pythons-native-dataclass)
-  * [ Defining dataclass with gata](docs/2_defining_dataclass.md#defining-dataclass-with-gata)
 ### [ Field types](docs/3_field_types.md)
 
   * [ Supported standard library types](docs/3_field_types.md#supported-standard-library-types)
