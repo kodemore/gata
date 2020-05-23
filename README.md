@@ -65,7 +65,6 @@ assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name'
 
   * [ Automatic validation](docs/4_validation.md#automatic-validation)
     * [ Performing post initialisation processing](docs/4_validation.md#performing-post-initialisation-processing)
-  * [ Manual validation](docs/4_validation.md#manual-validation)
   * [ Extra validators](docs/4_validation.md#extra-validators)
 ### [ Deserialisation](docs/5_deserialisation.md)
 
