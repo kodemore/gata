@@ -89,48 +89,6 @@ that field names matches most of defined key names in passed serialised value.
 All dataclasses are supported and they are validated against defined schema, while serialisation 
 they are converted to dict value containing converted types.
 
-## Gata types
-
-### `gata.typing.EmailAddress`
-Validates whether the value is a valid email address. 
-While deserialisation and serialisation will be treated as usual string.
-
-### `gata.typing.Duration`
-Validates whether the value is a valid ISO-8601 duration expression. 
-While deserialisation value will be cast to `datetime.timedelta`, 
-while serialisation value will be converted back to valid ISO-8601 duration expression.
-
-### `gata.typing.URI`
-Validates whether the value is a valid URI expression. 
-While deserialisation and serialisation will be treated as a usual string.
-
-### `gata.typing.UrlAddress`
-Validates whether the value is a valid URL address. 
-While deserialisation and serialisation will be treated as a usual string.
-
-### `gata.typing.Hostname`
-Validates whether the value is a valid hostname. 
-While deserialisation and serialisation will be treated as a usual string.
-
-### `gata.typing.Semver`
-Validates whether the value is a valid semantic version number. 
-While deserialisation and serialisation will be treated as a usual string.
-
-### `gata.typing.Uuid`
-Validates whether the value is a valid uuid number. 
-While deserialisation value will be cast to `uuid.UUID` instance, 
-during serialisation value will be converted back to string.
-
-### `gata.typing.Date`
-An alias to `datetime.date`
-
-### `gata.typing.DateTime`
-An alias to `datetime.datetime`
-
-### `gata.typing.Time`
-An alias to `datetime.time`
-
-
 ## Defining custom types
 
 The following example defines custom type for validating and representing UK post codes
