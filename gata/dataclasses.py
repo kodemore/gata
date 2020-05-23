@@ -104,7 +104,7 @@ def _dataclass_method_validate(cls: "Dataclass", value: Dict[str, Any]) -> None:
     for field_name, field_schema in cls.__gata_schema__:
         field_value = value[field_name] if field_name in value else None
 
-        if field_value is None and field_schema.is_optional:
+        if field_value is None and field_schema.is_optional or field_schema.read_only:
             continue
 
         try:
@@ -174,7 +174,7 @@ def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
         for property_name, field_schema in cls.__gata_schema__:
             property_value = value[property_name] if property_name in value else None
 
-            if field_schema.is_optional:
+            if field_schema.is_optional or field_schema.read_only:
                 if property_value is not None:
                     try:
                         property_value = field_schema.validate(property_value)
@@ -330,9 +330,9 @@ def dataclass(
 def field(
     default: Any = UNDEFINED,
     default_factory: Any = UNDEFINED,
-    init: bool = True,
     repr: bool = True,
     hash: None = None,
+    init: bool = True,
     compare: bool = True,
     metadata: None = None,
     maximum: Union[int, float, Decimal] = None,
@@ -344,15 +344,16 @@ def field(
     write_only: bool = False,
     items: Optional[Dict[str, Any]] = None,
 ) -> Field:
-    if hash or metadata or init is False:
+    if hash or metadata:
         raise NotImplementedError(
             "hash and metadata attribute are not yet supported. If you need these feature please use python's dataclasses instead"
         )
 
     return Field(
-        default=default,
         repr=repr,
         compare=compare,
+        default=default,
+        init=init,
         default_factory=default_factory,
         minimum=minimum,
         maximum=maximum,

@@ -16,9 +16,21 @@ class _Undefined:
 UNDEFINED = _Undefined()
 
 
+class FieldMeta:
+    def __init__(
+        self, read_only: bool = False, write_only: bool = False,
+    ):
+        pass
+
+
 class Field:
     def __init__(  # type: ignore
         self,
+        init: bool = True,
+        repr: bool = True,
+        compare: bool = True,
+        default: Any = UNDEFINED,
+        default_factory: Callable = UNDEFINED,  # type: ignore
         maximum: Union[int, float, Decimal] = None,
         minimum: Union[int, float, Decimal] = None,
         multiple_of: Union[int, float, Decimal] = None,
@@ -29,25 +41,22 @@ class Field:
         serialiser: Optional[Callable[[Any, Optional[Dict[str, Any]]], Any]] = None,
         deserialiser: Optional[Callable[[Any], Any]] = None,
         validator: Optional[Callable[[Any], None]] = None,
-        default: Any = UNDEFINED,
-        default_factory: Callable = UNDEFINED,  # type: ignore
-        compare: bool = True,
-        repr: bool = True,
         items: Dict[str, Any] = {},
     ):
+        self._default = default
+        self._default_factory = default_factory
+        self.repr = repr
+        self.compare = compare
+
+        self.read_only = True if not init else read_only
+        self.write_only = write_only
+
         self.minimum = minimum
         self.maximum = maximum
         self.multiple_of = multiple_of
         self.format = string_format
         self.pattern = pattern
-        self.read_only = read_only
-        self.write_only = write_only
-        self.repr = repr
-        self.compare = compare
         self.items = items
-
-        self._default = default
-        self._default_factory = default_factory
 
         self._deserialiser = deserialiser
         self._serialiser = serialiser
