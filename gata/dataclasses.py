@@ -2,6 +2,7 @@ from abc import ABC
 from dataclasses import Field as DataclassesField
 import datetime
 from decimal import Decimal
+from enum import Enum
 from inspect import isclass
 import ipaddress
 from typing import (
@@ -14,10 +15,10 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Pattern,
     Tuple,
     Type,
     Union,
-    Pattern,
 )
 import uuid
 
@@ -32,6 +33,7 @@ from .mapping import (
     DateMapping,
     DateTimeMapping,
     DecimalMapping,
+    EnumTypeMapping,
     FloatMapping,
     GataclassMapping,
     IntegerMapping,
@@ -404,10 +406,13 @@ def map_property_type_to_schema_type(property_type: Any, type_properties: Dict[s
     if origin_type is None:
         if property_type in SUPPORTED_TYPES:
             return SUPPORTED_TYPES[property_type](**type_properties)
-        if isclass(property_type) and issubclass(property_type, CustomType):
-            return CustomTypeMapping(custom_type=property_type)
+        if isclass(property_type):
+            if issubclass(property_type, CustomType):
+                return CustomTypeMapping(custom_type=property_type)
+            if issubclass(property_type, Enum):
+                return EnumTypeMapping(enum_type=property_type)
 
-        return None
+        return AnyTypeMapping()
     if origin_type not in SUPPORTED_TYPES:
         return AnyTypeMapping()
 

@@ -1,16 +1,15 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 import base64
 from datetime import date, datetime, time, timedelta
 import decimal
 import ipaddress
 import re
-from typing import Any, Dict, Optional, Pattern, TypeVar, Union, List, Iterable, Set, Callable, Match
+from typing import Any, Callable, Dict, List, Optional, Pattern, TypeVar, Union
 import uuid
 
 import bson
 
 from gata.errors import FormatValidationError, ValidationError
-from gata.stringformat import StringFormat
 from gata.iso_datetime import (
     parse_iso_date_string,
     parse_iso_datetime_string,
@@ -18,6 +17,7 @@ from gata.iso_datetime import (
     parse_iso_time_string,
     timedelta_to_iso_string,
 )
+from gata.stringformat import StringFormat
 from gata.validators import (
     TRUTHY_EXPRESSION,
     validate_boolean,
@@ -27,25 +27,26 @@ from gata.validators import (
     validate_decimal,
     validate_email,
     validate_float,
+    validate_frozenset,
     validate_hostname,
     validate_integer,
     validate_ipv4,
     validate_ipv6,
+    validate_length,
     validate_list,
     validate_multiple_of,
     validate_object_id,
     validate_pattern,
     validate_range,
     validate_semver,
+    validate_set,
     validate_string,
     validate_time,
+    validate_tuple,
     validate_uri,
     validate_url,
     validate_uuid,
-    validate_length,
-    validate_set,
-    validate_frozenset,
-    validate_tuple,
+    validate_enum,
 )
 
 _FORMAT_TO_VALIDATOR_MAP = {
@@ -494,6 +495,19 @@ class CustomTypeMapping(Mapping):
 
     def deserialise(self, value: Any) -> Any:
         return self.custom_type(value)
+
+
+class EnumTypeMapping(Mapping):
+    enum_type: Any
+
+    def validate(self, value: Any) -> Any:
+        return validate_enum(value, self.enum_type)
+
+    def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+        return value.value
+
+    def deserialise(self, value: Any) -> Any:
+        return self.enum_type(value)
 
 
 class AnyTypeMapping(Mapping):
