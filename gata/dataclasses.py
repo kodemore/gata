@@ -87,6 +87,26 @@ def asdict(obj: Any) -> Dict[str, Any]:
     return _dataclass_method_serialise(obj)
 
 
+def _freeze_object(self: "Dataclass") -> None:
+    frozen_dict = {}
+    for property_name, property_schema in self.__gata_schema__:
+        property_value = getattr(self, property_name)
+        delattr(self, property_name)
+        frozen_dict[property_name] = property_value
+    self.__frozen_dict__ = frozen_dict
+
+
+def validate_dataclass(obj: object) -> None:
+    schema = build_schema(obj.__class__)
+    for field_name, field_schema in schema:
+        if field_schema.read_only:
+            continue
+        value = getattr(obj, field_name, None)
+        if field_schema.is_optional and value is None:
+            continue
+        field_schema.validate(value)
+
+
 def _dataclass_method_serialise(self: "Dataclass", **mapping) -> Dict[str, Any]:
     serialised = {}
     for key, schema in self.__gata_schema__:
@@ -144,10 +164,16 @@ def _dataclass_method_eq(self: "Dataclass", other: "Dataclass") -> bool:
 
 
 def _dataclass_method_frozen_setattr(self: "Dataclass", name: str, value: Any) -> None:
+    if not self.__frozen_dict__:
+        self.__dict__[name] = value
+        return None
     raise TypeError(f"cannot modify attribute {name} of {self}, the dataclass is marked as frozen")
 
 
 def _dataclass_method_frozen_getattr(self: "Dataclass", name: str) -> Any:
+    if not self.__frozen_dict__:
+        return self.__dict__.get("name")
+
     if name in self.__frozen_dict__:
         return self.__frozen_dict__[name]
     raise TypeError(f"cannot get non existing attribute {name} of {self}, the dataclass is marked as frozen")
@@ -171,7 +197,6 @@ def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
     else:
         self = cls.__new__(cls)
 
-    frozen_dict = {}
     if cls.__validate__:
         for property_name, field_schema in cls.__gata_schema__:
             property_value = value[property_name] if property_name in value else None
@@ -188,10 +213,6 @@ def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
                         property_value = None
             else:
                 property_value = field_schema.validate(property_value)
-
-            if cls.__frozen__:
-                frozen_dict[property_name] = property_value
-                continue
             setattr(self, property_name, property_value)
     else:
         for property_name, property_descriptor in cls.__gata_schema__:  # type: ignore
@@ -201,18 +222,11 @@ def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
                     property_value = None
             else:
                 property_value = _deserialise_field_from_hash(property_name, property_descriptor, value)
-            if cls.__frozen__:
-                frozen_dict[property_name] = property_value
-                continue
             setattr(self, property_name, property_value)
-
-    if cls.__frozen__:
-        self.__dict__["__frozen_dict__"] = frozen_dict
 
     return self
 
 
-# lets create frozen method init and normal, and also frozen wrapped init
 def _dataclass_method_init(*args, **kwargs) -> None:
     self: "Dataclass" = args[0]
     init_kwargs = {}
@@ -229,6 +243,9 @@ def _dataclass_method_init(*args, **kwargs) -> None:
     self.deserialise.__func__(self, value=init_kwargs)  # type: ignore
 
     self.__post_init__()
+
+    if self.__frozen__:
+        _freeze_object(self)
 
 
 def _process_class(
@@ -266,20 +283,27 @@ def _process_class(
     if eq and "__eq__" not in _cls.__dict__:
         setattr(new_cls, "__eq__", _dataclass_method_eq)
 
-    if frozen:
-        setattr(new_cls, "__setattr__", _dataclass_method_frozen_setattr)
-        setattr(new_cls, "__getattr__", _dataclass_method_frozen_getattr)
-
-    if not init:
-        if frozen:
-            raise ValueError(f"cannot define dataclass {_cls} as frozen when init=False")
-        return new_cls
-
     __init__ = object.__init__
     if "__init__" in _cls.__dict__:
-        __init__ = getattr(new_cls, "__init__")
+        class_init = getattr(new_cls, "__init__")
 
-    setattr(new_cls, "__init__", _dataclass_method_init)
+        def __init__(self, *args, **kwargs):
+            class_init(self, *args, **kwargs)
+            self.__post_init__()
+            if validate:
+                validate_dataclass(self)
+            if frozen:
+                _freeze_object(self)
+
+    else:
+        __init__ = _dataclass_method_init
+
+    setattr(new_cls, "__init__", __init__)
+
+    if frozen:
+        setattr(new_cls, "__frozen_dict__", {})
+        setattr(new_cls, "__setattr__", _dataclass_method_frozen_setattr)
+        setattr(new_cls, "__getattr__", _dataclass_method_frozen_getattr)
 
     return new_cls
 
