@@ -80,11 +80,11 @@ class Dataclass(ABC):  # pragma: no cover
         ...
 
 
-def asdict(obj: Any) -> Dict[str, Any]:
+def asdict(obj: Any, mapping: Dict[str, Union[bool, str, dict]] = {}) -> Dict[str, Any]:
     if not hasattr(obj.__class__, "__gata_schema__"):
         setattr(obj.__class__, "__gata_schema__", build_schema(obj.__class__))
 
-    return _dataclass_method_serialise(obj)
+    return _dataclass_method_serialise(obj, **mapping)
 
 
 def _freeze_object(self: "Dataclass") -> None:
@@ -104,7 +104,10 @@ def validate_dataclass(obj: object) -> None:
         value = getattr(obj, field_name, None)
         if field_schema.is_optional and value is None:
             continue
-        field_schema.validate(value)
+        try:
+            field_schema.validate(value)
+        except ValidationError as error:
+            raise FieldError(field_name, error) from error
 
 
 def _dataclass_method_serialise(self: "Dataclass", **mapping) -> Dict[str, Any]:
@@ -212,7 +215,10 @@ def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
                     if property_value is UNDEFINED:
                         property_value = None
             else:
-                property_value = field_schema.validate(property_value)
+                try:
+                    property_value = field_schema.validate(property_value)
+                except ValidationError as error:
+                    raise FieldError(property_name, error) from error
             setattr(self, property_name, property_value)
     else:
         for property_name, property_descriptor in cls.__gata_schema__:  # type: ignore
