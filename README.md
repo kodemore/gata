@@ -75,6 +75,7 @@ assert asdict(pet) == {'tags': ['dog'], 'name': 'Boo', 'age': 0}  # serialise ob
 assert asdict(pet, {"age": False, "name": "pet_name"}) == {'tags': ['dog'], 'pet_name': 'Boo'}
 ```
 
+> More examples are available under [examples](examples) directory
 
 ## Documentation
 
