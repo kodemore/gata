@@ -1,13 +1,9 @@
 [tool.poetry]
 name = "gata"
-version = "3.1.1"
+version = "3.1.2"
 description = "Gata is data validation and transformation library for python"
 authors = ["dkraczkowski <dawid.kraczkowski@gmail.com>"]
 license = "MIT"
-packages = [
-    {include = "gata"},
-    # {include = "tests", format = "sdist"},
-]
 include = ["gata/py.typed"]
 keywords = ["dataclass", "validation", "serialisation", "deserialisation", "schema", "json"]
 classifiers = [
@@ -34,7 +30,3 @@ isort = "^4.3.21"
 mypy = "^0.770"
 pytest = "^5.4.1"
 pytest-cov = "^2.9.0"
-
-[build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
