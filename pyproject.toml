@@ -1,10 +1,9 @@
 [tool.poetry]
 name = "gata"
-version = "3.1.2"
+version = "3.1.3"
 description = "Gata is data validation and transformation library for python"
 authors = ["dkraczkowski <dawid.kraczkowski@gmail.com>"]
 license = "MIT"
-include = ["gata/py.typed"]
 keywords = ["dataclass", "validation", "serialisation", "deserialisation", "schema", "json"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
