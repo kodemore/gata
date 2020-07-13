@@ -17,16 +17,16 @@ Gata is a toolbox library for python's dataclasses which allows to serialise/des
  - support for complex datatypes
  - serialisation/deserialisation mechanism
  - easy to use field mapping
+ - Full IDE support with `Dataclass` class
 
 
 ## Example
 ```python
 from typing import List
-from gata import dataclass
+from gata import Dataclass
 
 
-@dataclass
-class Pet:
+class Pet(Dataclass, frozen=True):
     tags: List[str]
     name: str = "Boo"
     age: int = 0
