@@ -62,6 +62,9 @@ class Dataclass(ABC):  # pragma: no cover
     __validate__: bool
     __class_name__: str
 
+    def __init__(self, *args, **kwargs):
+        ...
+
     def serialise(self, **mapping) -> Dict[str, Any]:
         ...
 
@@ -91,7 +94,6 @@ def _freeze_object(self: "Dataclass") -> None:
     frozen_dict = {}
     for property_name, property_schema in self.__gata_schema__:
         property_value = getattr(self, property_name)
-        delattr(self, property_name)
         frozen_dict[property_name] = property_value
     self.__frozen_dict__ = frozen_dict
 
@@ -175,10 +177,14 @@ def _dataclass_method_frozen_setattr(self: "Dataclass", name: str, value: Any) -
 
 def _dataclass_method_frozen_getattr(self: "Dataclass", name: str) -> Any:
     if not self.__frozen_dict__:
-        return self.__dict__.get("name")
+        return self.__dict__.get(name)
 
     if name in self.__frozen_dict__:
         return self.__frozen_dict__[name]
+
+    if name[0:2] == "__" and name[-2:] == "__":
+        return super(self.__class__).__getattribute__(name)
+
     raise TypeError(f"cannot get non existing attribute {name} of {self}, the dataclass is marked as frozen")
 
 
@@ -191,9 +197,7 @@ def _deserialise_field_from_hash(property_name: str, property_descriptor: Field,
     return value
 
 
-def _dataclass_method_deserialise(*args, value: Dict[str, Any]) -> "Dataclass":
-    cls = args[0]
-
+def _dataclass_method_deserialise(cls, value: Dict[str, Any]) -> "Dataclass":
     if not isclass(cls):
         self = cls
         cls = self.__class__
@@ -254,6 +258,41 @@ def _dataclass_method_init(*args, **kwargs) -> None:
         _freeze_object(self)
 
 
+def make_dataclass(_cls: Any, repr: bool = True, eq: bool = True, validate: bool = True, frozen: bool = False) -> None:
+    setattr(_cls, "validate", classmethod(_dataclass_method_validate))
+    setattr(_cls, "deserialise", classmethod(_dataclass_method_deserialise))
+    setattr(_cls, "serialise", _dataclass_method_serialise)
+    setattr(_cls, "__iter__", _dataclass_method_iter)
+
+    if repr:
+        setattr(_cls, "__repr__", _dataclass_method_repr)
+
+    if eq:
+        setattr(_cls, "__eq__", _dataclass_method_eq)
+
+    __init__ = object.__init__
+    if "__init__" in _cls.__dict__:
+        class_init = getattr(_cls, "__init__")
+
+        def __init__(self, *args, **kwargs):
+            class_init(self, *args, **kwargs)
+            self.__post_init__()
+            if validate:
+                validate_dataclass(self)
+            if frozen:
+                _freeze_object(self)
+
+    else:
+        __init__ = _dataclass_method_init
+
+    setattr(_cls, "__init__", __init__)
+
+    if frozen:
+        setattr(_cls, "__frozen_dict__", {})
+        setattr(_cls, "__setattr__", _dataclass_method_frozen_setattr)
+        setattr(_cls, "__getattr__", _dataclass_method_frozen_getattr)
+
+
 def _process_class(
     _cls: Any, init=True, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False, validate=True,
 ) -> Type["Dataclass"]:
@@ -269,7 +308,9 @@ def _process_class(
 
     new_cls: Type["Dataclass"] = type(
         _cls.__name__ + "Dataclass",
-        (_cls, Dataclass),
+        (_cls, Dataclass)
+        if Dataclass not in _cls.__mro__[-1:0:-1]
+        else tuple([_cls]),  # add Dataclass to bases only if its not there already
         {
             "__validate__": validate,
             "__frozen__": frozen,
@@ -278,38 +319,15 @@ def _process_class(
         },
     )
 
-    setattr(new_cls, "validate", classmethod(_dataclass_method_validate))
-    setattr(new_cls, "deserialise", classmethod(_dataclass_method_deserialise))
-    setattr(new_cls, "serialise", _dataclass_method_serialise)
-    setattr(new_cls, "__iter__", _dataclass_method_iter)
-
-    if repr and "__repr__" not in _cls.__dict__:
-        setattr(new_cls, "__repr__", _dataclass_method_repr)
-
-    if eq and "__eq__" not in _cls.__dict__:
-        setattr(new_cls, "__eq__", _dataclass_method_eq)
-
-    __init__ = object.__init__
     if "__init__" in _cls.__dict__:
-        class_init = getattr(new_cls, "__init__")
+        setattr(new_cls, "__init__", _cls.__init__)
 
-        def __init__(self, *args, **kwargs):
-            class_init(self, *args, **kwargs)
-            self.__post_init__()
-            if validate:
-                validate_dataclass(self)
-            if frozen:
-                _freeze_object(self)
-
-    else:
-        __init__ = _dataclass_method_init
-
-    setattr(new_cls, "__init__", __init__)
-
-    if frozen:
-        setattr(new_cls, "__frozen_dict__", {})
-        setattr(new_cls, "__setattr__", _dataclass_method_frozen_setattr)
-        setattr(new_cls, "__getattr__", _dataclass_method_frozen_getattr)
+    make_dataclass(new_cls,
+       repr=(repr and "__repr__" not in _cls.__dict__),
+       eq=(eq and "__eq__" not in _cls.__dict__),
+       frozen=frozen,
+       validate=validate
+    )
 
     return new_cls
 
