@@ -9,7 +9,6 @@ class Dataclass:
     __validate__: bool = True
     __gata_schema__: Schema
     __frozen_dict__: Dict[str, Any]
-    __frozen__: bool
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -44,7 +43,7 @@ class Dataclass:
     def deserialise(cls, value: Dict[str, Any]) -> "Dataclass":
         return _dataclass_method_deserialise(cls, value=value)
 
-    def __iter__(self) -> ItemsView[str, Any]:
+    def __iter__(self) -> ItemsView[str, Any]:  # type: ignore
         for key, value in self.serialise().items():
             yield key, value
 

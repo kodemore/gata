@@ -112,7 +112,7 @@ def validate_dataclass(obj: object) -> None:
             raise FieldError(field_name, error) from error
 
 
-def _dataclass_method_serialise(self: "Dataclass", **mapping) -> Dict[str, Any]:
+def _dataclass_method_serialise(self, **mapping) -> Dict[str, Any]:
     serialised = {}
     for key, schema in self.__gata_schema__:
         if schema.write_only:
@@ -183,7 +183,7 @@ def _dataclass_method_frozen_getattr(self: "Dataclass", name: str) -> Any:
         return self.__frozen_dict__[name]
 
     if name[0:2] == "__" and name[-2:] == "__":
-        return super(self.__class__).__getattribute__(name)
+        return super(self.__class__, self).__getattribute__(name)
 
     raise TypeError(f"cannot get non existing attribute {name} of {self}, the dataclass is marked as frozen")
 
@@ -197,7 +197,7 @@ def _deserialise_field_from_hash(property_name: str, property_descriptor: Field,
     return value
 
 
-def _dataclass_method_deserialise(cls, value: Dict[str, Any]) -> "Dataclass":
+def _dataclass_method_deserialise(cls, value: Dict[str, Any]):
     if not isclass(cls):
         self = cls
         cls = self.__class__
