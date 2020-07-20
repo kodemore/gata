@@ -1,4 +1,3 @@
-from abc import ABC
 import base64
 from datetime import date, datetime, time, timedelta
 import decimal
@@ -7,8 +6,7 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Pattern, TypeVar, Union
 import uuid
 
-import bson
-
+from gata import bson_support
 from gata.errors import FormatValidationError, ValidationError
 from gata.iso_datetime import (
     parse_iso_date_string,
@@ -18,36 +16,13 @@ from gata.iso_datetime import (
     timedelta_to_iso_string,
 )
 from gata.stringformat import StringFormat
-from gata.validators import (
-    TRUTHY_EXPRESSION,
-    validate_boolean,
-    validate_bytes,
-    validate_date,
-    validate_datetime,
-    validate_decimal,
-    validate_email,
-    validate_float,
-    validate_frozenset,
-    validate_hostname,
-    validate_integer,
-    validate_ipv4,
-    validate_ipv6,
-    validate_length,
-    validate_list,
-    validate_multiple_of,
-    validate_object_id,
-    validate_pattern,
-    validate_range,
-    validate_semver,
-    validate_set,
-    validate_string,
-    validate_time,
-    validate_tuple,
-    validate_uri,
-    validate_url,
-    validate_uuid,
-    validate_enum,
-)
+from gata.validators import (TRUTHY_EXPRESSION, validate_boolean, validate_bytes, validate_date, validate_datetime,
+                             validate_decimal, validate_email, validate_enum, validate_float, validate_frozenset,
+                             validate_hostname, validate_integer, validate_ipv4, validate_ipv6, validate_length,
+                             validate_list, validate_multiple_of, validate_pattern, validate_range, validate_semver,
+                             validate_set, validate_string, validate_time, validate_tuple, validate_uri, validate_url,
+                             validate_uuid)
+from .base_mapping import Mapping
 
 _FORMAT_TO_VALIDATOR_MAP = {
     StringFormat.DATETIME: validate_datetime,
@@ -63,7 +38,6 @@ _FORMAT_TO_VALIDATOR_MAP = {
     StringFormat.BOOLEAN: validate_boolean,
     StringFormat.SEMVER: validate_semver,
     StringFormat.BYTE: validate_bytes,
-    StringFormat.OBJECT_ID: validate_object_id,
     "date-time": validate_datetime,
     "date": validate_date,
     "time": validate_time,
@@ -77,8 +51,8 @@ _FORMAT_TO_VALIDATOR_MAP = {
     "boolean": validate_boolean,
     "semver": validate_semver,
     "byte": validate_bytes,
-    "object-id": validate_object_id,
 }
+
 
 T = TypeVar("T")
 
@@ -98,7 +72,6 @@ __all__ = [
     "RegexPatternMapping",
     "Ipv4AddressMapping",
     "Ipv6AddressMapping",
-    "ObjectIdMapping",
     "ListMapping",
     "SetMapping",
     "TupleMapping",
@@ -106,25 +79,10 @@ __all__ = [
 ]
 
 
-class Mapping(ABC):
-    def __init__(self, **kwargs):
-        if not hasattr(self, "__annotations__"):
-            return
-
-        for property_name, property_type in self.__annotations__.items():
-            if property_name in kwargs:
-                setattr(self, property_name, kwargs[property_name])
-                continue
-            setattr(self, property_name, None)
-
-    def validate(self, value: Any) -> Any:
-        return value
-
-    def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
-        return value
-
-    def deserialise(self, value: Any) -> Any:
-        return value
+if bson_support.BSON_SUPPORT:
+    _FORMAT_TO_VALIDATOR_MAP["object-id"] = bson_support.validate_object_id
+    _FORMAT_TO_VALIDATOR_MAP[StringFormat.OBJECT_ID] = bson_support.validate_object_id
+    __all__ = __all__ + [bson_support.ObjectIdMapping]
 
 
 class BooleanMapping(Mapping):
@@ -347,17 +305,6 @@ class Ipv6AddressMapping(Mapping):
 
     def deserialise(self, value: Any) -> Any:
         return ipaddress.IPv6Address(value)
-
-
-class ObjectIdMapping(Mapping):
-    def validate(self, value: Any) -> Any:
-        return validate_object_id(value)
-
-    def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
-        return str(value)
-
-    def deserialise(self, value: Any) -> Any:
-        return bson.ObjectId(value)
 
 
 def _serialise_iterable(

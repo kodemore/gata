@@ -21,8 +21,7 @@ from typing import (
     Union,
 )
 import uuid
-
-import bson
+from gata import bson_support
 
 from .errors import FieldError, ValidationError
 from .mapping import (
@@ -40,7 +39,6 @@ from .mapping import (
     Ipv4AddressMapping,
     Ipv6AddressMapping,
     ListMapping,
-    ObjectIdMapping,
     RegexPatternMapping,
     SetMapping,
     StringMapping,
@@ -436,11 +434,14 @@ SUPPORTED_TYPES = {
     ipaddress.IPv4Address: Ipv4AddressMapping,
     ipaddress.IPv6Address: Ipv6AddressMapping,
     uuid.UUID: UUIDMapping,
-    bson.ObjectId: ObjectIdMapping,
     Any: AnyTypeMapping,
     ByteString: BytesMapping,
     AnyStr: StringMapping,
 }
+
+if bson_support.BSON_SUPPORT:
+    import bson
+    SUPPORTED_TYPES[bson.ObjectId] = bson_support.ObjectIdMapping
 
 
 def map_property_type_to_schema_type(property_type: Any, type_properties: Dict[str, Any]) -> Any:
