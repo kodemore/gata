@@ -86,7 +86,9 @@ __all__ = [
 ]
 
 if bson_support.BSON_SUPPORT:
-    __all__ = __all__ + [bson_support.validate_object_id]
+    from gata.bson_support import validate_object_id
+
+    __all__ = __all__ + ["validate_object_id"]
 
 
 T = TypeVar("T")

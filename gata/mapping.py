@@ -16,12 +16,35 @@ from gata.iso_datetime import (
     timedelta_to_iso_string,
 )
 from gata.stringformat import StringFormat
-from gata.validators import (TRUTHY_EXPRESSION, validate_boolean, validate_bytes, validate_date, validate_datetime,
-                             validate_decimal, validate_email, validate_enum, validate_float, validate_frozenset,
-                             validate_hostname, validate_integer, validate_ipv4, validate_ipv6, validate_length,
-                             validate_list, validate_multiple_of, validate_pattern, validate_range, validate_semver,
-                             validate_set, validate_string, validate_time, validate_tuple, validate_uri, validate_url,
-                             validate_uuid)
+from gata.validators import (
+    TRUTHY_EXPRESSION,
+    validate_boolean,
+    validate_bytes,
+    validate_date,
+    validate_datetime,
+    validate_decimal,
+    validate_email,
+    validate_enum,
+    validate_float,
+    validate_frozenset,
+    validate_hostname,
+    validate_integer,
+    validate_ipv4,
+    validate_ipv6,
+    validate_length,
+    validate_list,
+    validate_multiple_of,
+    validate_pattern,
+    validate_range,
+    validate_semver,
+    validate_set,
+    validate_string,
+    validate_time,
+    validate_tuple,
+    validate_uri,
+    validate_url,
+    validate_uuid,
+)
 from .base_mapping import Mapping
 
 _FORMAT_TO_VALIDATOR_MAP = {
@@ -80,9 +103,11 @@ __all__ = [
 
 
 if bson_support.BSON_SUPPORT:
+    from gata.bson_support import ObjectIdMapping
+
     _FORMAT_TO_VALIDATOR_MAP["object-id"] = bson_support.validate_object_id
     _FORMAT_TO_VALIDATOR_MAP[StringFormat.OBJECT_ID] = bson_support.validate_object_id
-    __all__ = __all__ + [bson_support.ObjectIdMapping]
+    __all__ = __all__ + ["ObjectIdMapping"]
 
 
 class BooleanMapping(Mapping):

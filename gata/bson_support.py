@@ -14,12 +14,12 @@ except ImportError:
 
 
 if BSON_SUPPORT:
+
     def validate_object_id(value: Any) -> bson.ObjectId:
         try:
             return bson.ObjectId(value)
         except Exception:
             raise FormatValidationError(expected_format=StringFormat.OBJECT_ID)
-
 
     class ObjectIdMapping(Mapping):
         def validate(self, value: Any) -> Any:

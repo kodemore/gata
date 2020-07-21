@@ -320,11 +320,12 @@ def _process_class(
     if "__init__" in _cls.__dict__:
         setattr(new_cls, "__init__", _cls.__init__)
 
-    make_dataclass(new_cls,
-       repr=(repr and "__repr__" not in _cls.__dict__),
-       eq=(eq and "__eq__" not in _cls.__dict__),
-       frozen=frozen,
-       validate=validate
+    make_dataclass(
+        new_cls,
+        repr=(repr and "__repr__" not in _cls.__dict__),
+        eq=(eq and "__eq__" not in _cls.__dict__),
+        frozen=frozen,
+        validate=validate,
     )
 
     return new_cls
@@ -441,6 +442,7 @@ SUPPORTED_TYPES = {
 
 if bson_support.BSON_SUPPORT:
     import bson
+
     SUPPORTED_TYPES[bson.ObjectId] = bson_support.ObjectIdMapping
 
 
