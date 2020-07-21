@@ -1,4 +1,5 @@
-from typing import Callable
+from typing import Callable, Any
+
 
 from .validators import (
     validate_all,
@@ -24,7 +25,6 @@ from .validators import (
     validate_literal,
     validate_multiple_of,
     validate_nullable,
-    validate_object_id,
     validate_pattern,
     validate_range,
     validate_semver,
@@ -36,6 +36,8 @@ from .validators import (
     validate_url,
     validate_uuid,
 )
+
+from gata import bson_support
 
 __all__ = ["Validator"]
 
@@ -49,6 +51,10 @@ def _make_assert(validator: Callable) -> Callable:
             return False
 
     return _validate
+
+
+def bson_not_supported(*args: Any) -> None:
+    raise RuntimeError("Bson is not installed")
 
 
 class Validator:
@@ -75,7 +81,6 @@ class Validator:
     assert_literal = _make_assert(validate_literal)
     assert_multiple_of = _make_assert(validate_multiple_of)
     assert_nullable = _make_assert(validate_nullable)
-    assert_object_id = _make_assert(validate_object_id)
     assert_pattern = _make_assert(validate_pattern)
     assert_range = _make_assert(validate_range)
     assert_semver = _make_assert(validate_semver)
@@ -86,3 +91,8 @@ class Validator:
     assert_uri = _make_assert(validate_uri)
     assert_url = _make_assert(validate_url)
     assert_uuid = _make_assert(validate_uuid)
+    assert_object_id = bson_not_supported
+
+
+if bson_support.BSON_SUPPORT:
+    Validator.assert_object_id = _make_assert(bson_support.validate_object_id)

@@ -5,7 +5,6 @@ import re
 from typing import List, Pattern, Tuple
 from uuid import UUID
 
-from bson import ObjectId
 import pytest
 
 from gata.dataclasses import field, build_schema
@@ -172,6 +171,11 @@ def test_schema_uuid_type() -> None:
 
 
 def test_schema_object_id_type() -> None:
+    try:
+        from bson import ObjectId
+    except ImportError:
+        pytest.skip("Bson not installed")
+
     class TestClass:
         property: ObjectId
 

@@ -1,31 +1,13 @@
 import pytest
 
-from gata.errors import ValidationError
-from gata.validators import validate_object_id
-from bson.objectid import ObjectId
 
+def test_valid_values():
+    try:
+        from bson import ObjectId
 
-@pytest.mark.parametrize(
-    "value",
-    (
-        str(ObjectId()),
-        str(ObjectId()),
-        str(ObjectId()),
-        "507f1f77bcf86cd799439011",
-    ),
-)
-def test_valid_values(value: str):
-    assert validate_object_id(value)
+    except ImportError:
+        pytest.skip("Bson not intalled")
 
-
-@pytest.mark.parametrize(
-    "value",
-    (
-        1,
-        True,
-        "ad23rfw"
-    ),
-)
-def test_invalid_values(value: str):
-    with pytest.raises(ValidationError):
-        validate_object_id(value)
+    from gata.bson_support import validate_object_id
+    assert validate_object_id("507f1f77bcf86cd799439011")
+    assert validate_object_id(ObjectId())

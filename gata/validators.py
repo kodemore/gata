@@ -1,9 +1,9 @@
 import base64
-import re
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from ipaddress import AddressValueError, IPv4Address, IPv6Address
+import re
 from typing import (
     Any,
     Callable,
@@ -23,9 +23,9 @@ from typing import (
 )
 from uuid import UUID
 
-from bson import ObjectId
 from typing_extensions import Protocol, runtime_checkable
 
+from gata import bson_support
 from gata.stringformat import StringFormat
 from .errors import (
     ArithmeticValidationError,
@@ -73,7 +73,6 @@ __all__ = [
     "validate_literal",
     "validate_multiple_of",
     "validate_nullable",
-    "validate_object_id",
     "validate_pattern",
     "validate_range",
     "validate_semver",
@@ -85,6 +84,12 @@ __all__ = [
     "validate_url",
     "validate_uuid",
 ]
+
+if bson_support.BSON_SUPPORT:
+    from gata.bson_support import validate_object_id
+
+    __all__ = __all__ + ["validate_object_id"]
+
 
 T = TypeVar("T")
 
@@ -476,13 +481,6 @@ def validate_url(value: Any) -> str:
         raise FormatValidationError(expected_format=StringFormat.URL)
 
     return value
-
-
-def validate_object_id(value: Any) -> ObjectId:
-    try:
-        return ObjectId(value)
-    except Exception:
-        raise FormatValidationError(expected_format=StringFormat.OBJECT_ID)
 
 
 def validate_uuid(value: Any) -> UUID:

@@ -21,8 +21,7 @@ from typing import (
     Union,
 )
 import uuid
-
-import bson
+from gata import bson_support
 
 from .errors import FieldError, ValidationError
 from .mapping import (
@@ -40,7 +39,6 @@ from .mapping import (
     Ipv4AddressMapping,
     Ipv6AddressMapping,
     ListMapping,
-    ObjectIdMapping,
     RegexPatternMapping,
     SetMapping,
     StringMapping,
@@ -322,11 +320,12 @@ def _process_class(
     if "__init__" in _cls.__dict__:
         setattr(new_cls, "__init__", _cls.__init__)
 
-    make_dataclass(new_cls,
-       repr=(repr and "__repr__" not in _cls.__dict__),
-       eq=(eq and "__eq__" not in _cls.__dict__),
-       frozen=frozen,
-       validate=validate
+    make_dataclass(
+        new_cls,
+        repr=(repr and "__repr__" not in _cls.__dict__),
+        eq=(eq and "__eq__" not in _cls.__dict__),
+        frozen=frozen,
+        validate=validate,
     )
 
     return new_cls
@@ -436,11 +435,15 @@ SUPPORTED_TYPES = {
     ipaddress.IPv4Address: Ipv4AddressMapping,
     ipaddress.IPv6Address: Ipv6AddressMapping,
     uuid.UUID: UUIDMapping,
-    bson.ObjectId: ObjectIdMapping,
     Any: AnyTypeMapping,
     ByteString: BytesMapping,
     AnyStr: StringMapping,
 }
+
+if bson_support.BSON_SUPPORT:
+    import bson
+
+    SUPPORTED_TYPES[bson.ObjectId] = bson_support.ObjectIdMapping
 
 
 def map_property_type_to_schema_type(property_type: Any, type_properties: Dict[str, Any]) -> Any:
