@@ -1,7 +1,10 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 
-from .errors import FormatValidationError
 from .base_mapping import Mapping
+from .errors import FormatValidationError
 from .stringformat import StringFormat
 
 BSON_SUPPORT = True
@@ -25,7 +28,7 @@ if BSON_SUPPORT:
         def validate(self, value: Any) -> Any:
             return validate_object_id(value)
 
-        def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+        def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None,) -> Any:
             return str(value)
 
         def deserialise(self, value: Any) -> Any:

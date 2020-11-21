@@ -24,12 +24,7 @@ def test_valid_values(value: str):
 
 
 @pytest.mark.parametrize(
-    "value",
-    (
-        1,
-        2,
-        "ad23rfw"
-    ),
+    "value", (1, 2, "ad23rfw"),
 )
 def test_invalid_values(value: str):
     with pytest.raises(ValidationError):

@@ -1,5 +1,6 @@
 from inspect import isclass
-from typing import Any, Union
+from typing import Any
+from typing import Union
 
 
 def is_dataclass_like(obj: Any) -> bool:

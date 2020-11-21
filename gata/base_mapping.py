@@ -1,5 +1,8 @@
 from abc import ABC
-from typing import Any, Optional, Union, Dict
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 
 
 class Mapping(ABC):

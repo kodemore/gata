@@ -15,7 +15,10 @@ from gata.iso_datetime import (
         ("202010", time(hour=20, minute=20, second=10)),
         ("20:20:10", time(hour=20, minute=20, second=10)),
         ("20:20:10Z", time(hour=20, minute=20, second=10, tzinfo=timezone.utc)),
-        ("20:20:10+02:00", time(hour=20, minute=20, second=10, tzinfo=timezone(timedelta(hours=2))),),
+        (
+            "20:20:10+02:00",
+            time(hour=20, minute=20, second=10, tzinfo=timezone(timedelta(hours=2))),
+        ),
     ],
 )
 def test_parse_iso_time_string(given, expected) -> None:

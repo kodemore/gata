@@ -4,7 +4,9 @@ from gata.validators import validate_frozenset, validate_integer
 
 
 def test_validate_frozenset():
-    assert validate_frozenset({"2019-10-10 10:10:10", "2019-10-10 10:10:10", "2019-10-10 10:10:10"})
+    assert validate_frozenset(
+        {"2019-10-10 10:10:10", "2019-10-10 10:10:10", "2019-10-10 10:10:10"}
+    )
 
     with pytest.raises(ValueError):
         validate_frozenset(1)

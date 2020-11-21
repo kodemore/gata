@@ -11,7 +11,9 @@ class Album:
     song_list: List[str]
 
 
-led_zeppelin_I = Album(name="Led Zeppelin I", artist="Led Zeppelin", release_year=1969, song_list=None)
+led_zeppelin_I = Album(
+    name="Led Zeppelin I", artist="Led Zeppelin", release_year=1969, song_list=None
+)
 
 assert asdict(led_zeppelin_I) == {
     "name": "Led Zeppelin I",

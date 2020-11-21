@@ -1,16 +1,16 @@
-from typing import Any, Dict, ItemsView
+from typing import Any
+from typing import Dict
+from typing import ItemsView
 
-from .dataclasses import (
-    _dataclass_method_init,
-    _dataclass_method_serialise,
-    _dataclass_method_validate,
-    _dataclass_method_deserialise,
-    build_schema,
-    _dataclass_method_frozen_getattr,
-    _dataclass_method_frozen_setattr,
-    _dataclass_method_repr,
-    _dataclass_method_eq,
-)
+from .dataclasses import _dataclass_method_deserialise
+from .dataclasses import _dataclass_method_eq
+from .dataclasses import _dataclass_method_frozen_getattr
+from .dataclasses import _dataclass_method_frozen_setattr
+from .dataclasses import _dataclass_method_init
+from .dataclasses import _dataclass_method_repr
+from .dataclasses import _dataclass_method_serialise
+from .dataclasses import _dataclass_method_validate
+from .dataclasses import build_schema
 from .schema import Schema
 
 

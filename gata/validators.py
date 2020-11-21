@@ -1,50 +1,51 @@
 import base64
-from datetime import date, datetime, time, timedelta
+import re
+from datetime import date
+from datetime import datetime
+from datetime import time
+from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
-from ipaddress import AddressValueError, IPv4Address, IPv6Address
-import re
-from typing import (
-    Any,
-    Callable,
-    Collection,
-    Dict,
-    FrozenSet,
-    Iterable,
-    List,
-    Optional,
-    Pattern,
-    Set,
-    Sized,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from ipaddress import AddressValueError
+from ipaddress import IPv4Address
+from ipaddress import IPv6Address
+from typing import Any
+from typing import Callable
+from typing import Collection
+from typing import Dict
+from typing import FrozenSet
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Pattern
+from typing import Set
+from typing import Sized
+from typing import Tuple
+from typing import Type
+from typing import TypeVar
+from typing import Union
 from uuid import UUID
 
-from typing_extensions import Protocol, runtime_checkable
+from typing_extensions import Protocol
+from typing_extensions import runtime_checkable
 
 from gata import bson_support
-from gata.stringformat import StringFormat
-from .errors import (
-    ArithmeticValidationError,
-    FormatValidationError,
-    IterableValidationError,
-    MaximumBoundError,
-    MaximumLengthError,
-    MinimumBoundError,
-    MinimumLengthError,
-    TypeValidationError,
-    UniqueValidationError,
-    ValidationError,
-)
-from .iso_datetime import (
-    parse_iso_date_string,
-    parse_iso_datetime_string,
-    parse_iso_duration_string,
-    parse_iso_time_string,
-)
+from .stringformat import StringFormat
+from .errors import ArithmeticValidationError
+from .errors import FormatValidationError
+from .errors import IterableValidationError
+from .errors import MaximumBoundError
+from .errors import MaximumLengthError
+from .errors import MinimumBoundError
+from .errors import MinimumLengthError
+from .errors import TypeValidationError
+from .errors import UniqueValidationError
+from .errors import ValidationError
+from .iso_datetime import parse_iso_date_string
+from .iso_datetime import parse_iso_datetime_string
+from .iso_datetime import parse_iso_duration_string
+from .iso_datetime import parse_iso_time_string
+from .utils import NoneType
 
 __all__ = [
     "validate_all",
@@ -86,8 +87,6 @@ __all__ = [
 ]
 
 if bson_support.BSON_SUPPORT:
-    from gata.bson_support import validate_object_id
-
     __all__ = __all__ + ["validate_object_id"]
 
 
@@ -113,6 +112,13 @@ def validate_all(value: Any, validators: Iterable[Callable]) -> Any:
     for validate in validators:
         value = validate(value)
     return value
+
+
+def validate_none(value: Any) -> None:
+    if value is None:
+        return None
+
+    raise TypeValidationError(value=value, expected_type=None)
 
 
 def validate_string(value: Any) -> str:
@@ -351,7 +357,7 @@ def validate_enum(value: Any, enum_class: Type[Enum]) -> Enum:
         raise TypeValidationError(expected_type=enum_class)
 
 
-HOSTNAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*$", re.I)
+HOSTNAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*$", re.I,)
 
 
 def validate_hostname(value: str) -> str:
@@ -419,7 +425,7 @@ def validate_length(value: Any, minimum: Optional[int] = None, maximum: Optional
 def validate_multiple_of(value: Union[float, int], multiple_of: Union[float, int]) -> Union[float, int]:
     if not value % multiple_of == 0:
         raise ArithmeticValidationError(
-            f"passed value must be multiplication of {multiple_of}", code="multiple_of_error"
+            f"passed value must be multiplication of {multiple_of}", code="multiple_of_error",
         )
 
     return value
@@ -433,7 +439,7 @@ def validate_nullable(value: Any, validator: Callable) -> Any:
 
 
 def validate_range(
-    value: Comparable, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None
+    value: Comparable, minimum: Optional[Comparable] = None, maximum: Optional[Comparable] = None,
 ) -> Any:
 
     if minimum is not None and value < minimum:
@@ -446,7 +452,7 @@ def validate_range(
 
 
 SEMVER_REGEX = re.compile(
-    r"^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)(?:\+([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)$", re.I
+    r"^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)(?:\+([0-9a-z-]+(?:\.[0-9a-z-]+)*))?)$", re.I,
 )
 
 

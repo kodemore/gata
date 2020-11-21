@@ -2,9 +2,16 @@ from collections import OrderedDict
 from collections.abc import Iterable
 from decimal import Decimal
 from inspect import isclass
-from typing import Any, Callable, Dict, Optional, Union, Iterator, Tuple
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Iterator
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
-from .mapping import Mapping, AnyTypeMapping
+from .mapping import AnyTypeMapping
+from .mapping import Mapping
 from .stringformat import StringFormat
 from .utils import is_optional_type
 

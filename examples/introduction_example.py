@@ -17,7 +17,7 @@ except ValueError as error:  # gata.errors.FieldError
 
 pet = Pet(**{"tags": ["dog"]})
 
-assert pet.serialise() == {'tags': ['dog'], 'name': 'Boo', 'age': 0}  # serialise object
+assert pet.serialise() == {"tags": ["dog"], "name": "Boo", "age": 0}  # serialise object
 
 # exclude `age` field from serialisation, and rename `name` field to `pet_name`
-assert pet.serialise(age=False, name="pet_name") == {'tags': ['dog'], 'pet_name': 'Boo'}
+assert pet.serialise(age=False, name="pet_name") == {"tags": ["dog"], "pet_name": "Boo"}

@@ -13,6 +13,8 @@ class Album:
 
 
 try:
-    invalid_release_year = Album(name="Perfect Strangers", artist="Deep Purple", release_year="1984")
+    invalid_release_year = Album(
+        name="Perfect Strangers", artist="Deep Purple", release_year="1984"
+    )
 except FieldError as error:
     print(f"there was an error with validating field: {error.context['field_name']}")

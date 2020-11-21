@@ -1,51 +1,60 @@
 import base64
-from datetime import date, datetime, time, timedelta
 import decimal
 import ipaddress
 import re
-from typing import Any, Callable, Dict, List, Optional, Pattern, TypeVar, Union
 import uuid
+from datetime import date
+from datetime import datetime
+from datetime import time
+from datetime import timedelta
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Pattern
+from typing import TypeVar
+from typing import Union
 
 from gata import bson_support
-from gata.errors import FormatValidationError, ValidationError
-from gata.iso_datetime import (
-    parse_iso_date_string,
-    parse_iso_datetime_string,
-    parse_iso_duration_string,
-    parse_iso_time_string,
-    timedelta_to_iso_string,
-)
-from gata.stringformat import StringFormat
-from gata.validators import (
-    TRUTHY_EXPRESSION,
-    validate_boolean,
-    validate_bytes,
-    validate_date,
-    validate_datetime,
-    validate_decimal,
-    validate_email,
-    validate_enum,
-    validate_float,
-    validate_frozenset,
-    validate_hostname,
-    validate_integer,
-    validate_ipv4,
-    validate_ipv6,
-    validate_length,
-    validate_list,
-    validate_multiple_of,
-    validate_pattern,
-    validate_range,
-    validate_semver,
-    validate_set,
-    validate_string,
-    validate_time,
-    validate_tuple,
-    validate_uri,
-    validate_url,
-    validate_uuid,
-)
 from .base_mapping import Mapping
+from .errors import FormatValidationError
+from .errors import ValidationError
+from .iso_datetime import parse_iso_date_string
+from .iso_datetime import parse_iso_datetime_string
+from .iso_datetime import parse_iso_duration_string
+from .iso_datetime import parse_iso_time_string
+from .iso_datetime import timedelta_to_iso_string
+from .stringformat import StringFormat
+from .validators import TRUTHY_EXPRESSION
+from .validators import validate_any
+from .validators import validate_boolean
+from .validators import validate_bytes
+from .validators import validate_date
+from .validators import validate_datetime
+from .validators import validate_decimal
+from .validators import validate_email
+from .validators import validate_enum
+from .validators import validate_float
+from .validators import validate_frozenset
+from .validators import validate_hostname
+from .validators import validate_integer
+from .validators import validate_ipv4
+from .validators import validate_ipv6
+from .validators import validate_length
+from .validators import validate_list
+from .validators import validate_multiple_of
+from .validators import validate_none
+from .validators import validate_pattern
+from .validators import validate_range
+from .validators import validate_semver
+from .validators import validate_set
+from .validators import validate_string
+from .validators import validate_time
+from .validators import validate_tuple
+from .validators import validate_uri
+from .validators import validate_url
+from .validators import validate_uuid
 
 _FORMAT_TO_VALIDATOR_MAP = {
     StringFormat.DATETIME: validate_datetime,
@@ -103,8 +112,6 @@ __all__ = [
 
 
 if bson_support.BSON_SUPPORT:
-    from gata.bson_support import ObjectIdMapping
-
     _FORMAT_TO_VALIDATOR_MAP["object-id"] = bson_support.validate_object_id
     _FORMAT_TO_VALIDATOR_MAP[StringFormat.OBJECT_ID] = bson_support.validate_object_id
     __all__ = __all__ + ["ObjectIdMapping"]
@@ -333,7 +340,7 @@ class Ipv6AddressMapping(Mapping):
 
 
 def _serialise_iterable(
-    value: Any, item_type: Optional[Mapping] = None, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None
+    value: Any, item_type: Optional[Mapping] = None, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None,
 ) -> List[Any]:
     result: List[Any] = []
     if not value:
@@ -418,12 +425,14 @@ class FrozenSetMapping(Mapping):
 class TupleMapping(Mapping):
     minimum: int
     maximum: int
-    items: List[Mapping]
-    validators: List[Callable]
+    items: List[Union[Mapping, Any]]
+    validators: List[Union[Callable, Any]]
 
     def validate(self, value: Any) -> Any:
         if not self.validators:
-            self.validators = [item_type.validate for item_type in self.items]
+            self.validators = [item_type.validate for item_type in self.items if isinstance(item_type, Mapping)]
+            if self.items[-1] is ...:
+                self.validators.append(...)
 
         return validate_tuple(value, self.validators)
 
@@ -432,6 +441,34 @@ class TupleMapping(Mapping):
 
     def deserialise(self, value: Any) -> Any:
         return value
+
+
+class UnionMapping(Mapping):
+    items: List[Mapping]
+    validators: List[Callable]
+
+    def validate(self, value: Any) -> Any:
+        if not self.validators:
+            self.validators = [item_type.validate for item_type in self.items]
+
+        return validate_any(value, self.validators)
+
+    def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+        return value
+
+    def deserialise(self, value: Any) -> Any:
+        return value
+
+
+class NoneMapping(Mapping):
+    def validate(self, value: Any) -> Any:
+        return validate_none(value)
+
+    def serialise(self, value: Any, mapping: Optional[Dict[str, Union[Dict, str, bool]]] = None) -> Any:
+        return None
+
+    def deserialise(self, value: Any) -> Any:
+        return None
 
 
 class GataclassMapping(Mapping):

@@ -6,12 +6,10 @@ from gata.errors import ValidationError
 from gata.validators import validate_bytes
 
 
-@pytest.mark.parametrize("value", [
-    b64encode(b"asa"),
-    b64encode(b"another"),
-    b"some bytes",
-    bytearray(b"byte array")
-])
+@pytest.mark.parametrize(
+    "value",
+    [b64encode(b"asa"), b64encode(b"another"), b"some bytes", bytearray(b"byte array")],
+)
 def test_valid_values(value: str):
     assert validate_bytes(value)
 

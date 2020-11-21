@@ -1,55 +1,57 @@
+import datetime
+import ipaddress
+import uuid
 from abc import ABC
 from dataclasses import Field as DataclassesField
-import datetime
 from decimal import Decimal
 from enum import Enum
 from inspect import isclass
-import ipaddress
-from typing import (
-    Any,
-    AnyStr,
-    ByteString,
-    Callable,
-    Dict,
-    ItemsView,
-    Iterator,
-    List,
-    Optional,
-    Pattern,
-    Tuple,
-    Type,
-    Union,
-)
-import uuid
-from gata import bson_support
+from typing import Any
+from typing import AnyStr
+from typing import ByteString
+from typing import Callable
+from typing import Dict
+from typing import ItemsView
+from typing import Iterator
+from typing import List
+from typing import Optional
+from typing import Pattern
+from typing import Tuple
+from typing import Type
+from typing import Union
 
-from .errors import FieldError, ValidationError
-from .mapping import (
-    AnyTypeMapping,
-    BooleanMapping,
-    BytesMapping,
-    CustomTypeMapping,
-    DateMapping,
-    DateTimeMapping,
-    DecimalMapping,
-    EnumTypeMapping,
-    FloatMapping,
-    GataclassMapping,
-    IntegerMapping,
-    Ipv4AddressMapping,
-    Ipv6AddressMapping,
-    ListMapping,
-    RegexPatternMapping,
-    SetMapping,
-    StringMapping,
-    TimeMapping,
-    TimedeltaMapping,
-    TupleMapping,
-    UUIDMapping,
-)
-from .schema import Field, Schema, UNDEFINED
+from gata import bson_support
+from .errors import FieldError
+from .errors import ValidationError
+from .mapping import AnyTypeMapping
+from .mapping import BooleanMapping
+from .mapping import BytesMapping
+from .mapping import CustomTypeMapping
+from .mapping import DateMapping
+from .mapping import DateTimeMapping
+from .mapping import DecimalMapping
+from .mapping import EnumTypeMapping
+from .mapping import FloatMapping
+from .mapping import GataclassMapping
+from .mapping import IntegerMapping
+from .mapping import Ipv4AddressMapping
+from .mapping import Ipv6AddressMapping
+from .mapping import ListMapping
+from .mapping import NoneMapping
+from .mapping import RegexPatternMapping
+from .mapping import SetMapping
+from .mapping import StringMapping
+from .mapping import TimeMapping
+from .mapping import TimedeltaMapping
+from .mapping import TupleMapping
+from .mapping import UUIDMapping
+from .mapping import UnionMapping
+from .schema import Field
+from .schema import Schema
+from .schema import UNDEFINED
 from .stringformat import StringFormat
 from .types import Type as CustomType
+from .utils import NoneType
 from .utils import is_dataclass_like
 
 
@@ -256,7 +258,7 @@ def _dataclass_method_init(*args, **kwargs) -> None:
         _freeze_object(self)
 
 
-def make_dataclass(_cls: Any, repr: bool = True, eq: bool = True, validate: bool = True, frozen: bool = False) -> None:
+def make_dataclass(_cls: Any, repr: bool = True, eq: bool = True, validate: bool = True, frozen: bool = False,) -> None:
     setattr(_cls, "validate", classmethod(_dataclass_method_validate))
     setattr(_cls, "deserialise", classmethod(_dataclass_method_deserialise))
     setattr(_cls, "serialise", _dataclass_method_serialise)
@@ -332,7 +334,7 @@ def _process_class(
 
 
 def serialise_mapped_field(
-    result: Dict[str, Any], key: str, value: Any, schema_field: Field, mapping: Dict[str, Union[bool, str, dict]]
+    result: Dict[str, Any], key: str, value: Any, schema_field: Field, mapping: Dict[str, Union[bool, str, dict]],
 ) -> None:
     item_key = mapping[key]
     serialised_value = schema_field.serialise(value, item_key)  # type: ignore
@@ -425,7 +427,9 @@ SUPPORTED_TYPES = {
     list: ListMapping,
     set: SetMapping,
     tuple: TupleMapping,
+    NoneType: NoneMapping,  # type: ignore
     List: ListMapping,
+    Union: UnionMapping,
     Decimal: DecimalMapping,
     datetime.date: DateMapping,
     datetime.datetime: DateTimeMapping,
@@ -469,9 +473,12 @@ def map_property_type_to_schema_type(property_type: Any, type_properties: Dict[s
 
     subtypes = []
     for python_subtype in property_type.__args__:
+        if python_subtype is ...:
+            subtypes.append(...)
+            continue
         subtypes.append(
             map_property_type_to_schema_type(
-                python_subtype, type_properties["items"] if "items" in type_properties else {}
+                python_subtype, type_properties["items"] if "items" in type_properties else {},
             )
         )
 

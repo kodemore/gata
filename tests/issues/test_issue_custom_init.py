@@ -29,7 +29,6 @@ def test_custom_init_with_validator() -> None:
 
 
 def test_custom_init_for_frozen_dataclass() -> None:
-
     @dataclass(frozen=True)
     class TestFrozenInit:
         field_a: str

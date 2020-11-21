@@ -26,7 +26,9 @@ class Album:
 song_1 = Song(title="Whole lotta rosie", length="PT5M40S")
 song_2 = Song(title="Thunderstruck", length="PT4M38S")
 artist = Artist(name="AC/DC")
-album = Album(name="Best of AC/DC", artist=artist, release_year=1989, song_list=[song_1, song_2])
+album = Album(
+    name="Best of AC/DC", artist=artist, release_year=1989, song_list=[song_1, song_2]
+)
 
 serialised_album = album.serialise(
     artist={

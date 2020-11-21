@@ -19,9 +19,12 @@ except ValueError as error:
 
 pet = Pet(**{"tags": ["dog"]})
 
-assert asdict(pet) == {'tags': ['dog'], 'name': 'Boo', 'age': 0}  # serialise object
+assert asdict(pet) == {"tags": ["dog"], "name": "Boo", "age": 0}  # serialise object
 
 # exclude `age` field from serialisation, and rename `name` field to `pet_name`
-assert asdict(pet, {"age": False, "name": "pet_name"}) == {'tags': ['dog'], 'pet_name': 'Boo'}
+assert asdict(pet, {"age": False, "name": "pet_name"}) == {
+    "tags": ["dog"],
+    "pet_name": "Boo",
+}
 
 print(pet)

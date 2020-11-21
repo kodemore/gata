@@ -73,7 +73,9 @@ def test_schema_date_type() -> None:
     schema = build_schema(TestClass)
 
     assert schema["property"].type is date
-    assert schema["property"].validate("2020-10-20") == date(year=2020, month=10, day=20)
+    assert schema["property"].validate("2020-10-20") == date(
+        year=2020, month=10, day=20
+    )
 
     with pytest.raises(ValueError):
         schema["property"].validate(123)
@@ -86,7 +88,9 @@ def test_schema_datetime_type() -> None:
     schema = build_schema(TestClass)
 
     assert schema["property"].type is datetime
-    assert schema["property"].validate("2020-10-20 10:21:59") == datetime(year=2020, month=10, day=20, hour=10, minute=21, second=59)
+    assert schema["property"].validate("2020-10-20 10:21:59") == datetime(
+        year=2020, month=10, day=20, hour=10, minute=21, second=59
+    )
 
     with pytest.raises(ValueError):
         schema["property"].validate(123)
@@ -99,7 +103,9 @@ def test_schema_time_type() -> None:
     schema = build_schema(TestClass)
 
     assert schema["property"].type is time
-    assert schema["property"].validate("10:21:59") == time(hour=10, minute=21, second=59)
+    assert schema["property"].validate("10:21:59") == time(
+        hour=10, minute=21, second=59
+    )
 
     with pytest.raises(ValueError):
         schema["property"].validate(123)
@@ -195,7 +201,10 @@ def test_schema_bytes_and_bytes_array_type() -> None:
     schema = build_schema(TestClass)
 
     assert schema["property"].type is bytes
-    assert schema["property"].validate(base64.b64encode(b"test bytes").decode("utf8")) == b"test bytes"
+    assert (
+        schema["property"].validate(base64.b64encode(b"test bytes").decode("utf8"))
+        == b"test bytes"
+    )
 
     with pytest.raises(ValueError):
         schema["property"].validate("aaa")
@@ -344,8 +353,13 @@ def test_set_type() -> None:
 
 def test_tuple_type() -> None:
     class TestTuple:
-        values: Tuple[int, ...]
+        property: Tuple[int, ...]
 
     schema = build_schema(TestTuple)
-    a = 1
+    assert schema["property"].type is Tuple[int, ...]
+
+    assert schema["property"].validate((1, 2, 3, 4))
+
+    with pytest.raises(ValueError):
+        schema["property"].validate((1, 2, 5, "a"))
 

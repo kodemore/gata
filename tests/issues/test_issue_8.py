@@ -3,7 +3,6 @@ from gata import dataclass, field
 
 
 def test_issue_8() -> None:
-
     @dataclass()
     class TestDataclass:
         _id: str = field(init=False)

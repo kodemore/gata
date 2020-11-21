@@ -12,4 +12,3 @@ def test_improved_interface() -> None:
     song_repr = repr(song)
     assert song.serialise() == raw_song
     assert "test_improved_interface.<locals>.Song" in song_repr
-
