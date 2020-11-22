@@ -1,4 +1,4 @@
-name: kodemore/gata
+name: Linting and Tests
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  build:
+  lint_and_test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -30,7 +30,7 @@ jobs:
       - name: Linting
         run: |
           make lint
-      - name: Test with codecoverate
+      - name: Test with codecoverage
         run: |
-          make citest
+          make test
 
