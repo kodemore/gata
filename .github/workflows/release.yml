@@ -35,8 +35,5 @@ jobs:
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
-          source $HOME/.poetry/env
-          python -m pip install --upgrade pip
-          pip install poetry
           make publish
 
