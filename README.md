@@ -1,4 +1,5 @@
 # Gata
+![Release](https://github.com/kodemore/gata/workflows/Release/badge.svg)
 ![CI](https://github.com/kodemore/gata/workflows/Linting%20and%20Tests/badge.svg?branch=master)
 [![Coverage](https://codecov.io/gh/kodemore/gata/branch/master/graph/badge.svg)](https://codecov.io/gh/kodemore/gata)
 [![Maintainability](https://api.codeclimate.com/v1/badges/00892e0c37a7f1716bdd/maintainability)](https://codeclimate.com/github/kodemore/gata/maintainability)
