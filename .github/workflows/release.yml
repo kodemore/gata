@@ -15,7 +15,6 @@ jobs:
         run: |
           echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
       - name: Build release
-        uses: actions/setup-python@v2
         with:
           python-version: "3.8"
         run: |
@@ -28,7 +27,6 @@ jobs:
           name: gata-${{ steps.tag.outputs.tag }}.tar.gz
           path: dist/gata-${{ steps.tag.outputs.tag }}.tar.gz
       - name: Publish release
-        uses: actions/setup-python@v2
         with:
           python-version: "3.8"
         env:
