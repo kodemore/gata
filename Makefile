@@ -12,7 +12,7 @@ mypy:
 test:
 	poetry run pytest
 
-citest:
+test-codecov:
 	poetry run pytest --ignore venv -W ignore::DeprecationWarning --cov=gata --cov-report=term-missing
 	poetry run codecov
 
