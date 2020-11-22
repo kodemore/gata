@@ -2,15 +2,15 @@ from typing import Any
 from typing import Dict
 from typing import ItemsView
 
-from .dataclasses import _dataclass_method_deserialise
-from .dataclasses import _dataclass_method_eq
-from .dataclasses import _dataclass_method_frozen_getattr
-from .dataclasses import _dataclass_method_frozen_setattr
-from .dataclasses import _dataclass_method_init
-from .dataclasses import _dataclass_method_repr
-from .dataclasses import _dataclass_method_serialise
-from .dataclasses import _dataclass_method_validate
-from .dataclasses import build_schema
+from gata.dataclasses import _dataclass_method_deserialise
+from gata.dataclasses import _dataclass_method_eq
+from gata.dataclasses import _dataclass_method_frozen_getattr
+from gata.dataclasses import _dataclass_method_frozen_setattr
+from gata.dataclasses import _dataclass_method_init
+from gata.dataclasses import _dataclass_method_repr
+from gata.dataclasses import _dataclass_method_serialise
+from gata.dataclasses import _dataclass_method_validate
+from gata.dataclasses import build_schema
 from .schema import Schema
 
 

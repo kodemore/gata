@@ -12,6 +12,10 @@ mypy:
 test:
 	poetry run pytest
 
+citest:
+	poetry run pytest --ignore venv -W ignore::DeprecationWarning --cov=gata --cov-report=term-missing
+	poetry run codecov
+
 lint:
 	poetry run isort -c setup.cfg
 	poetry run black --line-length=120 --target-version py38 gata

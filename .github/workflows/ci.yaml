@@ -1,4 +1,4 @@
-name: Gata
+name: kodemore/gata
 
 on:
   push:
@@ -27,11 +27,9 @@ jobs:
           pip install poetry
           poetry add bson
           poetry install
-          pip install codecov
       - name: Linting
         run: |
           make lint
       - name: Test with codecoverate
         run: |
-          poetry run pytest --ignore venv -W ignore::DeprecationWarning --cov=gata --cov-report=term-missing
-          codecov
+          make citest
