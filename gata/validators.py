@@ -30,7 +30,6 @@ from typing_extensions import Protocol
 from typing_extensions import runtime_checkable
 
 from gata import bson_support
-from .stringformat import StringFormat
 from .errors import ArithmeticValidationError
 from .errors import FormatValidationError
 from .errors import IterableValidationError
@@ -45,7 +44,7 @@ from .iso_datetime import parse_iso_date_string
 from .iso_datetime import parse_iso_datetime_string
 from .iso_datetime import parse_iso_duration_string
 from .iso_datetime import parse_iso_time_string
-from .utils import NoneType
+from .stringformat import StringFormat
 
 __all__ = [
     "validate_all",
